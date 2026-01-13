@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 毕业设计</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .register-container {
+            width: 400px;
+            margin: 100px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .register-title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .login-link a {
+            color: #1E9FFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2 class="register-title">用户注册</h2>
+        <form class="layui-form" id="registerForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" name="username" id="username" lay-verify="required" placeholder="请输入用户名" autocomplete="off" class="layui-input">
+            </div>
+            <div class="form-group">
+                <label for="nickname">昵称</label>
+                <input type="text" name="nickname" id="nickname" placeholder="请输入昵称（可选，不填自动生成）" autocomplete="off" class="layui-input">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" name="password" id="password" lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input">
+            </div>
+            <div class="form-group">
+                <button type="button" class="layui-btn layui-btn-normal layui-btn-fluid" id="registerBtn">注册</button>
+            </div>
+            <div class="login-link">
+                <span>已有账号？</span><a th:href="@{/login}">立即登录</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.jquery;
+
+            $('#registerBtn').on('click', function() {
+                var username = $('#username').val();
+                var nickname = $('#nickname').val();
+                var password = $('#password').val();
+
+                if (!username) {
+                    layer.msg('请输入用户名', {icon: 2});
+                    return;
+                }
+                if (!password) {
+                    layer.msg('请输入密码', {icon: 2});
+                    return;
+                }
+                if (password.length < 6) {
+                    layer.msg('密码长度不能少于6位', {icon: 2});
+                    return;
+                }
+
+                $.post('/user/register', {
+                    username: username,
+                    nickname: nickname,
+                    password: password
+                }, function(res) {
+                    if (res.code === 200) {
+                        layer.msg(res.message, {icon: 1}, function() {
+                            // 注册成功后跳转到登录页面
+                            window.location.href = '/login';
+                        });
+                    } else {
+                        layer.msg(res.message, {icon: 2});
+                    }
+                }, 'json');
+            });
+        });
+        </script>
+</body>
+</html>

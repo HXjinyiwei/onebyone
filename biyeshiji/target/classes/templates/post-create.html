@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发布帖子 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        /* 表单样式 */
+        .post-form {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .layui-form-item {
+            margin-bottom: 25px;
+        }
+        
+        .layui-form-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .layui-input, .layui-textarea, .layui-select {
+            font-size: 14px;
+        }
+        
+        .layui-textarea {
+            resize: vertical;
+            min-height: 300px;
+        }
+        
+        /* 表单按钮样式 */
+        .form-buttons {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .form-buttons button {
+            margin: 0 10px;
+        }
+        
+        /* 发布选项样式 */
+        .publish-options {
+            background-color: #fafafa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .publish-options h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .option-group {
+            margin-bottom: 15px;
+        }
+        
+        .option-group label {
+            margin-right: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item layui-this"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <!-- 返回按钮 -->
+        <div class="back-btn" style="margin-bottom: 20px;">
+            <a href="/post/list" class="layui-btn layui-btn-primary"><i class="layui-icon layui-icon-left"></i> 返回帖子列表</a>
+        </div>
+        
+        <!-- 发帖表单 -->
+        <form class="post-form layui-form" id="postForm">
+            <h2 class="form-title">发布帖子</h2>
+            
+            <div class="layui-form-item">
+                <label class="layui-form-label">帖子标题</label>
+                <div class="layui-input-block">
+                    <input type="text" name="title" required  lay-verify="required" placeholder="请输入帖子标题" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            
+            <div class="layui-form-item">
+                <label class="layui-form-label">帖子分类</label>
+                <div class="layui-input-block">
+                    <select name="categoryId" lay-verify="required" id="categorySelect">
+                        <option value="">请选择分类</option>
+                        <option value="2">讨论</option>
+                        <option value="3">求助</option>
+                        <option value="4">分享</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="layui-form-item">
+                <label class="layui-form-label">帖子内容</label>
+                <div class="layui-input-block">
+                    <textarea name="content" required lay-verify="required" placeholder="请输入帖子内容" class="layui-textarea"></textarea>
+                </div>
+            </div>
+            
+            <!-- 发布选项 -->
+            <div class="publish-options">
+                <h3>发布选项</h3>
+                
+                <div class="option-group">
+                    <label>
+                        <input type="radio" name="status" value="1" title="立即发布" checked>
+                    </label>
+                    <label>
+                        <input type="radio" name="status" value="0" title="保存草稿">
+                    </label>
+                </div>
+                
+                <div class="option-group">
+                    <label>
+                        <input type="checkbox" name="isLocked" lay-skin="primary" title="锁定帖子（仅自己可见）">
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 表单按钮 -->
+            <div class="form-buttons">
+                <button type="submit" class="layui-btn layui-btn-normal" lay-submit lay-filter="postSubmit">发布帖子</button>
+                <button type="button" class="layui-btn layui-btn-primary" onclick="window.location.href='/post/list'">取消</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery', 'form'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.jquery;
+            var form = layui.form;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        
+                        // 如果是管理员，添加公告分类选项
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            // 在分类选择框中添加公告选项（放在最前面）
+                            $('#categorySelect').prepend('<option value="1">公告</option>');
+                            // 重新渲染表单
+                            form.render('select');
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 表单验证和提交
+            form.on('submit(postSubmit)', function(data) {
+                // 这里可以添加异步请求，提交表单数据
+                console.log('表单数据:', data.field);
+                
+                // 实际提交到后端API
+                $.ajax({
+                    url: '/post/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data.field),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('帖子发布成功！', {icon: 1}, function() {
+                                window.location.href = '/post/list';
+                            });
+                        } else {
+                            layer.msg(res.message || '帖子发布失败', {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.msg('帖子发布失败：' + error, {icon: 2});
+                        console.error('帖子发布请求失败:', error);
+                    }
+                });
+                
+                return false; // 阻止表单默认提交
+            });
+        });
+    </script>
+</body>
+</html>

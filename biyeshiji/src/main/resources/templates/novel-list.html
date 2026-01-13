@@ -1,0 +1,518 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说列表 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <!-- 引入公共样式 -->
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .category-sidebar {
+            background: #fff;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .category-sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .category-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .category-list li {
+            padding: 14px 22px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #e6f7ff 0%, #d1edff 100%);
+            border: 2px solid #b3d9ff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 16px;
+            color: #000; /* 黑色文字 */
+            display: block;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .category-list li:hover {
+            background: linear-gradient(135deg, #d1edff 0%, #b3d9ff 100%);
+            border-color: #8cc2ff;
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 12px 20px rgba(140, 194, 255, 0.4);
+            color: #000; /* 悬停时黑色 */
+        }
+        .category-list li.active {
+            background: linear-gradient(135deg, #6a1bb2 0%, #2a4bdf 100%);
+            color: #000; /* 黑色文字 */
+            border-color: #6a1bb2;
+            font-weight: bold;
+            box-shadow: 0 12px 24px rgba(106, 27, 178, 0.5);
+            transform: translateY(-4px) scale(1.05);
+            /* 确保内边距对称，无勾号 */
+            padding: 14px 22px;
+            text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); /* 白色阴影提高可读性 */
+        }
+        .category-list li.active:hover {
+            color: #000; /* 黑色文字 */
+            background: linear-gradient(135deg, #5a16a2 0%, #1a3bcf 100%);
+            border-color: #5a16a2;
+            transform: translateY(-4px) scale(1.05); /* 保持与选中状态相同的变换，或微调 */
+            box-shadow: 0 12px 24px rgba(90, 22, 162, 0.7);
+        }
+        .category-list li a {
+            color: inherit;
+            display: block;
+            text-decoration: none;
+            position: relative;
+            z-index: 2;
+        }
+        .main-content {
+            padding-left: 20px;
+        }
+        .novel-btn, .search-box, .sort-tabs, .novel-list, .pagination {
+            margin-bottom: 20px;
+        }
+        .sort-tabs a {
+            margin-right: 15px;
+            color: #666;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .sort-tabs a.active {
+            background: #5FB878;
+            color: #fff;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                padding-left: 0;
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item layui-this"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <div class="layui-row">
+            <!-- 左侧分类侧边栏 -->
+            <div class="layui-col-md-3">
+                <div class="category-sidebar">
+                    <h3>📚 小说分类</h3>
+                    <ul class="category-list" id="categoryList">
+                        <li class="active" data-category-id="0"><a href="javascript:;">全部</a></li>
+                        <!-- 分类将通过AJAX动态加载 -->
+                    </ul>
+                </div>
+            </div>
+            <!-- 右侧内容 -->
+            <div class="layui-col-md-9">
+                <div class="main-content">
+                    <!-- 发布按钮 -->
+                    <div class="novel-btn">
+                        <a href="/novel/create" class="layui-btn layui-btn-normal">发布小说</a>
+                    </div>
+                    
+                    <!-- 搜索框 -->
+                    <div class="search-box">
+                        <h3>搜索小说：</h3>
+                        <input type="text" id="searchKeyword" class="layui-input" placeholder="输入关键词（标题、作者、分类）">
+                        <button class="layui-btn layui-btn-normal" onclick="searchNovels()">搜索</button>
+                        <button class="layui-btn layui-btn-primary" onclick="clearSearch()">清空</button>
+                    </div>
+                    
+                    <!-- 热门排序 -->
+                    <div class="sort-tabs" id="sortTabs">
+                        <a href="javascript:;" class="active" data-sort="all">全部</a>
+                        <a href="javascript:;" data-sort="view">最热</a>
+                        <a href="javascript:;" data-sort="like">点赞</a>
+                        <a href="javascript:;" data-sort="favorite">收藏</a>
+                        <a href="javascript:;" data-sort="new">最新</a>
+                    </div>
+                    
+                    <!-- 小说列表 -->
+                    <div class="novel-list" id="novelList">
+                        <!-- 小说内容将通过AJAX动态加载 -->
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination">
+                        <div class="layui-box layui-laypage layui-laypage-default">
+                            <a href="javascript:;" class="layui-laypage-first" onclick="changePage(1)">首页</a>
+                            <a href="javascript:;" class="layui-laypage-prev" onclick="changePage(currentPage - 1)">上一页</a>
+                            <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em id="currentPage">1</em></span>
+                            <a href="javascript:;" onclick="changePage(2)">2</a>
+                            <a href="javascript:;" onclick="changePage(3)">3</a>
+                            <a href="javascript:;" class="layui-laypage-next" onclick="changePage(currentPage + 1)">下一页</a>
+                            <a href="javascript:;" class="layui-laypage-last" onclick="changePage(totalPage)">尾页</a>
+                            <span class="layui-laypage-count">共 <span id="totalPage">1</span> 页</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.$;
+            
+            // 全局变量
+            var currentUser = null;
+            var currentPage = 1;
+            var totalPage = 1;
+            var currentSort = 'all';
+            var currentCategoryId = 0; // 0表示全部
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    window.location.href = '/logout';
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code === 200 && res.data) {
+                        currentUser = res.data;
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        // 检测是否为管理员，显示管理后台菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                    }
+                },
+                error: function() {
+                    $('#welcomeText').text('欢迎，未知用户');
+                }
+            });
+            
+            // 加载分类列表
+            function loadCategories() {
+                $.ajax({
+                    url: '/category/list',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var $categoryList = $('#categoryList');
+                            // 清空除“全部”以外的项
+                            $categoryList.find('li:not(:first)').remove();
+                            $.each(res.data, function(index, category) {
+                                // 过滤掉论坛分类（ID 1-6 或名称包含特定关键词）
+                                if (category.id >= 1 && category.id <= 6) {
+                                    return; // 跳过
+                                }
+                                var li = $('<li data-category-id="' + category.id + '"><a href="javascript:;">' + category.name + '</a></li>');
+                                $categoryList.append(li);
+                            });
+                            // 绑定分类点击事件
+                            $categoryList.find('li').on('click', function() {
+                                var categoryId = $(this).data('category-id');
+                                selectCategory(categoryId);
+                            });
+                        } else {
+                            layer.msg('加载分类失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('加载分类请求失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 选择分类
+            function selectCategory(categoryId) {
+                currentCategoryId = categoryId;
+                $('#categoryList li').removeClass('active');
+                $('#categoryList li[data-category-id="' + categoryId + '"]').addClass('active');
+                // 重新加载小说列表
+                loadNovels(currentSort, 1);
+            }
+            
+            // 加载小说列表
+            function loadNovels(sort, page) {
+                console.log('loadNovels called', sort, page, 'category:', currentCategoryId);
+                currentSort = sort || 'all';
+                currentPage = page || 1;
+                // 更新排序选项卡活动状态
+                $('#sortTabs a').removeClass('active');
+                $('#sortTabs a').each(function() {
+                    var $this = $(this);
+                    if ($this.data('sort') === sort) {
+                        $this.addClass('active');
+                    }
+                });
+                var url = '';
+                var params = { page: currentPage, pageSize: 10 };
+                if (sort === 'view') {
+                    url = '/novel/top/view';
+                    params.limit = 10;
+                } else if (sort === 'like') {
+                    url = '/novel/top/like';
+                    params.limit = 10;
+                } else if (sort === 'favorite') {
+                    url = '/novel/top/favorite';
+                    params.limit = 10;
+                } else if (sort === 'new') {
+                    url = '/novel/top/new';
+                    params.limit = 10;
+                } else {
+                    url = '/novel/all';
+                    params.keyword = $('#searchKeyword').val().trim();
+                }
+                // 如果选择了分类（非0），则添加分类参数
+                if (currentCategoryId !== 0) {
+                    params.categoryId = currentCategoryId;
+                }
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            renderNovelList(res.data);
+                            updatePagination();
+                        } else {
+                            layer.msg('获取小说列表失败：' + (res.message || '未知错误'), {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.msg('请求失败：' + error, {icon: 2});
+                    }
+                });
+            }
+            // 暴露到全局作用域
+            window.loadNovels = loadNovels;
+            
+            // 绑定排序选项卡点击事件
+            $('#sortTabs a').on('click', function() {
+                var sort = $(this).data('sort');
+                loadNovels(sort);
+            });
+            
+            // 搜索小说
+            window.searchNovels = function() {
+                var keyword = $('#searchKeyword').val().trim();
+                if (!keyword) {
+                    layer.msg('请输入搜索关键词', {icon: 2});
+                    return;
+                }
+                var params = { keyword: keyword };
+                if (currentCategoryId !== 0) {
+                    params.categoryId = currentCategoryId;
+                }
+                $.ajax({
+                    url: '/novel/search',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            renderNovelList(res.data);
+                            layer.msg('搜索完成，找到 ' + res.data.length + ' 条结果', {icon: 1});
+                        } else {
+                            layer.msg('搜索失败：' + (res.message || '未知错误'), {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('搜索请求失败', {icon: 2});
+                    }
+                });
+            };
+            
+            // 清空搜索
+            window.clearSearch = function() {
+                $('#searchKeyword').val('');
+                loadNovels(currentSort, 1);
+            };
+            
+            // 渲染小说列表
+            function renderNovelList(novels) {
+                var novelListHtml = '';
+                if (novels.length === 0) {
+                    novelListHtml = '<div style="text-align: center; padding: 50px 0; color: #999;">暂无小说数据</div>';
+                } else {
+                    novels.forEach(function(novel) {
+                        var statusText = '连载中';
+                        var statusClass = 'status-ongoing';
+                        if (novel.status === 1) {
+                            statusText = '已完结';
+                            statusClass = 'status-completed';
+                        } else if (novel.status === 2) {
+                            statusText = '暂停';
+                            statusClass = 'status-paused';
+                        }
+                        // 获取分类名称（多个）
+                        var categoryNames = '未分类';
+                        if (novel.categories && novel.categories.length > 0) {
+                            categoryNames = novel.categories.map(function(cat) {
+                                return cat.name;
+                            }).join('、');
+                        }
+                        novelListHtml += '<div class="novel-item">';
+                        novelListHtml += '<img class="novel-cover" src="' + (novel.coverImage || '/images/默认图片.jpg') + '" alt="封面">';
+                        novelListHtml += '<div class="novel-info">';
+                        novelListHtml += '<div class="novel-title">';
+                        novelListHtml += '<a href="/novel/view/' + novel.id + '">' + novel.title + '</a>';
+                        novelListHtml += '<span class="status-tag ' + statusClass + '">' + statusText + '</span>';
+                        novelListHtml += '</div>';
+                        novelListHtml += '<div class="novel-meta">';
+                        novelListHtml += '<span>作者：' + (novel.penName || (novel.author ? novel.author.nickname : '未知')) + '</span>';
+                        novelListHtml += '<span>分类：' + categoryNames + '</span>';
+                        novelListHtml += '<span>字数：' + (novel.chapterCount || 0) + '章</span>';
+                        novelListHtml += '<span>更新时间：' + formatDate(novel.updateTime) + '</span>';
+                        // 管理员显示删除和封禁按钮
+                        if (currentUser && (currentUser.role === 1 || currentUser.role === 2)) {
+                            novelListHtml += '<span style="float: right;">';
+                            novelListHtml += '<button class="layui-btn layui-btn-warning layui-btn-xs" onclick="banNovel(' + novel.id + ')" style="margin-right: 5px;">封禁</button>';
+                            novelListHtml += '<button class="layui-btn layui-btn-danger layui-btn-xs" onclick="deleteNovel(' + novel.id + ')">删除</button>';
+                            novelListHtml += '</span>';
+                        }
+                        novelListHtml += '</div>';
+                        novelListHtml += '<div class="novel-description">' + (novel.description || '暂无简介') + '</div>';
+                        novelListHtml += '<div class="novel-stats">';
+                        novelListHtml += '<span>阅读：' + (novel.viewCount || 0) + '</span>';
+                        novelListHtml += '<span>点赞：' + (novel.likeCount || 0) + '</span>';
+                        novelListHtml += '<span>收藏：' + (novel.favoriteCount || 0) + '</span>';
+                        novelListHtml += '</div>';
+                        novelListHtml += '</div>';
+                        novelListHtml += '</div>';
+                    });
+                }
+                $('#novelList').html(novelListHtml);
+            }
+            
+            // 格式化日期
+            function formatDate(dateStr) {
+                if (!dateStr) return '未知';
+                var date = new Date(dateStr);
+                return date.getFullYear() + '-' +
+                       (date.getMonth() + 1).toString().padStart(2, '0') + '-' +
+                       date.getDate().toString().padStart(2, '0') + ' ' +
+                       date.getHours().toString().padStart(2, '0') + ':' +
+                       date.getMinutes().toString().padStart(2, '0');
+            }
+            
+            // 更新分页
+            function updatePagination() {
+                // 这里应该根据总页数更新分页UI，但暂时简单处理
+                $('#currentPage').text(currentPage);
+                $('#totalPage').text(totalPage);
+            }
+            
+            // 切换页面
+            window.changePage = function(page) {
+                if (page < 1 || page > totalPage) return;
+                loadNovels(currentSort, page);
+            };
+            
+            // 删除小说（管理员）
+            window.deleteNovel = function(novelId) {
+                layer.confirm('确定要删除该小说吗？删除后不可恢复。', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/delete/' + novelId,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('删除成功', {icon: 1});
+                                loadNovels(currentSort, currentPage);
+                            } else {
+                                layer.msg('删除失败：' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('删除请求失败', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 封禁小说（管理员）
+            window.banNovel = function(novelId) {
+                layer.prompt({
+                    title: '请输入封禁原因（可选）',
+                    formType: 2,
+                    value: '',
+                    area: ['400px', '150px']
+                }, function(reason, index) {
+                    $.ajax({
+                        url: '/novel/ban/' + novelId,
+                        type: 'POST',
+                        data: { reason: reason },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说封禁成功', {icon: 1});
+                                loadNovels(currentSort, currentPage);
+                            } else {
+                                layer.msg('封禁失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 初始化加载
+            loadCategories();
+            loadNovels('all', 1);
+        });
+    </script>
+</body>
+</html>

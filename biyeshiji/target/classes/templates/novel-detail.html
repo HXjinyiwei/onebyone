@@ -1,0 +1,591 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小说详情 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <!-- 引入公共样式 -->
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item layui-this"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <!-- 返回按钮 -->
+        <div class="layui-row">
+            <div class="layui-col-md12">
+                <a href="/novel/list" class="layui-btn layui-btn-primary"><i class="layui-icon layui-icon-left"></i> 返回小说列表</a>
+            </div>
+        </div>
+        
+        <!-- 小说基本信息卡片 -->
+        <div class="layui-row" style="margin-top: 20px;">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        <h1 id="novelTitle" style="font-size: 28px; margin: 0;">加载中...</h1>
+                    </div>
+                    <div class="layui-card-body">
+                        <div class="layui-row">
+                            <!-- 封面 -->
+                            <div class="layui-col-md3">
+                                <div class="novel-cover" style="text-align: center;">
+                                    <img id="novelCover" src="/images/默认图片.jpg" alt="小说封面" style="width: 200px; height: 280px; object-fit: cover; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                </div>
+                            </div>
+                            <!-- 信息 -->
+                            <div class="layui-col-md9">
+                                <div class="layui-row">
+                                    <div class="layui-col-md12">
+                                        <div class="novel-meta" style="color: #999; font-size: 14px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #f0f0f0;">
+                                            <span>作者：<span id="novelAuthor">未知</span></span>
+                                            <span>分类：<span id="novelCategory">未分类</span></span>
+                                            <span>状态：<span id="novelStatus">连载中</span></span>
+                                            <span>章节数：<span id="novelChapterCount">0</span></span>
+                                            <span>阅读：<span id="novelViewCount">0</span></span>
+                                            <span>点赞：<span id="novelLikeCount">0</span></span>
+                                            <span>收藏：<span id="novelFavoriteCount">0</span></span>
+                                            <span>发布时间：<span id="novelCreateTime">2024-01-01 10:00:00</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layui-row">
+                                    <div class="layui-col-md12">
+                                        <div class="layui-panel" style="background-color: #fafafa; padding: 20px; border-radius: 5px;">
+                                            <h3 style="margin-top: 0; color: #333;">作品简介</h3>
+                                            <div id="novelSummary" style="color: #333; line-height: 1.8; font-size: 16px;">
+                                                加载中...
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="layui-row" style="margin-top: 20px;">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <button class="layui-btn layui-btn-primary" id="likeBtn">
+                            <i class="layui-icon layui-icon-praise"></i> 点赞 (<span id="likeCountDisplay">0</span>)
+                        </button>
+                        <button class="layui-btn layui-btn-primary" id="favoriteBtn">
+                            <i class="layui-icon layui-icon-collect"></i> 收藏 (<span id="favoriteCountDisplay">0</span>)
+                        </button>
+                        <button class="layui-btn layui-btn-primary" id="shareBtn">
+                            <i class="layui-icon layui-icon-share"></i> 分享
+                        </button>
+                        <button class="layui-btn layui-btn-primary" id="reportBtn">
+                            <i class="layui-icon layui-icon-report"></i> 举报
+                        </button>
+                        <button class="layui-btn layui-btn-warm" id="adminBanBtn" style="display: none;">
+                            <i class="layui-icon layui-icon-lock"></i> 封禁
+                        </button>
+                        <div style="float: right;">
+                            <a href="/novel/edit/" id="editBtn" class="layui-btn layui-btn-normal" style="display: none;"><i class="layui-icon layui-icon-edit"></i> 编辑小说</a>
+                            <a href="/chapter/create?novelId=" id="addChapterBtn" class="layui-btn layui-btn-warm"><i class="layui-icon layui-icon-add-circle"></i> 添加章节</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 章节列表 -->
+        <div class="layui-row" style="margin-top: 20px;">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        <h2 style="margin: 0; font-size: 20px;">章节列表 (<span id="totalChapters">0</span>)</h2>
+                    </div>
+                    <div class="layui-card-body">
+                        <ul class="chapter-list" id="chapterList">
+                            <li class="chapter-item">
+                                <div class="chapter-title">正在加载章节列表...</div>
+                                <div class="chapter-meta">-</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 评论区域（暂不实现，先隐藏） -->
+        <div class="layui-row" style="margin-top: 20px; display: none;">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-header">
+                        <h2 style="margin: 0; font-size: 20px;">评论列表 (<span id="totalComments">0</span>)</h2>
+                    </div>
+                    <div class="layui-card-body">
+                        <!-- 评论表单 -->
+                        <div class="layui-panel" style="background-color: #fafafa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #333;">发表评论</h3>
+                            <form id="commentForm">
+                                <div class="layui-form-item">
+                                    <textarea name="content" placeholder="请输入评论内容" style="width: 100%; height: 120px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 14px; resize: none;"></textarea>
+                                </div>
+                                <div class="layui-form-item">
+                                    <button type="submit" class="layui-btn layui-btn-normal">发表评论</button>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- 评论列表 -->
+                        <ul class="comment-list" id="commentList">
+                            <!-- 评论将通过JavaScript动态加载 -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.jquery;
+            
+            // 获取URL中的小说ID
+            var pathParts = window.location.pathname.split('/');
+            var novelId = pathParts[pathParts.length - 1];
+            var currentUser = null;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        currentUser = res.data;
+                        // 如果是管理员或高级管理员，显示管理后台菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                        // 如果是作者，显示编辑按钮
+                        checkAuthor();
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 获取小说详情
+            function getNovelDetail() {
+                $.ajax({
+                    url: '/novel/detail/' + novelId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('获取小说详情成功:', res);
+                        if (res.code === 200 && res.data) {
+                            var novel = res.data;
+                            // 存储作者ID供章节列表使用
+                            if (novel.author) {
+                                window.novelAuthorId = novel.author.id;
+                            }
+                            $('#novelTitle').text(novel.title);
+                            $('#novelSummary').html((novel.description || '').replace(/\n/g, '<br>'));
+                            $('#novelViewCount').text(novel.viewCount);
+                            $('#novelLikeCount').text(novel.likeCount);
+                            $('#novelFavoriteCount').text(novel.favoriteCount);
+                            // 字数字段已移除
+                            $('#novelChapterCount').text(novel.chapterCount);
+                            $('#likeCountDisplay').text(novel.likeCount);
+                            $('#favoriteCountDisplay').text(novel.favoriteCount);
+                            
+                            // 格式化时间
+                            var createTime = new Date(novel.createTime).toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                            $('#novelCreateTime').text(createTime);
+                            
+                            // 作者信息：优先显示笔名，若笔名为空则显示作者昵称
+                            var authorDisplayName = novel.penName || (novel.author ? novel.author.nickname : '未知');
+                            $('#novelAuthor').text(authorDisplayName);
+                            
+                            // 分类信息
+                            var categoryNames = '未分类';
+                            if (novel.categories && novel.categories.length > 0) {
+                                categoryNames = novel.categories.map(function(cat) {
+                                    return cat.name;
+                                }).join('、');
+                            }
+                            $('#novelCategory').text(categoryNames);
+                            
+                            // 状态
+                            var statusText = '';
+                            var statusClass = '';
+                            if (novel.status === 0) {
+                                statusText = '连载中';
+                                statusClass = 'status-normal';
+                            } else if (novel.status === 1) {
+                                statusText = '已完结';
+                                statusClass = 'status-completed';
+                            } else if (novel.status === 2) {
+                                statusText = '草稿';
+                                statusClass = 'status-draft';
+                            } else if (novel.status === 3) {
+                                statusText = '锁定';
+                                statusClass = 'status-locked';
+                            }
+                            $('#novelStatus').html('<span class="status-tag ' + statusClass + '">' + statusText + '</span>');
+                            
+                            // 封面
+                            if (novel.coverImage) {
+                                $('#novelCover').attr('src', novel.coverImage);
+                            }
+                            
+                            // 更新编辑和添加章节链接
+                            $('#editBtn').attr('href', '/novel/edit/' + novel.id).toggle(novel.author && currentUser && (currentUser.id === novel.author.id || currentUser.role === 1 || currentUser.role === 2));
+                            $('#addChapterBtn').attr('href', '/chapter/create?novelId=' + novel.id).toggle(novel.author && currentUser && (currentUser.id === novel.author.id || currentUser.role === 1 || currentUser.role === 2));
+                            
+                            // 加载章节列表
+                            getChapters();
+                        } else {
+                            layer.msg('获取小说详情失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('获取小说详情请求失败:', error);
+                        layer.msg('获取小说详情失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 检查当前用户是否是作者
+            function checkAuthor() {
+                // 在getNovelDetail中已经处理
+            }
+            
+            // 获取章节列表
+            function getChapters() {
+                $.ajax({
+                    url: '/chapter/list/' + novelId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('获取章节列表成功:', res);
+                        if (res.code === 200 && res.data) {
+                            var chapters = res.data;
+                            $('#totalChapters').text(chapters.length);
+                            
+                            // 清空现有列表
+                            $('#chapterList').empty();
+                            
+                            if (chapters.length === 0) {
+                                $('#chapterList').append('<li class="chapter-item"><div class="chapter-title">暂无章节</div><div class="chapter-meta">-</div></li>');
+                                return;
+                            }
+                            
+                            // 按章节号排序
+                            chapters.sort((a, b) => a.sortOrder - b.sortOrder);
+                            
+                            chapters.forEach(function(chapter) {
+                                var chapterTime = new Date(chapter.createTime).toLocaleString('zh-CN', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                                var chapterHtml = `
+                                    <li class="chapter-item">
+                                        <div class="chapter-title">
+                                            <a href="/chapter/view/${chapter.id}">第${chapter.sortOrder}章 ${chapter.title}</a>
+                                            ${currentUser && (currentUser.id === window.novelAuthorId || currentUser.role === 1 || currentUser.role === 2) ?
+                                                `<a href="/chapter/create?id=${chapter.id}&novelId=${novelId}" class="layui-btn layui-btn-xs layui-btn-normal" style="margin-left: 10px;">编辑</a>`
+                                                : ''}
+                                        </div>
+                                        <div class="chapter-meta">
+                                            ${chapterTime} | 字数: ${chapter.wordCount}
+                                        </div>
+                                    </li>
+                                `;
+                                $('#chapterList').append(chapterHtml);
+                            });
+                        } else {
+                            layer.msg('获取章节列表失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('获取章节列表请求失败:', error);
+                        layer.msg('获取章节列表失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 点赞小说
+            $('#likeBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/like/toggle',
+                    type: 'POST',
+                    data: {targetType: 3, targetId: novelId},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.message, {icon: 1});
+                            // 更新点赞数
+                            getNovelDetail();
+                        } else {
+                            layer.msg(res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('点赞请求失败:', error);
+                        layer.msg('点赞失败', {icon: 2});
+                    }
+                });
+            });
+            
+            // 收藏小说
+            $('#favoriteBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/favorite/toggleGeneric',
+                    type: 'POST',
+                    data: {targetType: 3, targetId: novelId},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.message, {icon: 1});
+                            // 更新收藏数
+                            getNovelDetail();
+                        } else {
+                            layer.msg(res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('收藏请求失败:', error);
+                        layer.msg('收藏失败', {icon: 2});
+                    }
+                });
+            });
+            
+            // 分享按钮（暂未实现）
+            $('#shareBtn').click(function() {
+                layer.msg('分享功能开发中', {icon: 1});
+            });
+            
+            // 举报小说
+            $('#reportBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                // 弹出举报表单
+                layer.open({
+                    type: 1,
+                    title: '举报小说',
+                    area: ['500px', '400px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form id="reportForm">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报类型</label>
+                                    <div class="layui-input-block">
+                                        <select name="reportType" lay-verify="required" lay-filter="reportType">
+                                            <option value="">请选择举报类型</option>
+                                            <option value="1">违规内容</option>
+                                            <option value="2">垃圾广告</option>
+                                            <option value="3">色情低俗</option>
+                                            <option value="4">人身攻击</option>
+                                            <option value="5">侵犯版权</option>
+                                            <option value="6">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报描述</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="description" placeholder="请详细描述举报原因，有助于管理员快速处理"
+                                                  style="width: 100%; height: 150px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 14px; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="submit" class="layui-btn layui-btn-normal">提交举报</button>
+                                        <button type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">取消</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function(layero, index) {
+                        // 重新渲染表单元素
+                        layui.form.render();
+                        
+                        // 提交举报表单
+                        $('#reportForm').submit(function(e) {
+                            e.preventDefault();
+                            var reportType = $(this).find('select[name="reportType"]').val();
+                            var description = $(this).find('textarea[name="description"]').val();
+                            
+                            if (!reportType) {
+                                layer.msg('请选择举报类型', {icon: 2});
+                                return;
+                            }
+                            
+                            if (!description.trim()) {
+                                layer.msg('请输入举报描述', {icon: 2});
+                                return;
+                            }
+                            
+                            var reportData = {
+                                targetType: 3, // 3表示小说
+                                targetId: novelId,
+                                reportType: parseInt(reportType),
+                                description: description
+                            };
+                            
+                            $.ajax({
+                                url: '/admin/reports/create',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(reportData),
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('举报提交成功！管理员会尽快处理。', {icon: 1});
+                                        layer.close(index);
+                                    } else {
+                                        layer.msg('举报提交失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('举报请求失败:', error);
+                                    layer.msg('举报提交失败', {icon: 2});
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+            
+            // 显示/隐藏管理员封禁按钮
+            function updateAdminButtons() {
+                if (currentUser && (currentUser.role === 1 || currentUser.role === 2)) {
+                    $('#adminBanBtn').show();
+                } else {
+                    $('#adminBanBtn').hide();
+                }
+            }
+            
+            // 封禁小说
+            $('#adminBanBtn').click(function() {
+                if (!currentUser || (currentUser.role !== 1 && currentUser.role !== 2)) {
+                    layer.msg('您没有权限执行此操作', {icon: 2});
+                    return;
+                }
+                
+                layer.confirm('确定要封禁该小说吗？封禁后小说将不可见，但可以解禁。', {
+                    title: '封禁确认',
+                    btn: ['确定封禁', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/ban/' + novelId,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说已成功封禁', {icon: 1});
+                                // 刷新页面
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1500);
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('封禁请求失败:', error);
+                            layer.msg('封禁失败', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                }, function(index) {
+                    layer.close(index);
+                });
+            });
+            
+            // 初始化页面
+            getNovelDetail();
+            
+            // 更新管理员按钮显示
+            setTimeout(function() {
+                updateAdminButtons();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

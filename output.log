@@ -1,0 +1,142 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -----------------------< com.example:biyeshiji >------------------------
+[INFO] Building biyeshiji 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.2.5:run (default-cli) > test-compile @ biyeshiji >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ biyeshiji ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 22 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ biyeshiji ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ biyeshiji ---
+[INFO] skip non existing resourceDirectory d:\trae\onebyone\biyeshiji\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ biyeshiji ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] <<< spring-boot:3.2.5:run (default-cli) < test-compile @ biyeshiji <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.2.5:run (default-cli) @ biyeshiji ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.5)
+
+2025-12-15T10:40:07.115+08:00  INFO 20412 --- [biyeshiji] [           main] c.e.biyeshiji.BiyeshijiApplication       : Starting BiyeshijiApplication using Java 17.0.12 with PID 20412 (D:\trae\onebyone\biyeshiji\target\classes started by 锦依卫 in d:\trae\onebyone\biyeshiji)
+2025-12-15T10:40:07.117+08:00  INFO 20412 --- [biyeshiji] [           main] c.e.biyeshiji.BiyeshijiApplication       : No active profile set, falling back to 1 default profile: "default"
+2025-12-15T10:40:07.572+08:00  INFO 20412 --- [biyeshiji] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-15T10:40:07.644+08:00  INFO 20412 --- [biyeshiji] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 66 ms. Found 10 JPA repository interfaces.
+2025-12-15T10:40:08.086+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2025-12-15T10:40:08.088+08:00  INFO 20412 --- [biyeshiji] [           main] o.a.catalina.core.AprLifecycleListener   : Loaded Apache Tomcat Native library [2.0.8] using APR version [1.7.4].
+2025-12-15T10:40:08.092+08:00  INFO 20412 --- [biyeshiji] [           main] o.a.catalina.core.AprLifecycleListener   : OpenSSL successfully initialized [OpenSSL 3.0.14 4 Jun 2024]
+2025-12-15T10:40:08.099+08:00  INFO 20412 --- [biyeshiji] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-15T10:40:08.099+08:00  INFO 20412 --- [biyeshiji] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2025-12-15T10:40:08.150+08:00  INFO 20412 --- [biyeshiji] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-15T10:40:08.151+08:00  INFO 20412 --- [biyeshiji] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 999 ms
+2025-12-15T10:40:08.261+08:00  INFO 20412 --- [biyeshiji] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-15T10:40:08.299+08:00  INFO 20412 --- [biyeshiji] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2025-12-15T10:40:08.325+08:00  INFO 20412 --- [biyeshiji] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-15T10:40:08.466+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-15T10:40:08.483+08:00  INFO 20412 --- [biyeshiji] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-15T10:40:08.601+08:00  INFO 20412 --- [biyeshiji] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@7c5f29c6
+2025-12-15T10:40:08.602+08:00  INFO 20412 --- [biyeshiji] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-15T10:40:08.633+08:00  WARN 20412 --- [biyeshiji] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-15T10:40:09.302+08:00  INFO 20412 --- [biyeshiji] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: alter table category modify column is_active tinyint default 1
+Hibernate: alter table category modify column is_deleted tinyint default 0
+Hibernate: alter table chapter modify column is_free tinyint default 1
+Hibernate: alter table comment modify column is_deleted tinyint default 0
+Hibernate: alter table comment modify column status tinyint default 0 not null
+Hibernate: alter table novel modify column is_deleted tinyint default 0
+Hibernate: alter table novel modify column status tinyint default 0
+Hibernate: alter table post modify column is_deleted tinyint default 0
+Hibernate: alter table post modify column is_locked tinyint default 0
+Hibernate: alter table post modify column is_top tinyint default 0
+Hibernate: alter table post modify column status tinyint default 0 not null
+Hibernate: alter table user modify column role tinyint default 0 not null
+Hibernate: alter table user modify column status tinyint default 0 not null
+2025-12-15T10:40:09.499+08:00  INFO 20412 --- [biyeshiji] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-15T10:40:09.716+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+Hibernate: select count(*) from category c1_0
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order from category c1_0 where c1_0.name=?
+Hibernate: select count(*) from user u1_0
+Hibernate: select count(*) from post p1_0
+2025-12-15T10:40:10.336+08:00  WARN 20412 --- [biyeshiji] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-12-15T10:40:10.395+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.b.a.w.s.WelcomePageHandlerMapping    : Adding welcome page template: index
+2025-12-15T10:40:10.539+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@3c6c7782, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@7aaf260f, org.springframework.security.web.context.SecurityContextHolderFilter@7c732cc2, org.springframework.security.web.header.HeaderWriterFilter@7a2c95e2, org.springframework.web.filter.CorsFilter@739e76e6, org.springframework.security.web.authentication.logout.LogoutFilter@69f90fc4, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter@5ae7e5db, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6f535d77, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@19097fa5, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@789a9354, org.springframework.security.web.access.ExceptionTranslationFilter@180f49c5, org.springframework.security.web.access.intercept.AuthorizationFilter@782b12c9]
+2025-12-15T10:40:10.693+08:00  INFO 20412 --- [biyeshiji] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path ''
+2025-12-15T10:40:10.699+08:00  INFO 20412 --- [biyeshiji] [           main] c.e.biyeshiji.BiyeshijiApplication       : Started BiyeshijiApplication in 3.794 seconds (process running for 4.02)
+2025-12-15T10:40:33.636+08:00  INFO 20412 --- [biyeshiji] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-15T10:40:33.636+08:00  INFO 20412 --- [biyeshiji] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-15T10:40:33.636+08:00  INFO 20412 --- [biyeshiji] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 0 ms
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+Hibernate: update novel set author_id=?,category_id=?,chapter_count=?,cover_image=?,create_time=?,description=?,favorite_count=?,is_deleted=?,like_count=?,pen_name=?,status=?,tags=?,title=?,update_time=?,view_count=? where id=?
+Hibernate: select n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=?
+Hibernate: select c1_0.id,c1_0.content,c1_0.create_time,c1_0.is_free,c1_0.novel_id,c1_0.sort_order,c1_0.title,c1_0.update_time,c1_0.view_count,c1_0.word_count from chapter c1_0 where c1_0.novel_id=? order by c1_0.sort_order
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.id=? and n1_0.is_deleted=0
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+当前认证用户名: anonymousUser
+认证类型: org.springframework.security.authentication.AnonymousAuthenticationToken
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select u1_0.id,u1_0.nickname,u1_0.role,u1_0.status,u1_0.userpassword,u1_0.username from user u1_0 where u1_0.username=?
+Hibernate: select distinct n1_0.id,a1_0.id,a1_0.nickname,a1_0.role,a1_0.status,a1_0.userpassword,a1_0.username,n1_0.author_id,c1_0.id,c1_0.create_time,c1_0.description,c1_0.is_active,c1_0.is_deleted,c1_0.name,c1_0.parent_id,c1_0.sort_order,n1_0.category_id,n1_0.chapter_count,n1_0.cover_image,n1_0.create_time,n1_0.description,n1_0.favorite_count,n1_0.is_deleted,n1_0.like_count,n1_0.pen_name,n1_0.status,n1_0.tags,n1_0.title,n1_0.update_time,n1_0.view_count from novel n1_0 left join user a1_0 on a1_0.id=n1_0.author_id left join category c1_0 on c1_0.id=n1_0.category_id where n1_0.is_deleted=0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10:29 min
+[INFO] Finished at: 2025-12-15T10:50:34+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.2.5:run (default-cli) on project biyeshiji: Process terminated with exit code: 1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
+
+d:\trae\onebyone\biyeshiji>

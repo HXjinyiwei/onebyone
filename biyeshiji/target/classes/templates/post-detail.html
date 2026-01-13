@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>帖子详情 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item layui-this"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <!-- 返回按钮 -->
+        <div class="back-btn" style="margin-bottom: 20px;">
+            <a href="/post/list" class="layui-btn layui-btn-primary"><i class="layui-icon layui-icon-left"></i> 返回帖子列表</a>
+        </div>
+        
+        <!-- 帖子内容 -->
+        <div class="post-content">
+            <h1 class="post-title" id="postTitle">欢迎来到小说发布与讨论论坛</h1>
+            <div class="post-meta">
+                <span>作者：<span id="postAuthor">管理员</span></span>
+                <span>分类：<span id="postCategory">公告</span></span>
+                <span>发布时间：<span id="postCreateTime">2024-01-01 10:00:00</span></span>
+                <span>阅读：<span id="postViewCount">100</span></span>
+                <span>点赞：<span id="postLikeCount">20</span></span>
+                <span>评论：<span id="postCommentCount">15</span></span>
+                <span class="status-tag status-normal" id="postStatus">正常</span>
+            </div>
+            <div class="post-body" id="postContent">
+                <p>欢迎来到小说发布与讨论论坛！这里是一个专门为小说爱好者打造的交流平台，你可以在这里发布你的小说作品，与其他读者交流讨论，分享阅读心得和写作经验。</p>
+                <p>论坛提供了丰富的功能：</p>
+                <ul>
+                    <li>发布和浏览小说作品</li>
+                    <li>参与小说讨论和评论</li>
+                    <li>关注喜欢的作者和作品</li>
+                    <li>参加各种小说相关的活动</li>
+                </ul>
+                <p>我们希望这个论坛能够成为小说爱好者的乐园，让大家在这里找到志同道合的朋友，共同进步，共同成长。</p>
+                <p>最后，祝大家在论坛里玩得开心！</p>
+            </div>
+        </div>
+        
+        <!-- 帖子操作 -->
+        <div class="post-actions">
+            <button class="layui-btn layui-btn-primary action-btn" id="likeBtn">
+                <i class="layui-icon layui-icon-praise"></i> 点赞 (<span id="likeCountDisplay">0</span>)
+            </button>
+            <button class="layui-btn layui-btn-primary action-btn" id="favoriteBtn">
+                <i class="layui-icon layui-icon-collect"></i> 收藏 (<span id="favoriteCountDisplay">0</span>)
+            </button>
+            <button class="layui-btn layui-btn-primary action-btn" id="reportBtn">
+                <i class="layui-icon layui-icon-report"></i> 举报
+            </button>
+            <button class="layui-btn layui-btn-warm action-btn" id="adminBanBtn" style="display: none;">
+                <i class="layui-icon layui-icon-lock"></i> 封禁
+            </button>
+        </div>
+        
+        <!-- 评论区域 -->
+        <div class="comments-section">
+            <h2 class="comments-title">评论列表 (<span id="totalComments">15</span>)</h2>
+            
+            <!-- 评论表单 - 贴吧风格 -->
+            <div class="comment-form tieba-style">
+                <h3><i class="layui-icon layui-icon-reply-fill" style="margin-right: 5px;"></i>发表评论</h3>
+                <div id="replyInfo" class="reply-info tieba-style" style="display: none;">
+                    <span><i class="layui-icon layui-icon-reply" style="margin-right: 5px;"></i>回复 <strong id="replyTarget"></strong></span>
+                    <a href="javascript:;" id="cancelReply" class="cancel-reply-btn tieba-style"><i class="layui-icon layui-icon-close"></i> 取消回复</a>
+                </div>
+                <form id="commentForm">
+                    <input type="hidden" id="parentId" name="parentId" value="">
+                    <div class="layui-form-item">
+                        <textarea name="content" placeholder="请输入评论内容...（支持Markdown格式）" class="comment-textarea tieba-style"></textarea>
+                    </div>
+                    <div class="layui-form-item form-actions">
+                        <button type="submit" class="layui-btn layui-btn-normal"><i class="layui-icon layui-icon-release"></i> 发表评论</button>
+                        <div class="form-tips">
+                            <i class="layui-icon layui-icon-tips"></i> 文明发言，遵守社区规范
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- 评论列表 -->
+            <ul class="comment-list" id="commentList">
+                <!-- 评论将通过JavaScript动态加载 -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.jquery;
+            
+            // 获取URL中的帖子ID
+            var postId = window.location.pathname.split('/')[2];
+            var currentUser = null;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        currentUser = res.data;
+                        // 如果是管理员或高级管理员，显示管理后台菜单和封禁按钮
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                            $('#adminBanBtn').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 获取帖子详情
+            function getPostDetail() {
+                $.ajax({
+                    url: '/post/detail/' + postId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('获取帖子详情成功:', res);
+                        if (res.code === 200 && res.data) {
+                            var post = res.data;
+                            $('#postTitle').text(post.title);
+                            $('#postContent').html(post.content.replace(/\n/g, '<br>'));
+                            $('#postViewCount').text(post.viewCount);
+                            $('#postLikeCount').text(post.likeCount);
+                            $('#postCommentCount').text(post.commentCount);
+                            $('#likeCountDisplay').text(post.likeCount);
+                            $('#favoriteCountDisplay').text(post.favoriteCount);
+                            
+                            // 格式化时间
+                            var createTime = new Date(post.createTime).toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                            $('#postCreateTime').text(createTime);
+                            
+                            // 直接使用帖子对象中的作者和分类信息
+                            if (post.author) {
+                                $('#postAuthor').text(post.author.nickname);
+                            }
+                            
+                            if (post.category) {
+                                $('#postCategory').text(post.category.name);
+                            } else {
+                                $('#postCategory').text('未分类');
+                            }
+                        } else {
+                            layer.msg('获取帖子详情失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('获取帖子详情请求失败:', error);
+                        layer.msg('获取帖子详情失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 获取评论列表
+            function getComments() {
+                $.ajax({
+                    url: '/comment/post/' + postId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('获取评论列表成功:', res);
+                        if (res.code === 200 && res.data) {
+                            var comments = res.data;
+                            $('#totalComments').text(comments.length);
+                            
+                            // 清空现有评论列表
+                            $('#commentList').empty();
+                            
+                            // 构建评论树
+                            var commentTree = buildCommentTree(comments);
+                            
+                            // 存储评论树数据到全局变量中，用于后续查找
+                            window.commentTreeData = commentTree;
+                            
+                            // 渲染评论树
+                            renderCommentTree(commentTree, $('#commentList'), 0, '');
+                        } else {
+                            layer.msg('获取评论列表失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('获取评论列表请求失败:', error);
+                        layer.msg('获取评论列表失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 构建评论树
+            function buildCommentTree(comments) {
+                var map = {};
+                var roots = [];
+                // 创建映射
+                comments.forEach(function(comment) {
+                    map[comment.id] = { ...comment, children: [] };
+                });
+                // 构建树
+                comments.forEach(function(comment) {
+                    var node = map[comment.id];
+                    if (comment.parentId && map[comment.parentId]) {
+                        map[comment.parentId].children.push(node);
+                    } else {
+                        roots.push(node);
+                    }
+                });
+                // 按楼层号排序根评论
+                roots.sort((a, b) => a.floorNumber - b.floorNumber);
+                // 递归排序子评论（按创建时间）
+                function sortChildren(node) {
+                    node.children.sort((a, b) => new Date(a.createTime) - new Date(b.createTime));
+                    node.children.forEach(sortChildren);
+                }
+                roots.forEach(sortChildren);
+                return roots;
+            }
+            
+            // 渲染评论树 - 贴吧示例样式（无头像版）带回复框和折叠功能
+            function renderCommentTree(nodes, container, depth, parentAuthorName) {
+                nodes.forEach(function(node, index) {
+                    // 格式化时间
+                    var commentTime = new Date(node.createTime).toLocaleString('zh-CN', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    // 计算相对时间
+                    var now = new Date();
+                    var commentDate = new Date(node.createTime);
+                    var timeDiff = now - commentDate;
+                    var relativeTime = '';
+                    
+                    if (timeDiff < 60000) { // 小于1分钟
+                        relativeTime = '刚刚';
+                    } else if (timeDiff < 3600000) { // 小于1小时
+                        var minutes = Math.floor(timeDiff / 60000);
+                        relativeTime = minutes + '分钟前';
+                    } else if (timeDiff < 86400000) { // 小于1天
+                        var hours = Math.floor(timeDiff / 3600000);
+                        relativeTime = hours + '小时前';
+                    } else if (timeDiff < 604800000) { // 小于1周
+                        var days = Math.floor(timeDiff / 86400000);
+                        relativeTime = days + '天前';
+                    } else {
+                        relativeTime = commentTime;
+                    }
+                    
+                    var authorName = node.author ? node.author.nickname : '未知用户';
+                    
+                    // 判断是否为楼中楼（depth > 0）
+                    var isNested = depth > 0;
+                    
+                    // 构建回复提示 - 如果是楼中楼回复，显示"回复xxx："
+                    var replyHint = '';
+                    if (depth > 0 && parentAuthorName) {
+                        replyHint = `<span style="font-size: 12px; color: #06c; margin-right: 5px; font-weight: 500;">回复 ${parentAuthorName}：</span>`;
+                    }
+                    
+                    // 构建删除按钮
+                    var deleteBtn = '';
+                    if (currentUser && (currentUser.id === node.authorId || currentUser.role === 1 || currentUser.role === 2)) {
+                        deleteBtn = `<a href="javascript:;" class="tieba-reply-btn" onclick="deleteComment(${node.id})" style="margin-left: 10px; color: #f00;">删除</a>`;
+                    }
+                    
+                    // 使用贴吧示例样式
+                    var commentHtml = `
+                        <li class="tieba-lzl-item" data-comment-id="${node.id}">
+                            <div class="tieba-lzl-content">
+                                <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                    <a href="javascript:;" class="tieba-username">${authorName}</a>
+                                    <span class="tieba-floor-marker">#${node.floorNumber}</span>
+                                    <span class="tieba-reply-time" style="margin-left: auto; font-size: 12px; color: #999;">${relativeTime}</span>
+                                </div>
+                                <div class="tieba-reply-text">
+                                    ${replyHint}${formatCommentContent(node.content)}
+                                </div>
+                                <div class="tieba-reply-actions">
+                                    <span class="tieba-reply-time">${commentTime}</span>
+                                    <a href="javascript:;" class="tieba-reply-btn" onclick="likeComment(${node.id})">
+                                        <i class="layui-icon layui-icon-praise" style="font-size: 12px; margin-right: 3px;"></i> 点赞 (${node.likeCount})
+                                    </a>
+                                    <a href="javascript:;" class="tieba-reply-btn" onclick="showReplyBox(${node.id}, '${authorName.replace(/'/g, "\\'")}')">
+                                        <i class="layui-icon layui-icon-reply-fill" style="font-size: 12px; margin-right: 3px;"></i> 回复
+                                    </a>
+                                    ${deleteBtn}
+                                </div>
+                            </div>
+                            
+                            <!-- 回复框 -->
+                            <div class="comment-reply-box" id="replyBox-${node.id}">
+                                <div class="reply-box-header">
+                                    <div class="reply-box-title">
+                                        <i class="layui-icon layui-icon-reply-fill"></i> 回复评论
+                                    </div>
+                                    <button class="reply-box-close" onclick="hideReplyBox(${node.id})">
+                                        <i class="layui-icon layui-icon-close"></i> 关闭
+                                    </button>
+                                </div>
+                                <div class="reply-target-info" id="replyTargetInfo-${node.id}" style="display: none;">
+                                    回复 <strong id="replyTargetName-${node.id}"></strong>
+                                </div>
+                                <textarea class="reply-textarea" id="replyText-${node.id}" placeholder="请输入回复内容..."></textarea>
+                                <div class="reply-buttons">
+                                    <button class="reply-cancel-btn" onclick="hideReplyBox(${node.id})">取消</button>
+                                    <button class="reply-submit-btn" onclick="submitReply(${node.id})">发表回复</button>
+                                </div>
+                            </div>
+                    `;
+                    
+                    // 如果有子评论（楼中楼回复），添加嵌套区域和折叠功能
+                    if (node.children.length > 0) {
+                        var maxVisibleReplies = 2; // 默认显示2条楼中楼回复
+                        var hasHiddenReplies = node.children.length > maxVisibleReplies;
+                        var visibleReplies = hasHiddenReplies ? node.children.slice(0, maxVisibleReplies) : node.children;
+                        var hiddenReplies = hasHiddenReplies ? node.children.slice(maxVisibleReplies) : [];
+                        
+                        commentHtml += `<div class="tieba-hidden-replies">`;
+                        commentHtml += `<ul class="tieba-lzl-list" style="margin: 0; padding: 0;">`;
+                        container.append(commentHtml);
+                        
+                        // 递归渲染可见的楼中楼回复（第一层），但不渲染它们的子回复（第二层及以上）
+                        var childContainer = container.find('.tieba-lzl-list').last();
+                        
+                        // 渲染可见的楼中楼回复，但不渲染它们的子回复
+                        visibleReplies.forEach(function(childNode, childIndex) {
+                            // 格式化时间
+                            var childCommentTime = new Date(childNode.createTime).toLocaleString('zh-CN', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                            
+                            // 计算相对时间
+                            var now = new Date();
+                            var childCommentDate = new Date(childNode.createTime);
+                            var childTimeDiff = now - childCommentDate;
+                            var childRelativeTime = '';
+                            
+                            if (childTimeDiff < 60000) {
+                                childRelativeTime = '刚刚';
+                            } else if (childTimeDiff < 3600000) {
+                                var minutes = Math.floor(childTimeDiff / 60000);
+                                childRelativeTime = minutes + '分钟前';
+                            } else if (childTimeDiff < 86400000) {
+                                var hours = Math.floor(childTimeDiff / 3600000);
+                                childRelativeTime = hours + '小时前';
+                            } else if (childTimeDiff < 604800000) {
+                                var days = Math.floor(childTimeDiff / 86400000);
+                                childRelativeTime = days + '天前';
+                            } else {
+                                childRelativeTime = childCommentTime;
+                            }
+                            
+                            var childAuthorName = childNode.author ? childNode.author.nickname : '未知用户';
+                            
+                            // 构建回复提示 - 显示"回复xxx："
+                            var childReplyHint = '';
+                            if (depth >= 0 && authorName) {
+                                childReplyHint = `<span style="font-size: 12px; color: #06c; margin-right: 5px; font-weight: 500;">回复 ${authorName}：</span>`;
+                            }
+                            
+                            // 构建删除按钮
+                            var childDeleteBtn = '';
+                            if (currentUser && (currentUser.id === childNode.authorId || currentUser.role === 1 || currentUser.role === 2)) {
+                                childDeleteBtn = `<a href="javascript:;" class="tieba-reply-btn" onclick="deleteComment(${childNode.id})" style="margin-left: 10px; color: #f00;">删除</a>`;
+                            }
+                            
+                            var childCommentHtml = `
+                                <li class="tieba-lzl-item" data-comment-id="${childNode.id}">
+                                    <div class="tieba-lzl-content">
+                                        <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                            <a href="javascript:;" class="tieba-username">${childAuthorName}</a>
+                                            <span class="tieba-floor-marker">#${childNode.floorNumber}</span>
+                                            <span class="tieba-reply-time" style="margin-left: auto; font-size: 12px; color: #999;">${childRelativeTime}</span>
+                                        </div>
+                                        <div class="tieba-reply-text">
+                                            ${childReplyHint}${formatCommentContent(childNode.content)}
+                                        </div>
+                                        <div class="tieba-reply-actions">
+                                            <span class="tieba-reply-time">${childCommentTime}</span>
+                                            <a href="javascript:;" class="tieba-reply-btn" onclick="likeComment(${childNode.id})">
+                                                <i class="layui-icon layui-icon-praise" style="font-size: 12px; margin-right: 3px;"></i> 点赞 (${childNode.likeCount})
+                                            </a>
+                                            <a href="javascript:;" class="tieba-reply-btn" onclick="showReplyBox(${childNode.id}, '${childAuthorName.replace(/'/g, "\\'")}')">
+                                                <i class="layui-icon layui-icon-reply-fill" style="font-size: 12px; margin-right: 3px;"></i> 回复
+                                            </a>
+                                            ${childDeleteBtn}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 回复框 -->
+                                    <div class="comment-reply-box" id="replyBox-${childNode.id}">
+                                        <div class="reply-box-header">
+                                            <div class="reply-box-title">
+                                                <i class="layui-icon layui-icon-reply-fill"></i> 回复评论
+                                            </div>
+                                            <button class="reply-box-close" onclick="hideReplyBox(${childNode.id})">
+                                                <i class="layui-icon layui-icon-close"></i> 关闭
+                                            </button>
+                                        </div>
+                                        <div class="reply-target-info" id="replyTargetInfo-${childNode.id}" style="display: none;">
+                                            回复 <strong id="replyTargetName-${childNode.id}"></strong>
+                                        </div>
+                                        <textarea class="reply-textarea" id="replyText-${childNode.id}" placeholder="请输入回复内容..."></textarea>
+                                        <div class="reply-buttons">
+                                            <button class="reply-cancel-btn" onclick="hideReplyBox(${childNode.id})">取消</button>
+                                            <button class="reply-submit-btn" onclick="submitReply(${childNode.id})">发表回复</button>
+                                        </div>
+                                    </div>
+                                </li>
+                            `;
+                            childContainer.append(childCommentHtml);
+                            
+                            // 注意：这里不渲染子回复（第二层及以上），只有在展开后才渲染
+                        });
+                        
+                        // 如果有隐藏的回复，添加折叠区域
+                        if (hasHiddenReplies) {
+                            var hiddenRepliesHtml = `
+                                <div class="hidden-replies" id="hiddenReplies-${node.id}">
+                                    <ul class="tieba-lzl-list" style="margin: 0; padding: 0;">
+                            `;
+                            childContainer.append(hiddenRepliesHtml);
+                            
+                            // 渲染隐藏的楼中楼回复，但不渲染它们的子回复
+                            var hiddenContainer = childContainer.find('.tieba-lzl-list').last();
+                            
+                            hiddenReplies.forEach(function(childNode, childIndex) {
+                                // 格式化时间
+                                var childCommentTime = new Date(childNode.createTime).toLocaleString('zh-CN', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                });
+                                
+                                // 计算相对时间
+                                var now = new Date();
+                                var childCommentDate = new Date(childNode.createTime);
+                                var childTimeDiff = now - childCommentDate;
+                                var childRelativeTime = '';
+                                
+                                if (childTimeDiff < 60000) {
+                                    childRelativeTime = '刚刚';
+                                } else if (childTimeDiff < 3600000) {
+                                    var minutes = Math.floor(childTimeDiff / 60000);
+                                    childRelativeTime = minutes + '分钟前';
+                                } else if (childTimeDiff < 86400000) {
+                                    var hours = Math.floor(childTimeDiff / 3600000);
+                                    childRelativeTime = hours + '小时前';
+                                } else if (childTimeDiff < 604800000) {
+                                    var days = Math.floor(childTimeDiff / 86400000);
+                                    childRelativeTime = days + '天前';
+                                } else {
+                                    childRelativeTime = childCommentTime;
+                                }
+                                
+                                var childAuthorName = childNode.author ? childNode.author.nickname : '未知用户';
+                                
+                                // 构建回复提示 - 显示"回复xxx："
+                                var childReplyHint = '';
+                                if (depth >= 0 && authorName) {
+                                    childReplyHint = `<span style="font-size: 12px; color: #06c; margin-right: 5px; font-weight: 500;">回复 ${authorName}：</span>`;
+                                }
+                                
+                                // 构建删除按钮
+                                var childDeleteBtn = '';
+                                if (currentUser && (currentUser.id === childNode.authorId || currentUser.role === 1 || currentUser.role === 2)) {
+                                    childDeleteBtn = `<a href="javascript:;" class="tieba-reply-btn" onclick="deleteComment(${childNode.id})" style="margin-left: 10px; color: #f00;">删除</a>`;
+                                }
+                                
+                                var childCommentHtml = `
+                                    <li class="tieba-lzl-item" data-comment-id="${childNode.id}">
+                                        <div class="tieba-lzl-content">
+                                            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                                                <a href="javascript:;" class="tieba-username">${childAuthorName}</a>
+                                                <span class="tieba-floor-marker">#${childNode.floorNumber}</span>
+                                                <span class="tieba-reply-time" style="margin-left: auto; font-size: 12px; color: #999;">${childRelativeTime}</span>
+                                            </div>
+                                            <div class="tieba-reply-text">
+                                                ${childReplyHint}${formatCommentContent(childNode.content)}
+                                            </div>
+                                            <div class="tieba-reply-actions">
+                                                <span class="tieba-reply-time">${childCommentTime}</span>
+                                                <a href="javascript:;" class="tieba-reply-btn" onclick="likeComment(${childNode.id})">
+                                                    <i class="layui-icon layui-icon-praise" style="font-size: 12px; margin-right: 3px;"></i> 点赞 (${childNode.likeCount})
+                                                </a>
+                                                <a href="javascript:;" class="tieba-reply-btn" onclick="showReplyBox(${childNode.id}, '${childAuthorName.replace(/'/g, "\\'")}')">
+                                                    <i class="layui-icon layui-icon-reply-fill" style="font-size: 12px; margin-right: 3px;"></i> 回复
+                                                </a>
+                                                ${childDeleteBtn}
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- 回复框 -->
+                                        <div class="comment-reply-box" id="replyBox-${childNode.id}">
+                                            <div class="reply-box-header">
+                                                <div class="reply-box-title">
+                                                    <i class="layui-icon layui-icon-reply-fill"></i> 回复评论
+                                                </div>
+                                                <button class="reply-box-close" onclick="hideReplyBox(${childNode.id})">
+                                                    <i class="layui-icon layui-icon-close"></i> 关闭
+                                                </button>
+                                            </div>
+                                            <div class="reply-target-info" id="replyTargetInfo-${childNode.id}" style="display: none;">
+                                                回复 <strong id="replyTargetName-${childNode.id}"></strong>
+                                            </div>
+                                            <textarea class="reply-textarea" id="replyText-${childNode.id}" placeholder="请输入回复内容..."></textarea>
+                                            <div class="reply-buttons">
+                                                <button class="reply-cancel-btn" onclick="hideReplyBox(${childNode.id})">取消</button>
+                                                <button class="reply-submit-btn" onclick="submitReply(${childNode.id})">发表回复</button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                `;
+                                hiddenContainer.append(childCommentHtml);
+                            });
+                            
+                            childContainer.append(`</ul></div>`);
+                            
+                            // 添加查看更多按钮
+                            var toggleButtonHtml = `
+                                <div class="view-more-replies">
+                                    <button class="view-more-btn" onclick="toggleHiddenReplies(${node.id})">
+                                        <i class="layui-icon layui-icon-down"></i>
+                                        查看全部 ${node.children.length} 条回复
+                                    </button>
+                                </div>
+                            `;
+                            childContainer.append(toggleButtonHtml);
+                        }
+                        
+                        container.append(`</ul></div></li>`);
+                    } else {
+                        commentHtml += `</li>`;
+                        container.append(commentHtml);
+                    }
+                });
+            }
+            
+            // 格式化评论内容
+            function formatCommentContent(content) {
+                // 替换换行符为<br>
+                var formatted = content.replace(/\n/g, '<br>');
+                // 简单处理@用户
+                formatted = formatted.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+                return formatted;
+            }
+            
+            // 点赞帖子
+            $('#likeBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/like/toggle',
+                    type: 'POST',
+                    data: {targetType: 1, targetId: postId},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.message, {icon: 1});
+                            // 更新点赞数
+                            getPostDetail();
+                        } else {
+                            layer.msg(res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('点赞请求失败:', error);
+                        layer.msg('点赞失败', {icon: 2});
+                    }
+                });
+            });
+            
+            // 收藏帖子
+            $('#favoriteBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/favorite/toggle',
+                    type: 'POST',
+                    data: {postId: postId},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.message, {icon: 1});
+                            // 更新收藏数
+                            getPostDetail();
+                        } else {
+                            layer.msg(res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('收藏请求失败:', error);
+                        layer.msg('收藏失败', {icon: 2});
+                    }
+                });
+            });
+            
+            // 举报帖子
+            $('#reportBtn').click(function() {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                // 弹出举报表单
+                layer.open({
+                    type: 1,
+                    title: '举报帖子',
+                    area: ['500px', '400px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form id="reportForm">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报类型</label>
+                                    <div class="layui-input-block">
+                                        <select name="reportType" lay-verify="required" lay-filter="reportType">
+                                            <option value="">请选择举报类型</option>
+                                            <option value="1">违规内容</option>
+                                            <option value="2">垃圾广告</option>
+                                            <option value="3">色情低俗</option>
+                                            <option value="4">人身攻击</option>
+                                            <option value="5">侵犯版权</option>
+                                            <option value="6">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报描述</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="description" placeholder="请详细描述举报原因，有助于管理员快速处理"
+                                                  style="width: 100%; height: 150px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 14px; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="submit" class="layui-btn layui-btn-normal">提交举报</button>
+                                        <button type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">取消</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function(layero, index) {
+                        // 重新渲染表单元素
+                        layui.form.render();
+                        
+                        // 提交举报表单
+                        $('#reportForm').submit(function(e) {
+                            e.preventDefault();
+                            var reportType = $(this).find('select[name="reportType"]').val();
+                            var description = $(this).find('textarea[name="description"]').val();
+                            
+                            if (!reportType) {
+                                layer.msg('请选择举报类型', {icon: 2});
+                                return;
+                            }
+                            
+                            if (!description.trim()) {
+                                layer.msg('请输入举报描述', {icon: 2});
+                                return;
+                            }
+                            
+                            var reportData = {
+                                targetType: 1, // 1表示帖子
+                                targetId: postId,
+                                reportType: parseInt(reportType),
+                                description: description
+                            };
+                            
+                            $.ajax({
+                                url: '/admin/reports/create',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(reportData),
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('举报提交成功！管理员会尽快处理。', {icon: 1});
+                                        layer.close(index);
+                                    } else {
+                                        layer.msg('举报提交失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('举报请求失败:', error);
+                                    layer.msg('举报提交失败', {icon: 2});
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+            
+            // 评论提交
+            $('#commentForm').submit(function(e) {
+                e.preventDefault();
+                var content = $(this).find('textarea[name="content"]').val();
+                if (!content.trim()) {
+                    layer.msg('请输入评论内容！', {icon: 2});
+                    return;
+                }
+                
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                var parentId = $('#parentId').val();
+                var data = {
+                    content: content,
+                    postId: postId
+                };
+                if (parentId) {
+                    data.parentId = parentId;
+                }
+                
+                $.ajax({
+                    url: '/comment/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('评论发表成功！', {icon: 1});
+                            // 清空评论表单
+                            $('#commentForm textarea[name="content"]').val('');
+                            // 重置回复状态
+                            cancelReply();
+                            // 重新加载评论列表
+                            $('#commentList').empty();
+                            getComments();
+                            // 更新帖子评论数
+                            getPostDetail();
+                        } else {
+                            layer.msg('评论发表失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('发表评论请求失败:', error);
+                        layer.msg('评论发表失败', {icon: 2});
+                    }
+                });
+            });
+            
+            // 显示回复框
+            window.showReplyBox = function(commentId, authorName) {
+                // 隐藏所有其他回复框
+                $('.comment-reply-box').removeClass('active');
+                $('.reply-target-info').hide();
+                
+                // 显示当前回复框
+                var replyBox = $('#replyBox-' + commentId);
+                var replyTargetInfo = $('#replyTargetInfo-' + commentId);
+                var replyTargetName = $('#replyTargetName-' + commentId);
+                
+                replyBox.addClass('active');
+                replyTargetInfo.show();
+                replyTargetName.text(authorName);
+                
+                // 聚焦到回复框
+                $('#replyText-' + commentId).focus();
+                
+                // 滚动到回复框位置
+                replyBox[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+
+            // 隐藏回复框
+            window.hideReplyBox = function(commentId) {
+                $('#replyBox-' + commentId).removeClass('active');
+                $('#replyTargetInfo-' + commentId).hide();
+                $('#replyText-' + commentId).val('');
+            };
+
+            // 切换隐藏的回复
+            window.toggleHiddenReplies = function(commentId) {
+                var hiddenReplies = $('#hiddenReplies-' + commentId);
+                var toggleButton = hiddenReplies.siblings('.view-more-replies').find('.view-more-btn');
+                var parentComment = hiddenReplies.closest('.tieba-lzl-item');
+                var parentContainer = parentComment.find('.tieba-hidden-replies > .tieba-lzl-list');
+                
+                if (hiddenReplies.hasClass('visible')) {
+                    // 隐藏回复 - 移除所有楼中楼回复的子回复
+                    parentContainer.find('.tieba-lzl-item').each(function() {
+                        var replyId = $(this).data('comment-id');
+                        // 移除该回复的子回复区域
+                        $(this).find('.tieba-hidden-replies').remove();
+                    });
+                    
+                    hiddenReplies.removeClass('visible').addClass('collapse-transition collapsed');
+                    toggleButton.html('<i class="layui-icon layui-icon-down"></i> 查看全部 ' + (parentContainer.find('.tieba-lzl-item').length) + ' 条回复');
+                    
+                    // 等待动画完成后移除过渡类
+                    setTimeout(function() {
+                        hiddenReplies.removeClass('collapse-transition collapsed');
+                    }, 300);
+                } else {
+                    // 显示回复 - 渲染所有楼中楼回复的子回复
+                    hiddenReplies.addClass('visible collapse-transition');
+                    
+                    // 为所有楼中楼回复渲染子回复
+                    parentContainer.find('.tieba-lzl-item').each(function() {
+                        var replyId = $(this).data('comment-id');
+                        var replyNode = findCommentNodeById(replyId);
+                        if (replyNode && replyNode.children && replyNode.children.length > 0) {
+                            // 创建子回复容器
+                            var childContainer = $('<div class="tieba-hidden-replies"><ul class="tieba-lzl-list" style="margin: 0; padding: 0;"></ul></div>');
+                            $(this).append(childContainer);
+                            
+                            // 渲染子回复
+                            var authorName = replyNode.author ? replyNode.author.nickname : '未知用户';
+                            renderCommentTree(replyNode.children, childContainer.find('.tieba-lzl-list'), 2, authorName);
+                        }
+                    });
+                    
+                    // 触发重排以获取正确的高度
+                    hiddenReplies[0].offsetHeight;
+                    hiddenReplies.addClass('expanded');
+                    toggleButton.html('<i class="layui-icon layui-icon-up"></i> 收起回复');
+                    
+                    // 等待动画完成后移除过渡类
+                    setTimeout(function() {
+                        hiddenReplies.removeClass('collapse-transition expanded');
+                    }, 300);
+                }
+            };
+            
+            // 辅助函数：根据ID查找评论节点
+            function findCommentNodeById(commentId) {
+                // 这个函数需要访问评论树数据，我们需要存储评论树数据
+                // 由于评论树数据在局部作用域中，我们需要将其存储到全局变量中
+                if (window.commentTreeData) {
+                    return findNodeInTree(window.commentTreeData, commentId);
+                }
+                return null;
+            }
+            
+            function findNodeInTree(nodes, commentId) {
+                for (var i = 0; i < nodes.length; i++) {
+                    if (nodes[i].id === commentId) {
+                        return nodes[i];
+                    }
+                    if (nodes[i].children && nodes[i].children.length > 0) {
+                        var found = findNodeInTree(nodes[i].children, commentId);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            // 提交回复
+            window.submitReply = function(commentId) {
+                var content = $('#replyText-' + commentId).val();
+                if (!content.trim()) {
+                    layer.msg('请输入回复内容！', {icon: 2});
+                    return;
+                }
+                
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                var data = {
+                    content: content,
+                    postId: postId,
+                    parentId: commentId
+                };
+                
+                $.ajax({
+                    url: '/comment/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('回复发表成功！', {icon: 1});
+                            // 清空回复框
+                            $('#replyText-' + commentId).val('');
+                            // 隐藏回复框
+                            hideReplyBox(commentId);
+                            // 重新加载评论列表
+                            $('#commentList').empty();
+                            getComments();
+                            // 更新帖子评论数
+                            getPostDetail();
+                        } else {
+                            layer.msg('回复发表失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('发表回复请求失败:', error);
+                        layer.msg('回复发表失败', {icon: 2});
+                    }
+                });
+            };
+
+            // 回复评论（旧版，保留兼容性）
+            window.replyToComment = function(commentId, authorName) {
+                showReplyBox(commentId, authorName);
+            };
+
+            // 取消回复
+            function cancelReply() {
+                $('#parentId').val('');
+                $('#replyInfo').hide();
+                $('textarea[name="content"]').attr('placeholder', '请输入评论内容');
+            }
+
+            // 绑定取消回复按钮
+            $('#cancelReply').click(cancelReply);
+
+            // 删除评论
+            window.deleteComment = function(commentId) {
+                layer.confirm('确定要删除这条评论吗？', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/comment/delete/' + commentId,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('评论删除成功！', {icon: 1});
+                                // 移除评论
+                                $('[data-comment-id="' + commentId + '"]').remove();
+                                // 更新评论数
+                                var commentCount = parseInt($('#totalComments').text()) - 1;
+                                $('#totalComments').text(commentCount);
+                                // 更新帖子评论数
+                                getPostDetail();
+                            } else {
+                                layer.msg('评论删除失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('删除评论请求失败:', error);
+                            layer.msg('评论删除失败', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                }, function(index) {
+                    layer.close(index);
+                });
+            };
+            
+            // 点赞评论
+            window.likeComment = function(commentId) {
+                if (!currentUser) {
+                    layer.msg('请先登录', {icon: 2});
+                    return;
+                }
+                
+                $.ajax({
+                    url: '/like/toggle',
+                    type: 'POST',
+                    data: {targetType: 2, targetId: commentId},
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg(res.message, {icon: 1});
+                            // 更新评论点赞数
+                            var commentItem = $('[data-comment-id="' + commentId + '"]');
+                            var likeLink = commentItem.find('.comment-like');
+                            var likeCountText = likeLink.text();
+                            var likeCount = parseInt(likeCountText.match(/\d+/)[0]);
+                            // 根据返回的isLiked状态更新点赞数
+                            var newLikeCount = res.data ? likeCount + 1 : likeCount - 1;
+                            likeLink.text('点赞 (' + newLikeCount + ')');
+                        } else {
+                            layer.msg(res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('点赞评论请求失败:', error);
+                        layer.msg('点赞失败', {icon: 2});
+                    }
+                });
+            };
+            
+            // 封禁帖子
+            $('#adminBanBtn').click(function() {
+                if (!currentUser || (currentUser.role !== 1 && currentUser.role !== 2)) {
+                    layer.msg('您没有权限执行此操作', {icon: 2});
+                    return;
+                }
+                
+                layer.confirm('确定要封禁这篇帖子吗？封禁后用户将无法查看该帖子。', {
+                    title: '封禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/ban/' + postId,
+                        type: 'POST',
+                        data: { reason: '管理员手动封禁' },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子封禁成功', {icon: 1});
+                                // 刷新页面以显示封禁状态
+                                location.reload();
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            });
+            
+            // 初始化页面
+            getPostDetail();
+            getComments();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>解封申诉 - 毕业设计</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .appeal-container {
+            width: 500px;
+            margin: 80px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .appeal-title {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        .form-group .layui-input,
+        .form-group .layui-textarea {
+            border-radius: 4px;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        .btn-group .layui-btn {
+            flex: 1;
+            margin: 0 5px;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #1E9FFF;
+        }
+    </style>
+</head>
+<body>
+    <div class="appeal-container">
+        <h2 class="appeal-title">解封申诉</h2>
+        <form class="layui-form" id="appealForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" name="username" id="username" lay-verify="required" placeholder="请输入您的用户名" autocomplete="off" class="layui-input">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" name="password" id="password" lay-verify="required" placeholder="请输入您的密码" autocomplete="off" class="layui-input">
+            </div>
+            <div class="form-group">
+                <label for="appealContent">申诉理由</label>
+                <textarea name="appealContent" id="appealContent" lay-verify="required" placeholder="请详细描述您的情况，说明为何需要解封（例如：误封、已改正等）" class="layui-textarea" rows="6"></textarea>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="layui-btn layui-btn-primary" id="backBtn">返回登录</button>
+                <button type="button" class="layui-btn layui-btn-normal" id="submitBtn">提交申诉</button>
+            </div>
+        </form>
+        <div class="back-link">
+            <a href="/login">返回登录页面</a>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['form', 'layer'], function() {
+            var form = layui.form;
+            var layer = layui.layer;
+            var $ = layui.jquery;
+
+            // 返回登录
+            $('#backBtn').on('click', function() {
+                window.location.href = '/login';
+            });
+
+            // 提交申诉
+            $('#submitBtn').on('click', function() {
+                var username = $('#username').val();
+                var password = $('#password').val();
+                var appealContent = $('#appealContent').val();
+
+                if (!username) {
+                    layer.msg('请输入用户名', {icon: 2});
+                    return;
+                }
+                if (!password) {
+                    layer.msg('请输入密码', {icon: 2});
+                    return;
+                }
+                if (!appealContent) {
+                    layer.msg('请输入申诉理由', {icon: 2});
+                    return;
+                }
+
+                // 显示加载中
+                var loadIndex = layer.load(1, {shade: [0.3, '#fff']});
+
+                $.post('/admin/unban-requests/submit', {
+                    username: username,
+                    password: password,
+                    content: appealContent
+                }, function(res) {
+                    layer.close(loadIndex);
+                    if (res.code === 200) {
+                        layer.msg('申诉提交成功，请等待管理员审核', {icon: 1}, function() {
+                            window.location.href = '/login';
+                        });
+                    } else {
+                        layer.msg('提交失败: ' + res.message, {icon: 2});
+                    }
+                }, 'json').fail(function() {
+                    layer.close(loadIndex);
+                    layer.msg('网络错误，请稍后重试', {icon: 2});
+                });
+            });
+        });
+    </script>
+</body>
+</html>

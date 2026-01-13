@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贴吧风格评论样式测试</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #1E9FFF;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+        .test-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .css-check {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #5FB878;
+            font-weight: bold;
+        }
+        .error {
+            color: #FF5722;
+            font-weight: bold;
+        }
+        .demo-comment {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>贴吧风格评论样式测试</h1>
+        
+        <div class="test-section">
+            <div class="test-title">1. CSS文件加载状态</div>
+            <div class="css-check" id="cssStatus">
+                正在检查CSS文件加载状态...
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">2. 贴吧风格评论演示</div>
+            
+            <!-- 贴吧风格评论表单 -->
+            <div class="comment-form tieba-style">
+                <h3><i class="layui-icon layui-icon-reply-fill" style="margin-right: 5px;"></i>发表评论</h3>
+                <div class="reply-info tieba-style">
+                    <span><i class="layui-icon layui-icon-reply" style="margin-right: 5px;"></i>回复 <strong>张三</strong></span>
+                    <a href="javascript:;" class="cancel-reply-btn tieba-style"><i class="layui-icon layui-icon-close"></i> 取消回复</a>
+                </div>
+                <textarea class="comment-textarea tieba-style" placeholder="请输入评论内容...">这是一个贴吧风格的评论框演示</textarea>
+                <div class="form-actions">
+                    <button class="layui-btn layui-btn-normal"><i class="layui-icon layui-icon-release"></i> 发表评论</button>
+                    <div class="form-tips">
+                        <i class="layui-icon layui-icon-tips"></i> 文明发言，遵守社区规范
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 贴吧风格评论列表 -->
+            <div class="demo-comment">
+                <div class="comment-item tieba-style">
+                    <div class="comment-header tieba-style">
+                        <div class="comment-author-info tieba-style">
+                            <span class="comment-author tieba-style">张三</span>
+                            <span class="comment-floor tieba-style">#1</span>
+                            <span class="comment-time tieba-style">
+                                <i class="layui-icon layui-icon-time"></i> 5分钟前
+                            </span>
+                        </div>
+                    </div>
+                    <div class="comment-content tieba-style">
+                        这是主楼评论内容，贴吧风格应该显示为简洁的卡片样式。
+                    </div>
+                    <div class="comment-actions tieba-style">
+                        <a href="javascript:;" class="comment-like tieba-style">
+                            <i class="layui-icon layui-icon-praise"></i> 点赞 (5)
+                        </a>
+                        <a href="javascript:;" class="comment-reply tieba-style">
+                            <i class="layui-icon layui-icon-reply-fill"></i> 回复
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 楼中楼评论 -->
+                <div class="comment-item tieba-style nested-comment" style="margin-left: 40px;">
+                    <div class="comment-header tieba-style">
+                        <div class="comment-author-info tieba-style">
+                            <span class="comment-author tieba-style">李四</span>
+                            <span class="comment-floor tieba-style">#2</span>
+                            <span class="comment-time tieba-style">
+                                <i class="layui-icon layui-icon-time"></i> 3分钟前
+                            </span>
+                        </div>
+                    </div>
+                    <div class="comment-content tieba-style">
+                        这是楼中楼回复，应该有左侧边框和背景色区分。
+                    </div>
+                    <div class="comment-actions tieba-style">
+                        <a href="javascript:;" class="comment-like tieba-style">
+                            <i class="layui-icon layui-icon-praise"></i> 点赞 (2)
+                        </a>
+                        <a href="javascript:;" class="comment-reply tieba-style">
+                            <i class="layui-icon layui-icon-reply-fill"></i> 回复
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- 更深层的楼中楼 -->
+                <div class="comment-item tieba-style nested-comment" style="margin-left: 80px;">
+                    <div class="comment-header tieba-style">
+                        <div class="comment-author-info tieba-style">
+                            <span class="comment-author tieba-style">王五</span>
+                            <span class="comment-floor tieba-style">#3</span>
+                            <span class="comment-time tieba-style">
+                                <i class="layui-icon layui-icon-time"></i> 1分钟前
+                            </span>
+                        </div>
+                    </div>
+                    <div class="comment-content tieba-style">
+                        这是更深层的楼中楼，应该有更深的缩进效果。
+                    </div>
+                    <div class="comment-actions tieba-style">
+                        <a href="javascript:;" class="comment-like tieba-style">
+                            <i class="layui-icon layui-icon-praise"></i> 点赞 (0)
+                        </a>
+                        <a href="javascript:;" class="comment-reply tieba-style">
+                            <i class="layui-icon layui-icon-reply-fill"></i> 回复
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <div class="test-title">3. 解决方案</div>
+            <p>如果贴吧风格没有生效，请尝试以下方法：</p>
+            <ol>
+                <li><strong>强制刷新页面</strong>：按 <code>Ctrl+F5</code> 或 <code>Ctrl+Shift+R</code> 清除浏览器缓存</li>
+                <li><strong>检查CSS文件</strong>：访问 <a href="/css/common.css" target="_blank">/css/common.css</a> 查看CSS文件是否包含贴吧样式（搜索 ".tieba-style"）</li>
+                <li><strong>检查HTML结构</strong>：在浏览器开发者工具中检查评论元素是否包含 <code>tieba-style</code> 类</li>
+                <li><strong>重启服务器</strong>：如果修改未生效，可能需要重启Spring Boot应用</li>
+            </ol>
+        </div>
+    </div>
+    
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(function() {
+            var $ = layui.jquery;
+            
+            // 检查CSS是否加载
+            function checkCSS() {
+                var cssLoaded = false;
+                var styleSheets = document.styleSheets;
+                
+                for (var i = 0; i < styleSheets.length; i++) {
+                    var sheet = styleSheets[i];
+                    if (sheet.href && sheet.href.includes('common.css')) {
+                        cssLoaded = true;
+                        try {
+                            var rules = sheet.cssRules || sheet.rules;
+                            var tiebaStyleFound = false;
+                            for (var j = 0; j < rules.length; j++) {
+                                if (rules[j].selectorText && rules[j].selectorText.includes('.tieba-style')) {
+                                    tiebaStyleFound = true;
+                                    break;
+                                }
+                            }
+                            if (tiebaStyleFound) {
+                                $('#cssStatus').html('<span class="success">✓ CSS文件已加载，贴吧样式已找到</span>');
+                            } else {
+                                $('#cssStatus').html('<span class="error">✗ CSS文件已加载，但未找到贴吧样式</span>');
+                            }
+                        } catch (e) {
+                            $('#cssStatus').html('<span class="success">✓ CSS文件已加载（跨域限制无法检查内容）</span>');
+                        }
+                        break;
+                    }
+                }
+                
+                if (!cssLoaded) {
+                    $('#cssStatus').html('<span class="error">✗ CSS文件未加载</span>');
+                }
+            }
+            
+            // 延迟检查，确保CSS已加载
+            setTimeout(checkCSS, 500);
+        });
+    </script>
+</body>
+</html>

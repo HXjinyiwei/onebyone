@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <!-- 引入公共样式 -->
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .ranking-tabs .layui-tab-title li {
+            font-size: 16px;
+        }
+        .ranking-tabs .layui-tab-content {
+            padding: 15px 0;
+        }
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+        .rank-number {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            background: #f2f2f2;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        .rank-number.top1 {
+            background: #ffd700;
+            color: #fff;
+        }
+        .rank-number.top2 {
+            background: #c0c0c0;
+            color: #fff;
+        }
+        .rank-number.top3 {
+            background: #cd7f32;
+            color: #fff;
+        }
+        .novel-info {
+            flex: 1;
+        }
+        .novel-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .novel-title a {
+            color: #333;
+        }
+        .novel-meta {
+            font-size: 12px;
+            color: #999;
+        }
+        .novel-meta span {
+            margin-right: 10px;
+        }
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+        .global-search {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .global-search .layui-input {
+            width: 400px;
+            display: inline-block;
+        }
+        .global-search .layui-btn {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+        <div class="nav-bar">
+            <div class="layui-container">
+                <ul class="layui-nav" lay-filter="">
+                    <li class="layui-nav-item layui-this"><a href="/index">首页</a></li>
+                    <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                    <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                    <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/profile">个人中心</a></dd>
+                            <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <div class="content">
+            <p>登录成功！</p>
+            <p>这是首页，您可以在这里访问系统的各项功能。</p>
+        </div>
+        
+        <!-- 全局搜索框 -->
+        <div class="global-search">
+            <input type="text" id="globalSearchKeyword" class="layui-input" placeholder="搜索小说、作者、分类...">
+            <button class="layui-btn layui-btn-normal" onclick="globalSearch()">搜索</button>
+            <button class="layui-btn layui-btn-primary" onclick="clearGlobalSearch()">清空</button>
+        </div>
+        
+        <!-- 小说排行榜选项卡 -->
+        <div class="ranking-tabs">
+            <div class="layui-tab layui-tab-brief" lay-filter="ranking-tab">
+                <ul class="layui-tab-title">
+                    <li class="layui-this" data-type="view">🔥 热门小说（阅读量）</li>
+                    <li data-type="like">❤️ 点赞最多</li>
+                    <li data-type="favorite">⭐ 收藏最多</li>
+                    <li data-type="new">🆕 最新更新</li>
+                </ul>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+                        <ul class="ranking-list" id="ranking-view">
+                            <li class="loading">加载中...</li>
+                        </ul>
+                    </div>
+                    <div class="layui-tab-item">
+                        <ul class="ranking-list" id="ranking-like">
+                            <li class="loading">加载中...</li>
+                        </ul>
+                    </div>
+                    <div class="layui-tab-item">
+                        <ul class="ranking-list" id="ranking-favorite">
+                            <li class="loading">加载中...</li>
+                        </ul>
+                    </div>
+                    <div class="layui-tab-item">
+                        <ul class="ranking-list" id="ranking-new">
+                            <li class="loading">加载中...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="layui-btn layui-btn-normal" onclick="window.location.href='/novel/list'">查看全部小说</button>
+            <button class="layui-btn layui-btn-primary" onclick="window.location.href='/novel/create'">发布新小说</button>
+        </div>
+
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.$;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        // 如果是管理员，显示管理后台菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 加载排行榜数据
+            function loadRanking(endpoint, containerId, metricName) {
+                $.ajax({
+                    url: endpoint,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('排行榜数据:', res);
+                        var $container = $('#' + containerId);
+                        $container.empty();
+                        if (res.code === 200 && res.data && res.data.length > 0) {
+                            $.each(res.data, function(index, novel) {
+                                var rankClass = '';
+                                if (index === 0) rankClass = 'top1';
+                                else if (index === 1) rankClass = 'top2';
+                                else if (index === 2) rankClass = 'top3';
+                                var metricValue = '';
+                                if (metricName === 'view') metricValue = novel.viewCount || 0;
+                                else if (metricName === 'like') metricValue = novel.likeCount || 0;
+                                else if (metricName === 'favorite') metricValue = novel.favoriteCount || 0;
+                                else if (metricName === 'new') metricValue = novel.createTime ? new Date(novel.createTime).toLocaleDateString() : '';
+                                var itemHtml = '<li class="ranking-item">' +
+                                    '<div class="rank-number ' + rankClass + '">' + (index + 1) + '</div>' +
+                                    '<div class="novel-info">' +
+                                    '<div class="novel-title"><a href="/novel/detail/' + novel.id + '" style="color:#333;">' + novel.title + '</a></div>' +
+                                    '<div class="novel-meta">' +
+                                    '<span>作者：' + (novel.author ? novel.author.nickname : '未知') + '</span>' +
+                                    '<span>' + (metricName === 'view' ? '阅读' : metricName === 'like' ? '点赞' : metricName === 'favorite' ? '收藏' : '更新') + '：' + metricValue + '</span>' +
+                                    '</div>' +
+                                    '</div>' +
+                                    '</li>';
+                                $container.append(itemHtml);
+                            });
+                        } else {
+                            $container.append('<li class="no-data">暂无数据</li>');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('加载排行榜失败:', error);
+                        $('#' + containerId).html('<li class="no-data">加载失败</li>');
+                    }
+                });
+            }
+            
+            // 加载四个排行榜
+            loadRanking('/novel/top/view', 'ranking-view', 'view');
+            loadRanking('/novel/top/like', 'ranking-like', 'like');
+            loadRanking('/novel/top/favorite', 'ranking-favorite', 'favorite');
+            loadRanking('/novel/top/new', 'ranking-new', 'new');
+            
+            // 选项卡切换时重新加载（可选，因为数据已预加载）
+            element.on('tab(ranking-tab)', function(data) {
+                // 如果需要动态加载，可以在这里调用loadRanking
+                // 但我们已经一次性加载了所有榜单，所以不需要
+            });
+            
+            // 全局搜索
+            window.globalSearch = function() {
+                var keyword = $('#globalSearchKeyword').val().trim();
+                if (!keyword) {
+                    layer.msg('请输入搜索关键词', {icon: 2});
+                    return;
+                }
+                window.location.href = '/novel/list?keyword=' + encodeURIComponent(keyword);
+            };
+            
+            window.clearGlobalSearch = function() {
+                $('#globalSearchKeyword').val('');
+            };
+        });
+    </script>
+</body>
+</html>

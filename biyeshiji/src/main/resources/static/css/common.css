@@ -1,0 +1,1875 @@
+/* common.css - 共享样式 */
+/* 基础样式 */
+body {
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+/* 标题区域 */
+.header-title {
+    text-align: center;
+    font-size: 28px;
+    font-weight: bold;
+    color: #333;
+    padding: 30px 0;
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+/* 导航栏样式 */
+.nav-bar {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.nav-bar .layui-container {
+    width: 1200px;
+    margin: 0 auto;
+}
+
+.nav-bar .layui-nav {
+    background-color: #fff;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.nav-bar .layui-nav-item a {
+    color: #333;
+    font-size: 16px;
+}
+
+.nav-bar .layui-nav-item a:hover {
+    color: #1E9FFF;
+}
+
+.nav-bar .layui-nav-item.layui-this a {
+    color: #1E9FFF;
+}
+
+/* 主内容区域 */
+.main-container {
+    width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+/* 状态标签 */
+.status-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    margin-left: 10px;
+}
+
+.status-normal {
+    background-color: #5FB878;
+    color: #fff;
+}
+
+.status-locked {
+    background-color: #FFB800;
+    color: #fff;
+}
+
+.status-draft {
+    background-color: #999;
+    color: #fff;
+}
+
+.status-completed {
+    background-color: #1E9FFF;
+    color: #fff;
+}
+
+.status-ongoing {
+    background-color: #5FB878;
+    color: #fff;
+}
+
+.status-paused {
+    background-color: #FFB800;
+    color: #fff;
+}
+
+/* 通用按钮组 */
+.btn-group {
+    text-align: center;
+    margin-top: 30px;
+}
+
+/* 内容区域 */
+.content {
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+    padding: 50px 0;
+}
+
+/* 排行榜样式（部分页面使用） */
+.rankings {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.ranking-box {
+    flex: 1;
+    margin: 0 10px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: left;
+}
+
+.ranking-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 2px solid #1E9FFF;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.ranking-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.ranking-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+}
+
+.ranking-item:last-child {
+    border-bottom: none;
+}
+
+.rank-number {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    background-color: #1E9FFF;
+    color: white;
+    border-radius: 50%;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.rank-number.top1 {
+    background-color: #FF6B6B;
+}
+
+.rank-number.top2 {
+    background-color: #FFA726;
+}
+
+.rank-number.top3 {
+    background-color: #66BB6A;
+}
+
+.novel-info {
+    flex: 1;
+}
+
+.novel-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.novel-meta {
+    font-size: 12px;
+    color: #999;
+}
+
+.novel-meta span {
+    margin-right: 10px;
+}
+
+.no-data {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    padding: 20px 0;
+}
+
+.loading {
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+    padding: 20px 0;
+}
+
+/* 章节列表样式 */
+.chapter-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.chapter-item {
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chapter-item:hover {
+    background-color: #fafafa;
+}
+
+.chapter-item:last-child {
+    border-bottom: none;
+}
+
+.chapter-title {
+    font-size: 16px;
+    color: #333;
+    flex: 1;
+}
+
+.chapter-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.chapter-title a:hover {
+    color: #1E9FFF;
+}
+
+.chapter-meta {
+    color: #999;
+    font-size: 14px;
+    margin-left: 20px;
+}
+
+/* 小说列表样式 */
+.novel-list {
+    margin-bottom: 20px;
+}
+
+.novel-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: flex-start;
+}
+
+.novel-item:last-child {
+    border-bottom: none;
+}
+
+.novel-cover {
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 20px;
+    flex-shrink: 0;
+}
+
+.novel-info {
+    flex: 1;
+}
+
+.novel-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.novel-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.novel-title a:hover {
+    color: #1E9FFF;
+}
+
+.novel-meta {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.novel-meta span {
+    margin-right: 20px;
+}
+
+.novel-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.novel-stats {
+    color: #999;
+    font-size: 14px;
+}
+
+.novel-stats span {
+    margin-right: 20px;
+}
+
+/* 帖子列表样式 */
+.post-list {
+    margin-bottom: 20px;
+}
+
+.post-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.post-item:last-child {
+    border-bottom: none;
+}
+
+.post-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.post-title a {
+    color: #333;
+    text-decoration: none;
+}
+
+.post-title a:hover {
+    color: #1E9FFF;
+}
+
+.post-meta {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.post-meta span {
+    margin-right: 20px;
+}
+
+.post-excerpt {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.post-stats {
+    color: #999;
+    font-size: 14px;
+}
+
+.post-stats span {
+    margin-right: 20px;
+}
+
+/* 分类筛选样式 */
+.category-filter {
+    background-color: #fafafa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.category-filter h3 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.category-list li {
+    margin-right: 15px;
+    margin-bottom: 10px;
+}
+
+.category-list li a {
+    padding: 5px 15px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 15px;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.category-list li a:hover,
+.category-list li a.active {
+    background-color: #1E9FFF;
+    color: #fff;
+    border-color: #1E9FFF;
+}
+
+/* 搜索框样式 */
+.search-box {
+    background-color: #fafafa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-box h3 {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    white-space: nowrap;
+}
+
+.search-box .layui-input {
+    flex: 1;
+    max-width: 400px;
+}
+
+.search-box .layui-btn {
+    white-space: nowrap;
+}
+
+/* 分页样式 */
+.pagination {
+    text-align: center;
+    margin-top: 30px;
+}
+
+/* 排序标签 */
+.sort-tabs {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.sort-tabs a {
+    display: inline-block;
+    padding: 5px 15px;
+    margin-right: 10px;
+    color: #666;
+    text-decoration: none;
+    border-radius: 15px;
+}
+
+.sort-tabs a:hover,
+.sort-tabs a.active {
+    background-color: #1E9FFF;
+    color: #fff;
+}
+
+/* 发布按钮样式 */
+.novel-btn,
+.post-btn {
+    margin-bottom: 20px;
+    text-align: right;
+}
+
+/* 个人中心左右布局 - 优化版 */
+.profile-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    min-height: 600px;
+}
+
+.side-nav {
+    width: 220px;
+    flex-shrink: 0;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 20px 0;
+    border: 1px solid #f0f0f0;
+}
+
+.side-nav .layui-nav-tree {
+    width: 100%;
+    border: none;
+    background-color: transparent;
+}
+
+.side-nav .layui-nav-item {
+    margin: 0;
+    border-bottom: 1px solid #f8f8f8;
+}
+
+.side-nav .layui-nav-item:last-child {
+    border-bottom: none;
+}
+
+.side-nav .layui-nav-item a {
+    padding: 15px 25px;
+    font-size: 15px;
+    color: #555;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.side-nav .layui-nav-item a:hover {
+    color: #1E9FFF;
+    background-color: #f8fafc;
+    border-left-color: #1E9FFF;
+}
+
+.side-nav .layui-nav-item.layui-this a {
+    color: #1E9FFF;
+    background-color: #f0f9ff;
+    border-left-color: #1E9FFF;
+    font-weight: 600;
+}
+
+.content-area {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    padding: 30px;
+    border: 1px solid #f0f0f0;
+    min-height: 600px;
+}
+
+.profile-section {
+    display: none;
+}
+
+.profile-section:first-of-type {
+    display: block;
+}
+
+/* 个人中心内容区域标题 */
+.profile-section h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+/* 个人中心卡片样式优化 */
+.profile-section .layui-card-normal {
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s;
+}
+
+.profile-section .layui-card-normal:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.profile-section .layui-card-header {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: #fafafa;
+    border-radius: 8px 8px 0 0;
+}
+
+.profile-section .layui-card-body {
+    padding: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .nav-bar .layui-container,
+    .main-container {
+        width: 95%;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile-layout {
+        flex-direction: column;
+    }
+    
+    .side-nav {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+    
+    .rankings {
+        flex-direction: column;
+    }
+    .ranking-box {
+        margin: 10px 0;
+    }
+    .novel-cover {
+        float: none;
+        margin-right: 0;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    .novel-cover img {
+        width: 150px;
+        height: 210px;
+    }
+    .novel-meta span {
+        display: block;
+        margin-right: 0;
+        margin-bottom: 5px;
+    }
+    .chapter-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .chapter-meta {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .search-box .layui-input {
+        max-width: none;
+    }
+}
+
+/* ==================== 评论区域美化样式 ==================== */
+
+/* 帖子内容区域 */
+.post-content {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.post-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.post-meta {
+    color: #999;
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+}
+
+.post-meta span {
+    display: flex;
+    align-items: center;
+}
+
+.post-body {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #444;
+    margin-bottom: 20px;
+}
+
+.post-body p {
+    margin-bottom: 15px;
+}
+
+.post-body ul, .post-body ol {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.post-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 评论区域 */
+.comments-section {
+    margin-top: 30px;
+}
+
+.comments-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #1E9FFF;
+}
+
+/* 评论表单美化 - 简洁版 */
+.comment-form {
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 25px;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.comment-form h3 {
+    font-size: 15px;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-form h3 i {
+    color: #1E9FFF;
+    margin-right: 6px;
+}
+
+.reply-info {
+    background-color: #f8fafc;
+    border: 1px solid #e1e8f0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.reply-info span {
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+
+.reply-info strong {
+    color: #1E9FFF;
+    margin: 0 4px;
+    font-weight: 600;
+}
+
+.cancel-reply-btn {
+    font-size: 12px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.cancel-reply-btn:hover {
+    color: #666;
+    background-color: #f0f0f0;
+}
+
+.comment-textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    line-height: 1.5;
+    background-color: #fafafa;
+}
+
+.comment-textarea:focus {
+    border-color: #1E9FFF;
+    outline: none;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.1);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+}
+
+.form-tips {
+    font-size: 12px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.form-tips i {
+    color: #aaa;
+    font-size: 14px;
+}
+
+.comment-form button[type="submit"] {
+    padding: 6px 20px;
+    font-size: 13px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #1E9FFF;
+    border: 1px solid #1E9FFF;
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.comment-form button[type="submit"]:hover {
+    background-color: #0d8bf2;
+}
+
+/* 评论列表美化 */
+.comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.comment-item {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+}
+
+.comment-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 回复评论的缩进效果 */
+.comment-item[style*="margin-left"] {
+    margin-left: 40px !important;
+    border-left: 3px solid #1E9FFF;
+    padding-left: 25px;
+    position: relative;
+}
+
+.comment-item[style*="margin-left"]::before {
+    content: "";
+    position: absolute;
+    left: -3px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #1E9FFF, transparent);
+}
+
+/* 评论头部 - 简化版（无头像） */
+.comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.comment-author-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.comment-author {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.comment-floor {
+    background-color: #f5f5f5;
+    color: #666;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-family: monospace;
+}
+
+.comment-time {
+    color: #999;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.comment-time i {
+    font-size: 12px;
+}
+
+.comment-delete {
+    color: #FF5722;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.comment-delete:hover {
+    color: #f4511e;
+    text-decoration: underline;
+}
+
+/* 评论内容 */
+.comment-content {
+    color: #444;
+    line-height: 1.6;
+    font-size: 14px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-content p {
+    margin-bottom: 8px;
+}
+
+.mention {
+    color: #1E9FFF;
+    font-weight: 500;
+    background-color: rgba(30, 159, 255, 0.08);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+/* 评论操作 */
+.comment-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 8px;
+}
+
+.comment-like, .comment-reply {
+    color: #666;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s;
+    padding: 3px 6px;
+    border-radius: 3px;
+}
+
+.comment-like:hover {
+    color: #FF5722;
+    background-color: rgba(255, 87, 34, 0.05);
+}
+
+.comment-reply:hover {
+    color: #1E9FFF;
+    background-color: rgba(30, 159, 255, 0.05);
+}
+
+.comment-like i, .comment-reply i {
+    font-size: 13px;
+}
+
+/* 空评论状态 */
+.empty-comments {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+    font-size: 16px;
+}
+
+.empty-comments i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    color: #ddd;
+    display: block;
+}
+
+/* ==================== 贴吧风格评论样式 ==================== */
+
+/* 贴吧风格评论卡片 */
+.comment-item.tieba-style {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border: 1px solid #e5e5e5;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: border-color 0.2s;
+}
+
+.comment-item.tieba-style:hover {
+    border-color: #d0d0d0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* 贴吧风格楼中楼效果 - 增强版 */
+.comment-item.tieba-style.nested-comment {
+    margin-left: 40px !important;
+    background-color: #f8fafc;
+    border-left: 4px solid #1E9FFF;
+    padding-left: 20px;
+    position: relative;
+    border-radius: 0 6px 6px 0;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    border-top: 1px solid #f0f0f0;
+    border-right: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item.tieba-style.nested-comment::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: -1px;
+    bottom: -1px;
+    width: 4px;
+    background: linear-gradient(to bottom, #1E9FFF, #5FB878, #FFB800);
+    border-radius: 2px 0 0 2px;
+}
+
+/* 更深层的楼中楼 */
+.comment-item.tieba-style.nested-comment.nested-level-2 {
+    margin-left: 80px !important;
+    background-color: #f5f9ff;
+    border-left-color: #5FB878;
+}
+
+.comment-item.tieba-style.nested-comment.nested-level-3 {
+    margin-left: 120px !important;
+    background-color: #f0f7ff;
+    border-left-color: #FFB800;
+}
+
+.comment-item.tieba-style.nested-comment.nested-level-4 {
+    margin-left: 160px !important;
+    background-color: #ebf4ff;
+    border-left-color: #FF5722;
+}
+
+/* 楼中楼回复提示 */
+.comment-item.tieba-style.nested-comment .comment-header.tieba-style::after {
+    content: "↳ 回复";
+    font-size: 11px;
+    color: #999;
+    margin-left: 8px;
+    background-color: #f0f0f0;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-style: italic;
+}
+
+/* 主楼评论更突出 */
+.comment-item.tieba-style:not(.nested-comment) {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 15px;
+}
+
+.comment-item.tieba-style:not(.nested-comment):hover {
+    border-color: #1E9FFF;
+    box-shadow: 0 4px 12px rgba(30, 159, 255, 0.1);
+}
+
+/* 贴吧风格评论头部 */
+.comment-header.tieba-style {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #eee;
+}
+
+.comment-author-info.tieba-style {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.comment-author.tieba-style {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+}
+
+.comment-floor.tieba-style {
+    background-color: #f0f0f0;
+    color: #666;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.comment-time.tieba-style {
+    color: #888;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 贴吧风格评论内容 */
+.comment-content.tieba-style {
+    color: #333;
+    line-height: 1.6;
+    font-size: 14px;
+    margin-bottom: 10px;
+    padding: 8px 0;
+}
+
+.comment-content.tieba-style p {
+    margin-bottom: 6px;
+}
+
+.mention.tieba-style {
+    color: #1E9FFF;
+    font-weight: 500;
+    background-color: rgba(30, 159, 255, 0.1);
+    padding: 1px 4px;
+    border-radius: 2px;
+    text-decoration: none;
+}
+
+/* 贴吧风格评论操作 */
+.comment-actions.tieba-style {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #eee;
+}
+
+.comment-like.tieba-style, .comment-reply.tieba-style {
+    color: #666;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+}
+
+.comment-like.tieba-style:hover {
+    color: #FF5722;
+    background-color: rgba(255, 87, 34, 0.05);
+    border-color: #FF5722;
+}
+
+.comment-reply.tieba-style:hover {
+    color: #1E9FFF;
+    background-color: rgba(30, 159, 255, 0.05);
+    border-color: #1E9FFF;
+}
+
+/* 贴吧风格回复提示 */
+.reply-info.tieba-style {
+    background-color: #f0f9ff;
+    border: 1px solid #cce7ff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #0066cc;
+}
+
+.reply-info.tieba-style span {
+    display: flex;
+    align-items: center;
+}
+
+.reply-info.tieba-style strong {
+    color: #1E9FFF;
+    margin: 0 4px;
+    font-weight: 600;
+}
+
+.cancel-reply-btn.tieba-style {
+    font-size: 12px;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.cancel-reply-btn.tieba-style:hover {
+    color: #666;
+    background-color: #f0f0f0;
+}
+
+/* 贴吧风格评论表单 */
+.comment-form.tieba-style {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.comment-form.tieba-style h3 {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-form.tieba-style h3 i {
+    color: #1E9FFF;
+    margin-right: 6px;
+}
+
+.comment-textarea.tieba-style {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    font-family: inherit;
+    line-height: 1.5;
+    background-color: #fafafa;
+}
+
+.comment-textarea.tieba-style:focus {
+    border-color: #1E9FFF;
+    outline: none;
+    background-color: #fff;
+    box-shadow: 0 0 0 2px rgba(30, 159, 255, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .comment-item {
+        padding: 15px;
+    }
+    
+    .comment-item[style*="margin-left"] {
+        margin-left: 20px !important;
+        padding-left: 15px;
+    }
+    
+    .comment-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .comment-time {
+        margin-left: 0;
+    }
+    
+    .comment-content, .comment-actions {
+        padding-left: 0;
+    }
+    
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+    
+    /* 贴吧风格响应式调整 */
+    .comment-item.tieba-style.nested-comment {
+        margin-left: 20px !important;
+        padding-left: 15px;
+    }
+    
+    .comment-actions.tieba-style {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
+
+/* ==================== 贴吧楼中楼示例样式（无头像版） ==================== */
+
+/* 贴吧楼中楼容器 */
+.tieba-lzl-container {
+    margin-top: 20px;
+}
+
+/* 贴吧楼中楼列表 */
+.tieba-lzl-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* 贴吧楼中楼单个回复项 */
+.tieba-lzl-item {
+    padding: 12px 0;
+    border-bottom: 1px dashed #eee;
+    position: relative;
+}
+
+.tieba-lzl-item:last-child {
+    border-bottom: none;
+}
+
+/* 无头像版 - 内容区域直接开始 */
+.tieba-lzl-content {
+    position: relative;
+}
+
+/* 用户名样式 */
+.tieba-username {
+    font-weight: bold;
+    color: #06c;
+    font-size: 14px;
+    text-decoration: none;
+    margin-right: 8px;
+}
+
+.tieba-username:hover {
+    text-decoration: underline;
+}
+
+/* 楼层标识 */
+.tieba-floor-marker {
+    display: inline-block;
+    background-color: #f0f0f0;
+    color: #999;
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 8px;
+    font-family: 'Courier New', monospace;
+}
+
+/* 回复文本 */
+.tieba-reply-text {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 6px 0 8px;
+    color: #333;
+    padding-left: 0;
+}
+
+/* 回复操作栏 */
+.tieba-reply-actions {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    color: #999;
+}
+
+.tieba-reply-time {
+    margin-right: 15px;
+}
+
+.tieba-reply-btn {
+    color: #06c;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 12px;
+}
+
+.tieba-reply-btn:hover {
+    text-decoration: underline;
+}
+
+/* 嵌套回复区域 - 只有第一层级有缩进 */
+.tieba-hidden-replies {
+    margin-top: 10px;
+    padding-left: 20px;
+    border-left: 2px solid #e0e0e0;
+}
+
+/* 楼中楼内部的回复（第二层及以上）取消进一步缩进 */
+.tieba-hidden-replies .tieba-hidden-replies {
+    padding-left: 0;
+    border-left: none;
+    margin-left: 0;
+}
+
+/* 确保楼中楼内部的回复项没有额外缩进 */
+.tieba-hidden-replies .tieba-lzl-item {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+/* 更多回复提示 */
+.tieba-more-replies {
+    margin-top: 10px;
+    padding-left: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+.tieba-show-more {
+    color: #06c;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tieba-show-more:hover {
+    text-decoration: underline;
+}
+
+/* 回复输入区域 */
+.tieba-reply-input-area {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: none;
+}
+
+.tieba-reply-input-area.active {
+    display: block;
+}
+
+.tieba-reply-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 10px;
+    font-family: inherit;
+}
+
+.tieba-submit-btn {
+    background-color: #06c;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.tieba-submit-btn:hover {
+    background-color: #005bb8;
+}
+
+.tieba-cancel-btn {
+    background-color: #999;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.tieba-cancel-btn:hover {
+    background-color: #777;
+}
+
+/* 添加回复按钮 */
+.tieba-add-reply-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    float: right;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tieba-add-reply-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* 回复目标提示 */
+.tieba-reply-to {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border-radius: 3px;
+    border-left: 3px solid #06c;
+}
+
+.tieba-reply-to strong {
+    color: #06c;
+    margin: 0 3px;
+}
+
+/* 分页样式 */
+.tieba-pagination {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.tieba-page-info {
+    font-size: 13px;
+    color: #666;
+}
+
+.tieba-page-buttons a {
+    color: #06c;
+    text-decoration: none;
+    margin-left: 10px;
+    font-size: 13px;
+}
+
+.tieba-page-buttons a:hover {
+    text-decoration: underline;
+}
+
+.tieba-page-buttons a.active {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .tieba-lzl-item {
+        padding: 10px 0;
+    }
+    
+    .tieba-hidden-replies {
+        padding-left: 15px;
+        margin-left: 5px;
+    }
+    
+    .tieba-reply-actions {
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .tieba-add-reply-btn {
+        float: none;
+        width: 100%;
+        justify-content: center;
+        margin-top: 15px;
+    }
+}
+
+/* ==================== 评论下方回复框样式 ==================== */
+
+/* 评论回复框容器 */
+.comment-reply-box {
+    margin-top: 10px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    display: none;
+}
+
+.comment-reply-box.active {
+    display: block;
+}
+
+/* 回复框头部 */
+.reply-box-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #ddd;
+}
+
+.reply-box-title {
+    font-size: 13px;
+    color: #333;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.reply-box-title i {
+    color: #06c;
+}
+
+.reply-box-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.reply-box-close:hover {
+    background-color: #e0e0e0;
+    color: #666;
+}
+
+/* 回复目标提示 */
+.reply-target-info {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    background-color: #f0f9ff;
+    border-radius: 3px;
+    border-left: 3px solid #06c;
+}
+
+.reply-target-info strong {
+    color: #06c;
+    margin: 0 3px;
+}
+
+/* 回复输入框 */
+.reply-textarea {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    resize: vertical;
+    margin-bottom: 10px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.reply-textarea:focus {
+    border-color: #06c;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+/* 回复按钮组 */
+.reply-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.reply-submit-btn {
+    background-color: #06c;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.reply-submit-btn:hover {
+    background-color: #005bb8;
+}
+
+.reply-cancel-btn {
+    background-color: #999;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.reply-cancel-btn:hover {
+    background-color: #777;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .comment-reply-box {
+        padding: 10px;
+    }
+    
+    .reply-buttons {
+        flex-direction: column;
+    }
+    
+    .reply-submit-btn,
+    .reply-cancel-btn {
+        width: 100%;
+    }
+}
+
+/* ==================== 楼中楼折叠功能样式 ==================== */
+
+/* 折叠/展开按钮 */
+.toggle-replies-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: #06c;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-top: 8px;
+    transition: background-color 0.2s;
+}
+
+.toggle-replies-btn:hover {
+    background-color: #f0f9ff;
+    text-decoration: underline;
+}
+
+.toggle-replies-btn i {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.toggle-replies-btn.expanded i {
+    transform: rotate(180deg);
+}
+
+/* 隐藏的回复 */
+.hidden-replies {
+    display: none;
+}
+
+.hidden-replies.visible {
+    display: block;
+}
+
+/* 回复计数提示 */
+.reply-count-info {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+    padding: 4px 8px;
+    background-color: #f8f9fa;
+    border-radius: 3px;
+    border-left: 3px solid #ddd;
+}
+
+.reply-count-info strong {
+    color: #666;
+    margin: 0 3px;
+}
+
+/* 查看更多回复按钮 */
+.view-more-replies {
+    text-align: center;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #eee;
+}
+
+.view-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #f5f5f5;
+    color: #666;
+    border: 1px solid #e0e0e0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.view-more-btn:hover {
+    background-color: #e0e0e0;
+    color: #333;
+    border-color: #ccc;
+}
+
+.view-more-btn i {
+    font-size: 10px;
+}
+
+/* 折叠动画 */
+.collapse-transition {
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+}
+
+.collapsed {
+    max-height: 0;
+}
+
+.expanded {
+    max-height: 1000px;
+}

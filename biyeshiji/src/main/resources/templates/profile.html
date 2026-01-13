@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item layui-this">
+                        <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/profile">个人中心</a></dd>
+                            <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                        </dl>
+                    </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container profile-layout">
+        <!-- 侧边导航栏 -->
+        <div class="side-nav">
+            <ul class="layui-nav layui-nav-tree" lay-filter="side-nav">
+                <li class="layui-nav-item layui-this"><a href="/profile">我的信息</a></li>
+                <li class="layui-nav-item"><a href="/profile/novels">我的小说</a></li>
+                <li class="layui-nav-item"><a href="/profile/posts">我的帖子</a></li>
+                <li class="layui-nav-item"><a href="/profile/messages">我的消息</a></li>
+            </ul>
+        </div>
+        
+        <!-- 右侧内容区域 -->
+        <div class="content-area">
+            <!-- 我的信息区域 -->
+            <div id="profile-info" class="profile-section">
+                <h2>我的信息</h2>
+                
+                <!-- 修改昵称表单 -->
+                <div class="layui-card layui-card-normal" style="margin-bottom: 20px;">
+                    <div class="layui-card-header">修改昵称</div>
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="nicknameForm">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">当前昵称</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="currentNickname" id="currentNickname" lay-verify="required" placeholder="请输入当前昵称" autocomplete="off" class="layui-input" readonly>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">新昵称</label>
+                                <div class="layui-input-inline">
+                                    <input type="text" name="newNickname" id="newNickname" lay-verify="required" placeholder="请输入新昵称" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn" lay-submit lay-filter="nicknameSubmit">保存修改</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 修改密码表单 -->
+                <div class="layui-card layui-card-normal" style="margin-bottom: 20px;">
+                    <div class="layui-card-header">修改密码</div>
+                    <div class="layui-card-body">
+                        <form class="layui-form" id="passwordForm" lay-filter="passwordSubmit">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">原密码</label>
+                                <div class="layui-input-inline">
+                                    <input type="password" name="oldPassword" id="oldPassword" lay-verify="required" placeholder="请输入原密码" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">新密码</label>
+                                <div class="layui-input-inline">
+                                    <input type="password" name="newPassword" id="newPassword" lay-verify="required" placeholder="请输入新密码" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">确认密码</label>
+                                <div class="layui-input-inline">
+                                    <input type="password" name="confirmPassword" id="confirmPassword" lay-verify="required" placeholder="请再次输入新密码" autocomplete="off" class="layui-input">
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <div class="layui-input-block">
+                                    <button class="layui-btn" lay-submit lay-filter="passwordSubmit">修改密码</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 我的小说区域 -->
+            <div id="profile-novels" class="profile-section" style="display: none;">
+                <h2>我的小说</h2>
+                <div style="margin-bottom: 20px;">
+                    <a href="/novel/create" class="layui-btn layui-btn-normal"><i class="layui-icon">&#xe654;</i> 发布新小说</a>
+                </div>
+                <!-- 标签页 -->
+                <div class="layui-tab layui-tab-brief" lay-filter="novels-tab">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this" data-type="my">我发布的小说</li>
+                        <li data-type="liked">我点赞的小说</li>
+                        <li data-type="favorited">我收藏的小说</li>
+                        <li data-type="deleted">我被删除的小说</li>
+                    </ul>
+                    <div class="layui-tab-content">
+                        <div class="layui-tab-item layui-show" id="my-novels-container"></div>
+                        <div class="layui-tab-item" id="liked-novels-container"></div>
+                        <div class="layui-tab-item" id="favorited-novels-container"></div>
+                        <div class="layui-tab-item" id="deleted-novels-container"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 我的帖子区域 -->
+            <div id="profile-posts" class="profile-section" style="display: none;">
+                <h2>我的帖子</h2>
+                <!-- 标签页 -->
+                <div class="layui-tab layui-tab-brief" lay-filter="posts-tab">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this" data-type="my">我发布的帖子</li>
+                        <li data-type="liked">我点赞的帖子</li>
+                        <li data-type="favorited">我收藏的帖子</li>
+                        <li data-type="deleted">我被删除的帖子</li>
+                    </ul>
+                    <div class="layui-tab-content">
+                        <div class="layui-tab-item layui-show" id="my-posts-container"></div>
+                        <div class="layui-tab-item" id="liked-posts-container"></div>
+                        <div class="layui-tab-item" id="favorited-posts-container"></div>
+                        <div class="layui-tab-item" id="deleted-posts-container"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 我的消息区域 -->
+            <div id="profile-messages" class="profile-section" style="display: none;">
+                <h2>我的消息</h2>
+                <!-- 标签页 -->
+                <div class="layui-tab layui-tab-brief" lay-filter="messages-tab">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this" data-type="all">所有消息</li>
+                        <li data-type="unread">未读消息</li>
+                        <li data-type="read">已读消息</li>
+                    </ul>
+                    <div class="layui-tab-content">
+                        <div class="layui-tab-item layui-show">
+                            <div class="layui-card layui-card-normal" style="margin-bottom: 20px;">
+                                <div class="layui-card-header">
+                                    <span>消息列表</span>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="markAllMessagesAsRead()">全部标记为已读</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteAllMessages()">清空消息</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <div id="messages-container-all">
+                                        <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="layui-card layui-card-normal" style="margin-bottom: 20px;">
+                                <div class="layui-card-header">
+                                    <span>未读消息</span>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-primary" onclick="markAllMessagesAsRead()">全部标记为已读</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <div id="messages-container-unread">
+                                        <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-tab-item">
+                            <div class="layui-card layui-card-normal" style="margin-bottom: 20px;">
+                                <div class="layui-card-header">
+                                    <span>已读消息</span>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteAllMessages()">清空消息</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <div id="messages-container-read">
+                                        <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'form', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var form = layui.form;
+            var $ = layui.jquery;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        $('#currentNickname').val(res.data.nickname);
+                        
+                        // 检测是否为管理员，显示审核管理菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        $('#currentNickname').val('未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    $('#currentNickname').val('未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 监听昵称修改表单提交
+            form.on('submit(nicknameSubmit)', function(data) {
+                var newNickname = $('#newNickname').val();
+                
+                $.ajax({
+                    url: '/user/update-nickname',
+                    type: 'POST',
+                    data: { nickname: newNickname },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('昵称修改成功', {icon: 1});
+                            $('#currentNickname').val(newNickname);
+                            $('#newNickname').val('');
+                            $('#welcomeText').text('欢迎，' + newNickname);
+                        } else {
+                            layer.msg(res.message || '昵称修改失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+                
+                return false; // 阻止表单跳转
+            });
+            
+            // 监听密码修改表单提交
+            form.on('submit(passwordSubmit)', function(data) {
+                var oldPassword = $('#oldPassword').val();
+                var newPassword = $('#newPassword').val();
+                var confirmPassword = $('#confirmPassword').val();
+                
+                // 验证新密码和确认密码是否一致
+                if (newPassword !== confirmPassword) {
+                    layer.msg('新密码和确认密码不一致', {icon: 2});
+                    return false;
+                }
+                
+                $.ajax({
+                    url: '/user/update-password',
+                    type: 'POST',
+                    data: {
+                        oldPassword: oldPassword,
+                        newPassword: newPassword
+                    },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('密码修改成功', {icon: 1});
+                            // 清空密码表单
+                            $('#oldPassword').val('');
+                            $('#newPassword').val('');
+                            $('#confirmPassword').val('');
+                        } else {
+                            layer.msg(res.message || '密码修改失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+                
+                return false; // 阻止表单跳转
+            });
+            
+            // 动态加载页面内容
+            function loadContent() {
+                var path = window.location.pathname;
+                console.log('当前路径:', path);
+                
+                // 隐藏所有内容区域
+                $('.profile-section').hide();
+                
+                // 更新导航栏选中状态
+                $('.side-nav .layui-nav-item').removeClass('layui-this');
+                if (path === '/profile') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile"])').addClass('layui-this');
+                    $('#profile-info').show();
+                } else if (path === '/profile/novels') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/novels"])').addClass('layui-this');
+                    $('#profile-novels').show();
+                    loadMyNovels();
+                    
+                    // 监听标签页切换
+                    element.on('tab(novels-tab)', function(data) {
+                        var type = $(this).attr('data-type');
+                        var userId = null;
+                        
+                        $.ajax({
+                            url: '/user/current',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code === 200 && res.data) {
+                                    userId = res.data.id;
+                                    switch(type) {
+                                        case 'my':
+                                            loadMyNovels();
+                                            break;
+                                        case 'liked':
+                                            loadLikedNovels(userId);
+                                            break;
+                                        case 'favorited':
+                                            loadFavoritedNovels(userId);
+                                            break;
+                                        case 'deleted':
+                                            loadDeletedNovels(userId);
+                                            break;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } else if (path === '/profile/posts') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/posts"])').addClass('layui-this');
+                    $('#profile-posts').show();
+                    loadMyPosts();
+                    
+                    // 监听标签页切换
+                    element.on('tab(posts-tab)', function(data) {
+                        var type = $(this).attr('data-type');
+                        var userId = null;
+                        
+                        $.ajax({
+                            url: '/user/current',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code === 200 && res.data) {
+                                    userId = res.data.id;
+                                    switch(type) {
+                                        case 'my':
+                                            loadMyPosts();
+                                            break;
+                                        case 'liked':
+                                            loadLikedPosts(userId);
+                                            break;
+                                        case 'favorited':
+                                            loadFavoritedPosts(userId);
+                                            break;
+                                        case 'deleted':
+                                            loadDeletedPosts(userId);
+                                            break;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                } else if (path === '/profile/approval/posts') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/approval/posts"])').addClass('layui-this');
+                    $('#post-approval').show();
+                    loadPendingPosts();
+                } else if (path === '/profile/approval/novels') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/approval/novels"])').addClass('layui-this');
+                    $('#novel-approval').show();
+                    loadPendingNovels();
+                } else if (path === '/profile/approval/chapters') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/approval/chapters"])').addClass('layui-this');
+                    $('#chapter-approval').show();
+                    loadPendingChapters();
+                } else if (path === '/profile/messages') {
+                    $('.side-nav .layui-nav-item:has(a[href="/profile/messages"])').addClass('layui-this');
+                    $('#profile-messages').show();
+                    // 加载所有消息
+                    loadMessagesByType('all');
+                    // 加载未读消息和已读消息（预加载）
+                    loadMessagesByType('unread');
+                    loadMessagesByType('read');
+                    
+                    // 监听标签页切换
+                    element.on('tab(messages-tab)', function(data) {
+                        var type = $(this).attr('data-type');
+                        loadMessagesByType(type);
+                    });
+                }
+                
+                // 重新渲染导航栏（LayUI需要重新渲染以应用样式）
+                element.render('nav', 'side-nav');
+            }
+            
+            // 加载我发布的帖子
+            function loadMyPosts() {
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var authorId = res.data.id;
+                            $.ajax({
+                                url: '/post/author/' + authorId,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        renderPosts(res.data, '#my-posts-container');
+                                    } else {
+                                        layer.msg('获取帖子失败', {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // 加载我发布的小说
+            function loadMyNovels() {
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var authorId = res.data.id;
+                            $.ajax({
+                                url: '/novel/author/' + authorId,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        renderNovels(res.data, '#my-novels-container');
+                                    } else {
+                                        layer.msg('获取小说失败', {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+            
+            // 加载我点赞的帖子
+            function loadLikedPosts(userId) {
+                $.ajax({
+                    url: '/post/liked/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPosts(res.data, '#liked-posts-container');
+                        } else {
+                            layer.msg('获取点赞帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载我点赞的小说
+            function loadLikedNovels(userId) {
+                $.ajax({
+                    url: '/novel/liked/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderNovels(res.data, '#liked-novels-container');
+                        } else {
+                            layer.msg('获取点赞小说失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载我收藏的帖子
+            function loadFavoritedPosts(userId) {
+                $.ajax({
+                    url: '/post/favorited/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPosts(res.data, '#favorited-posts-container');
+                        } else {
+                            layer.msg('获取收藏帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载我收藏的小说
+            function loadFavoritedNovels(userId) {
+                $.ajax({
+                    url: '/novel/favorited/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderNovels(res.data, '#favorited-novels-container');
+                        } else {
+                            layer.msg('获取收藏小说失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 加载我被删除的帖子
+            function loadDeletedPosts(userId) {
+                $.ajax({
+                    url: '/post/deleted/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderDeletedPosts(res.data, '#deleted-posts-container');
+                        } else {
+                            layer.msg('获取被删除帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 加载我被删除的小说
+            function loadDeletedNovels(userId) {
+                $.ajax({
+                    url: '/novel/deleted/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderDeletedNovels(res.data, '#deleted-novels-container');
+                        } else {
+                            layer.msg('获取被删除小说失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载我收藏的帖子
+            function loadFavoritedPosts(userId) {
+                $.ajax({
+                    url: '/post/favorited/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPosts(res.data, '#favorited-posts-container');
+                        } else {
+                            layer.msg('获取收藏帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 加载我被删除的帖子
+            function loadDeletedPosts(userId) {
+                $.ajax({
+                    url: '/post/deleted/' + userId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderDeletedPosts(res.data, '#deleted-posts-container');
+                        } else {
+                            layer.msg('获取被删除帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载待审核帖子
+            function loadPendingPosts() {
+                $.ajax({
+                    url: '/post/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingPosts(res.data, '#pending-posts-container');
+                        } else {
+                            layer.msg('获取待审核帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载消息（按类型）
+            function loadMessagesByType(type) {
+                // type: 'all', 'unread', 'read'
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var userId = res.data.id;
+                            var url = '/message/user/' + userId;
+                            if (type !== 'all') {
+                                var isRead = type === 'read' ? 1 : 0;
+                                url = '/message/user/' + userId + '/filter?isRead=' + isRead;
+                            }
+                            $.ajax({
+                                url: url,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        var container = '#messages-container-' + type;
+                                        renderMessages(res.data, container);
+                                    } else {
+                                        layer.msg('获取消息失败', {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // 加载所有消息（兼容旧调用）
+            function loadMessages() {
+                loadMessagesByType('all');
+            }
+            
+            // 渲染消息列表
+            function renderMessages(messages, container) {
+                var html = '';
+                if (messages.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无消息</div>';
+                } else {
+                    messages.forEach(function(message) {
+                        var time = new Date(message.createTime).toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        });
+                        var readClass = message.isRead === 1 ? 'layui-alert-normal' : 'layui-alert-primary';
+                        html += `
+                            <div class="layui-alert ${readClass}" style="margin: 10px 0;">
+                                <div class="layui-alert-content">
+                                    <p>${message.content}</p>
+                                    <div style="margin-top: 5px; font-size: 12px; color: #999;">
+                                        ${time}
+                                        <span style="float: right;">
+                                            ${message.isRead === 0 ? '<a href="javascript:;" onclick="markMessageAsRead(' + message.id + ')">标记为已读</a>' : ''}
+                                            <a href="javascript:;" onclick="deleteMessage(' + message.id + ')" style="margin-left: 10px;">删除</a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 获取当前消息标签页类型
+            function getCurrentMessageTabType() {
+                var activeTab = $('.layui-tab[lay-filter="messages-tab"] .layui-tab-title .layui-this');
+                if (activeTab.length) {
+                    return activeTab.attr('data-type') || 'all';
+                }
+                return 'all';
+            }
+
+            // 刷新当前消息标签页
+            function refreshCurrentMessageTab() {
+                var type = getCurrentMessageTabType();
+                loadMessagesByType(type);
+                // 同时刷新其他标签页以确保数据一致（可选）
+                if (type !== 'all') loadMessagesByType('all');
+                if (type !== 'unread') loadMessagesByType('unread');
+                if (type !== 'read') loadMessagesByType('read');
+            }
+
+            // 标记消息为已读
+            window.markMessageAsRead = function(messageId) {
+                $.ajax({
+                    url: '/message/read/' + messageId,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('标记为已读成功', {icon: 1});
+                            refreshCurrentMessageTab();
+                        } else {
+                            layer.msg('标记失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            };
+            
+            // 标记所有消息为已读
+            window.markAllMessagesAsRead = function() {
+                layer.confirm('确定要标记所有消息为已读吗？', {
+                    title: '确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/current',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200 && res.data) {
+                                var userId = res.data.id;
+                                $.ajax({
+                                    url: '/message/read-all/' + userId,
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    success: function(res) {
+                                        if (res.code === 200) {
+                                            layer.msg('全部标记为已读成功', {icon: 1});
+                                            refreshCurrentMessageTab();
+                                        } else {
+                                            layer.msg('标记失败', {icon: 2});
+                                        }
+                                    },
+                                    error: function() {
+                                        layer.msg('服务器错误', {icon: 2});
+                                    }
+                                });
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 删除消息
+            window.deleteMessage = function(messageId) {
+                layer.confirm('确定要删除这条消息吗？', {
+                    title: '确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/message/delete/' + messageId,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('删除成功', {icon: 1});
+                                refreshCurrentMessageTab();
+                            } else {
+                                layer.msg('删除失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 清空所有消息
+            window.deleteAllMessages = function() {
+                layer.confirm('确定要清空所有消息吗？此操作不可恢复', {
+                    title: '确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/current',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200 && res.data) {
+                                var userId = res.data.id;
+                                $.ajax({
+                                    url: '/message/delete-all/' + userId,
+                                    type: 'POST',
+                                    dataType: 'json',
+                                    success: function(res) {
+                                        if (res.code === 200) {
+                                            layer.msg('清空成功', {icon: 1});
+                                            refreshCurrentMessageTab();
+                                        } else {
+                                            layer.msg('清空失败', {icon: 2});
+                                        }
+                                    },
+                                    error: function() {
+                                        layer.msg('服务器错误', {icon: 2});
+                                    }
+                                });
+                            }
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 渲染帖子列表
+            function renderPosts(posts, container) {
+                var html = '';
+                if (posts.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无帖子</div>';
+                } else {
+                    posts.forEach(function(post) {
+                        var statusText = '';
+                        switch(post.status) {
+                            case 0: statusText = '已发布'; break;
+                            case 1: statusText = '审核中'; break;
+                            case 2: statusText = '已拒绝'; break;
+                        }
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/post/${post.id}" style="color: #333;">${post.title}</a>
+                                    <span style="float: right; color: #999; font-size: 12px;">${statusText}</span>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        发布时间: ${new Date(post.createTime).toLocaleString()} | 浏览量: ${post.viewCount} | 评论数: ${post.commentCount}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染小说列表
+            function renderNovels(novels, container) {
+                var html = '';
+                if (novels.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无小说</div>';
+                } else {
+                    novels.forEach(function(novel) {
+                        var statusText = '';
+                        switch(novel.status) {
+                            case 0: statusText = '已发布'; break;
+                            case 1: statusText = '审核中'; break;
+                            case 2: statusText = '已拒绝'; break;
+                        }
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/novel/view/${novel.id}" style="color: #333;">${novel.title}</a>
+                                    <span style="float: right; color: #999; font-size: 12px;">${statusText}</span>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${novel.description ? novel.description.substring(0, 100) : ''}${novel.description && novel.description.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        作者: ${novel.penName} | 章节数: ${novel.chapterCount} | 浏览量: ${novel.viewCount} | 点赞: ${novel.likeCount} | 收藏: ${novel.favoriteCount}
+                                    </div>
+                                    <div style="margin-top: 5px;">
+                                        <a href="/novel/edit/${novel.id}" class="layui-btn layui-btn-xs layui-btn-normal">编辑</a>
+                                        <a href="/chapter/create?novelId=${novel.id}" class="layui-btn layui-btn-xs layui-btn-primary">写章节</a>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNovel(${novel.id})">删除</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染被删除的帖子
+            function renderDeletedPosts(posts, container) {
+                var html = '';
+                if (posts.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无被删除的帖子</div>';
+                } else {
+                    posts.forEach(function(post) {
+                        var statusText = '';
+                        switch(post.status) {
+                            case 0: statusText = '已发布'; break;
+                            case 1: statusText = '审核中'; break;
+                            case 2: statusText = '已拒绝'; break;
+                        }
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/post/${post.id}" style="color: #333;">${post.title}</a>
+                                    <span style="float: right; color: #999; font-size: 12px;">已删除</span>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        发布时间: ${new Date(post.createTime).toLocaleString()} | 浏览量: ${post.viewCount} | 评论数: ${post.commentCount}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染被删除的小说
+            function renderDeletedNovels(novels, container) {
+                var html = '';
+                if (novels.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无被删除的小说</div>';
+                } else {
+                    novels.forEach(function(novel) {
+                        var statusText = '';
+                        switch(novel.status) {
+                            case 0: statusText = '已发布'; break;
+                            case 1: statusText = '审核中'; break;
+                            case 2: statusText = '已拒绝'; break;
+                        }
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/novel/view/${novel.id}" style="color: #333;">${novel.title}</a>
+                                    <span style="float: right; color: #999; font-size: 12px;">已删除</span>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${novel.description ? novel.description.substring(0, 100) : ''}${novel.description && novel.description.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        作者: ${novel.penName} | 章节数: ${novel.chapterCount} | 浏览量: ${novel.viewCount} | 点赞: ${novel.likeCount} | 收藏: ${novel.favoriteCount}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+
+            // 渲染待审核帖子
+            function renderPendingPosts(posts, container) {
+                var html = '';
+                if (posts.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核帖子</div>';
+                } else {
+                    posts.forEach(function(post) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/post/${post.id}" style="color: #333;">${post.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approvePost(${post.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectPost(${post.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        发布者ID: ${post.authorId} | 发布时间: ${new Date(post.createTime).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载待审核小说
+            function loadPendingNovels() {
+                $.ajax({
+                    url: '/novel/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingNovels(res.data, '#pending-novels-container');
+                        } else {
+                            layer.msg('获取待审核小说失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 渲染待审核小说
+            function renderPendingNovels(novels, container) {
+                var html = '';
+                if (novels.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核小说</div>';
+                } else {
+                    novels.forEach(function(novel) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/novel/view/${novel.id}" style="color: #333;">${novel.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approveNovel(${novel.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectNovel(${novel.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${novel.description ? novel.description.substring(0, 100) : ''}${novel.description && novel.description.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        作者: ${novel.penName} | 章节数: ${novel.chapterCount} | 浏览量: ${novel.viewCount} | 点赞: ${novel.likeCount} | 收藏: ${novel.favoriteCount}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载待审核章节
+            function loadPendingChapters() {
+                $.ajax({
+                    url: '/chapter/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingChapters(res.data, '#pending-chapters-container');
+                        } else {
+                            layer.msg('获取待审核章节失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 渲染待审核章节
+            function renderPendingChapters(chapters, container) {
+                var html = '';
+                if (chapters.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核章节</div>';
+                } else {
+                    chapters.forEach(function(chapter) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/chapter/${chapter.id}" style="color: #333;">${chapter.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approveChapter(${chapter.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectChapter(${chapter.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${chapter.content ? chapter.content.substring(0, 100) : ''}${chapter.content && chapter.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        所属小说ID: ${chapter.novelId} | 字数: ${chapter.wordCount} | 排序: ${chapter.sortOrder} | 发布时间: ${new Date(chapter.createTime).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 审核通过帖子
+            window.approvePost = function(postId) {
+                layer.confirm('确定要通过这篇帖子吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/approve/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子审核通过', {icon: 1});
+                                loadPendingPosts();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 拒绝帖子
+            window.rejectPost = function(postId) {
+                layer.confirm('确定要拒绝这篇帖子吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/reject/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子已拒绝', {icon: 1});
+                                loadPendingPosts();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 审核通过小说
+            window.approveNovel = function(novelId) {
+                layer.confirm('确定要通过这篇小说吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/approve/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说审核通过', {icon: 1});
+                                loadPendingNovels();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 拒绝小说
+            window.rejectNovel = function(novelId) {
+                layer.confirm('确定要拒绝这篇小说吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/reject/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说已拒绝', {icon: 1});
+                                loadPendingNovels();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 审核通过章节
+            window.approveChapter = function(chapterId) {
+                layer.confirm('确定要通过这个章节吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/approve/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节审核通过', {icon: 1});
+                                loadPendingChapters();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 拒绝章节
+            window.rejectChapter = function(chapterId) {
+                layer.confirm('确定要拒绝这个章节吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/reject/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节已拒绝', {icon: 1});
+                                loadPendingChapters();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 页面加载完成后执行
+            $(document).ready(function() {
+                loadContent();
+            });
+        });
+    </script>
+</body>
+</html>

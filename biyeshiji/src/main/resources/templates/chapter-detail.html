@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>章节详情 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <!-- 引入公共样式 -->
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .chapter-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .chapter-header {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .chapter-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .chapter-meta {
+            color: #999;
+            font-size: 14px;
+        }
+        .chapter-content {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #333;
+            padding: 20px 0;
+        }
+        .chapter-nav {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <div class="chapter-container">
+            <!-- 返回按钮 -->
+            <div style="margin-bottom: 20px;">
+                <a href="javascript:history.back()" class="layui-btn layui-btn-primary"><i class="layui-icon layui-icon-left"></i> 返回</a>
+                <a href="/novel/list" class="layui-btn layui-btn-primary">小说列表</a>
+            </div>
+            
+            <!-- 章节信息 -->
+            <div class="chapter-header">
+                <h1 class="chapter-title" id="chapterTitle">加载中...</h1>
+                <div class="chapter-meta">
+                    <span>所属小说：<a id="novelLink" href="#">加载中...</a></span>
+                    <span>字数：<span id="wordCount">0</span></span>
+                    <span>发布时间：<span id="createTime">-</span></span>
+                    <span>阅读量：<span id="viewCount">0</span></span>
+                    <span style="margin-left: 20px;">
+                        <button class="layui-btn layui-btn-xs layui-btn-primary" id="reportBtn">
+                            <i class="layui-icon layui-icon-report"></i> 举报
+                        </button>
+                        <button class="layui-btn layui-btn-xs layui-btn-warm" id="adminBanBtn" style="display: none;">
+                            <i class="layui-icon layui-icon-lock"></i> 封禁
+                        </button>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- 章节内容 -->
+            <div class="chapter-content" id="chapterContent">
+                加载中...
+            </div>
+            
+            <!-- 导航 -->
+            <div class="chapter-nav">
+                <a href="javascript:;" id="prevChapter" class="layui-btn layui-btn-primary">上一章</a>
+                <a href="javascript:;" id="nextChapter" class="layui-btn layui-btn-primary">下一章</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'jquery'], function() {
+            var layer = layui.layer;
+            var $ = layui.$;
+            
+            // 获取URL中的章节ID
+            var pathParts = window.location.pathname.split('/');
+            var chapterId = pathParts[pathParts.length - 1];
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    window.location.href = '/logout';
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        // 如果是管理员或高级管理员，显示管理后台菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                    }
+                },
+                error: function() {
+                    $('#welcomeText').text('欢迎，未知用户');
+                }
+            });
+            
+            // 加载章节详情
+            function loadChapterDetail() {
+                $.ajax({
+                    url: '/chapter/detail/' + chapterId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var chapter = res.data;
+                            $('#chapterTitle').text(chapter.title);
+                            $('#wordCount').text(chapter.wordCount);
+                            $('#viewCount').text(chapter.viewCount);
+                            $('#createTime').text(new Date(chapter.createTime).toLocaleString('zh-CN'));
+                            $('#chapterContent').html(chapter.content.replace(/\n/g, '<br>'));
+                            
+                            // 小说链接
+                            if (chapter.novel) {
+                                $('#novelLink').attr('href', '/novel/view/' + chapter.novel.id).text(chapter.novel.title);
+                            }
+                            
+                            // 加载上一章和下一章
+                            loadPrevNext(chapter.novelId, chapter.sortOrder);
+                        } else {
+                            layer.msg('获取章节详情失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.msg('获取章节详情失败', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载上一章和下一章
+            function loadPrevNext(novelId, sortOrder) {
+                // 上一章
+                $.ajax({
+                    url: '/chapter/previous/' + novelId + '/' + sortOrder,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            $('#prevChapter').attr('href', '/chapter/view/' + res.data.id).show();
+                        } else {
+                            $('#prevChapter').hide();
+                        }
+                    },
+                    error: function() {
+                        $('#prevChapter').hide();
+                    }
+                });
+                
+                // 下一章
+                $.ajax({
+                    url: '/chapter/next/' + novelId + '/' + sortOrder,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            $('#nextChapter').attr('href', '/chapter/view/' + res.data.id).show();
+                        } else {
+                            $('#nextChapter').hide();
+                        }
+                    },
+                    error: function() {
+                        $('#nextChapter').hide();
+                    }
+                });
+            }
+            
+            // 举报章节
+            $('#reportBtn').click(function() {
+                // 获取当前用户信息
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            showReportDialog();
+                        } else {
+                            layer.msg('请先登录', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('请先登录', {icon: 2});
+                    }
+                });
+            });
+            
+            function showReportDialog() {
+                // 弹出举报表单
+                layer.open({
+                    type: 1,
+                    title: '举报章节',
+                    area: ['500px', '400px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form id="reportForm">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报类型</label>
+                                    <div class="layui-input-block">
+                                        <select name="reportType" lay-verify="required" lay-filter="reportType">
+                                            <option value="">请选择举报类型</option>
+                                            <option value="1">违规内容</option>
+                                            <option value="2">垃圾广告</option>
+                                            <option value="3">色情低俗</option>
+                                            <option value="4">人身攻击</option>
+                                            <option value="5">侵犯版权</option>
+                                            <option value="6">其他</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">举报描述</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="description" placeholder="请详细描述举报原因，有助于管理员快速处理"
+                                                  style="width: 100%; height: 150px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 14px; resize: none;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button type="submit" class="layui-btn layui-btn-normal">提交举报</button>
+                                        <button type="button" class="layui-btn layui-btn-primary" onclick="layer.closeAll()">取消</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function(layero, index) {
+                        // 重新渲染表单元素
+                        layui.form.render();
+                        
+                        // 提交举报表单
+                        $('#reportForm').submit(function(e) {
+                            e.preventDefault();
+                            var reportType = $(this).find('select[name="reportType"]').val();
+                            var description = $(this).find('textarea[name="description"]').val();
+                            
+                            if (!reportType) {
+                                layer.msg('请选择举报类型', {icon: 2});
+                                return;
+                            }
+                            
+                            if (!description.trim()) {
+                                layer.msg('请输入举报描述', {icon: 2});
+                                return;
+                            }
+                            
+                            var reportData = {
+                                targetType: 4, // 4表示章节
+                                targetId: chapterId,
+                                reportType: parseInt(reportType),
+                                description: description
+                            };
+                            
+                            $.ajax({
+                                url: '/admin/reports/create',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(reportData),
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('举报提交成功！管理员会尽快处理。', {icon: 1});
+                                        layer.close(index);
+                                    } else {
+                                        layer.msg('举报提交失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function(xhr, status, error) {
+                                    console.error('举报请求失败:', error);
+                                    layer.msg('举报提交失败', {icon: 2});
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+            
+            // 显示/隐藏管理员封禁按钮
+            function updateAdminButtons() {
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data && (res.data.role === 1 || res.data.role === 2)) {
+                            $('#adminBanBtn').show();
+                        } else {
+                            $('#adminBanBtn').hide();
+                        }
+                    },
+                    error: function() {
+                        $('#adminBanBtn').hide();
+                    }
+                });
+            }
+            
+            // 封禁章节
+            $('#adminBanBtn').click(function() {
+                layer.confirm('确定要封禁该章节吗？封禁后章节将不可见，但可以解禁。', {
+                    title: '封禁确认',
+                    btn: ['确定封禁', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/ban/' + chapterId,
+                        type: 'POST',
+                        dataType: 'json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节已成功封禁', {icon: 1});
+                                // 刷新页面
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1500);
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('封禁请求失败:', error);
+                            layer.msg('封禁失败', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                }, function(index) {
+                    layer.close(index);
+                });
+            });
+            
+            // 初始化
+            loadChapterDetail();
+            
+            // 更新管理员按钮显示
+            setTimeout(function() {
+                updateAdminButtons();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

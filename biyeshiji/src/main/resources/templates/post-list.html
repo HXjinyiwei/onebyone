@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>广场（论坛） - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛</div>
+    
+    <!-- 导航栏 -->
+        <div class="nav-bar">
+            <div class="layui-container">
+                <ul class="layui-nav" lay-filter="">
+                    <li class="layui-nav-item"><a href="/index">首页</a></li>
+                    <li class="layui-nav-item layui-this"><a href="/post/list">广场（论坛）</a></li>
+                    <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                    <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="/profile">个人中心</a></dd>
+                            <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-container">
+        <!-- 发帖按钮 -->
+        <div class="post-btn">
+            <a href="/post/create" class="layui-btn layui-btn-normal">发布帖子</a>
+        </div>
+        
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <h3>搜索帖子：</h3>
+            <input type="text" id="searchKeyword" class="layui-input" placeholder="输入关键词（标题、内容、作者）">
+            <button class="layui-btn layui-btn-normal" onclick="searchPosts()">搜索</button>
+            <button class="layui-btn layui-btn-primary" onclick="clearSearch()">清空</button>
+        </div>
+        
+        <!-- 分类筛选 -->
+        <div class="category-filter">
+            <h3>分类筛选</h3>
+            <ul class="category-list">
+                <li><a href="/post/list" class="active">全部</a></li>
+                <li><a href="/post/list?categoryId=1">公告</a></li>
+                <li><a href="/post/list?categoryId=2">讨论</a></li>
+                <li><a href="/post/list?categoryId=3">求助</a></li>
+                <li><a href="/post/list?categoryId=4">分享</a></li>
+            </ul>
+        </div>
+        
+        <!-- 帖子列表 -->
+        <div class="post-list" id="postList">
+            <!-- 帖子内容将通过AJAX动态加载 -->
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination">
+            <div class="layui-box layui-laypage layui-laypage-default">
+                <a href="/post/list?page=1" class="layui-laypage-first">首页</a>
+                <a href="/post/list?page=1" class="layui-laypage-prev">上一页</a>
+                <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>1</em></span>
+                <a href="/post/list?page=2" class="">2</a>
+                <a href="/post/list?page=3" class="">3</a>
+                <a href="/post/list?page=2" class="layui-laypage-next">下一页</a>
+                <a href="/post/list?page=3" class="layui-laypage-last">尾页</a>
+                <span class="layui-laypage-count">共 3 页</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var $ = layui.jquery;
+            
+            // 全局变量，保存当前用户信息
+            var currentUser = null;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 点击确定按钮，跳转到退出登录页面
+                    window.location.href = '/logout';
+                    layer.close(index);
+                }, function(index) {
+                    // 点击取消按钮，关闭对话框
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    console.log('获取当前用户信息成功:', res);
+                    if (res.code === 200 && res.data) {
+                        currentUser = res.data;
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        // 检测是否为管理员，显示管理后台菜单
+                        if (res.data.role === 1 || res.data.role === 2) {
+                            $('.admin-menu').show();
+                        }
+                    } else {
+                        $('#welcomeText').text('欢迎，未知用户');
+                        console.log('获取当前用户信息失败:', res.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#welcomeText').text('欢迎，未知用户');
+                    console.error('获取当前用户信息请求失败:', error);
+                    console.log('响应状态:', status);
+                    console.log('响应内容:', xhr.responseText);
+                }
+            });
+            
+            // 获取帖子列表
+            function getPostList(categoryId, page) {
+                $.ajax({
+                    url: '/post/all',
+                    type: 'GET',
+                    data: {
+                        categoryId: categoryId || '',
+                        page: page || 1,
+                        pageSize: 10
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('获取帖子列表成功:', res);
+                        if (res.code === 200 && res.data) {
+                            renderPostList(res.data);
+                        } else {
+                            layer.msg('获取帖子列表失败：' + (res.message || '未知错误'), {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.msg('获取帖子列表请求失败：' + error, {icon: 2});
+                        console.error('获取帖子列表请求失败:', error);
+                    }
+                });
+            }
+            
+            // 搜索帖子
+            window.searchPosts = function() {
+                var keyword = $('#searchKeyword').val().trim();
+                if (!keyword) {
+                    layer.msg('请输入搜索关键词', {icon: 2});
+                    return;
+                }
+                $.ajax({
+                    url: '/post/search',
+                    type: 'GET',
+                    data: {
+                        keyword: keyword,
+                        page: 1,
+                        pageSize: 10
+                    },
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('搜索帖子成功:', res);
+                        if (res.code === 200 && res.data) {
+                            renderPostList(res.data);
+                            layer.msg('搜索完成，找到 ' + res.data.length + ' 条结果', {icon: 1});
+                        } else {
+                            layer.msg('搜索失败：' + (res.message || '未知错误'), {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        layer.msg('搜索请求失败：' + error, {icon: 2});
+                        console.error('搜索请求失败:', error);
+                    }
+                });
+            };
+
+            // 清空搜索
+            window.clearSearch = function() {
+                $('#searchKeyword').val('');
+                // 重新加载普通帖子列表
+                var categoryId = $('.category-list a.active').attr('href').split('categoryId=')[1];
+                if (!categoryId || categoryId === '/post/list') {
+                    categoryId = '';
+                }
+                getPostList(categoryId);
+            };
+
+            // 删除帖子
+            window.deletePost = function(postId) {
+                layer.confirm('确定要删除这篇帖子吗？', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/delete/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子删除成功', {icon: 1});
+                                // 重新加载帖子列表
+                                var categoryId = $('.category-list a.active').attr('href').split('categoryId=')[1];
+                                if (!categoryId || categoryId === '/post/list') {
+                                    categoryId = '';
+                                }
+                                getPostList(categoryId);
+                            } else {
+                                layer.msg('删除失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+
+            // 封禁帖子
+            window.banPost = function(postId) {
+                layer.prompt({
+                    title: '请输入封禁原因（可选）',
+                    formType: 2,
+                    value: '',
+                    area: ['400px', '150px']
+                }, function(reason, index) {
+                    $.ajax({
+                        url: '/post/ban/' + postId,
+                        type: 'POST',
+                        data: { reason: reason },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子封禁成功', {icon: 1});
+                                // 重新加载帖子列表
+                                var categoryId = $('.category-list a.active').attr('href').split('categoryId=')[1];
+                                if (!categoryId || categoryId === '/post/list') {
+                                    categoryId = '';
+                                }
+                                getPostList(categoryId);
+                            } else {
+                                layer.msg('封禁失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 渲染帖子列表
+            function renderPostList(posts) {
+                var postListHtml = '';
+                if (posts.length === 0) {
+                    postListHtml = '<div style="text-align: center; padding: 50px 0; color: #999;">暂无帖子数据</div>';
+                } else {
+                    posts.forEach(function(post) {
+                        postListHtml += '<div class="post-item">';
+                        postListHtml += '<div class="post-title">';
+                        postListHtml += '<a href="/post/' + post.id + '">' + post.title + '</a>';
+                        postListHtml += '<span class="status-tag ' + (post.status === 0 ? 'status-normal' : 'status-locked') + '">' + (post.status === 0 ? '正常' : '已锁定') + '</span>';
+                        postListHtml += '</div>';
+                        postListHtml += '<div class="post-meta">';
+                        postListHtml += '<span>作者：' + (post.author ? post.author.nickname : '未知作者') + '</span>';
+                        postListHtml += '<span>分类：' + (post.category ? post.category.name : '未分类') + '</span>';
+                        postListHtml += '<span>发布时间：' + formatDate(post.createTime) + '</span>';
+                        // 管理员显示删除和封禁按钮
+                        if (currentUser && (currentUser.role === 1 || currentUser.role === 2)) {
+                            postListHtml += '<span style="float: right;">';
+                            postListHtml += '<button class="layui-btn layui-btn-warning layui-btn-xs" onclick="banPost(' + post.id + ')" style="margin-right: 5px;">封禁</button>';
+                            postListHtml += '<button class="layui-btn layui-btn-danger layui-btn-xs" onclick="deletePost(' + post.id + ')">删除</button>';
+                            postListHtml += '</span>';
+                        }
+                        postListHtml += '</div>';
+                        postListHtml += '<div class="post-excerpt">' + (post.content ? post.content.substring(0, 200) + '...' : '') + '</div>';
+                        postListHtml += '<div class="post-stats">';
+                        postListHtml += '<span>阅读：' + (post.viewCount || 0) + '</span>';
+                        postListHtml += '<span>点赞：' + (post.likeCount || 0) + '</span>';
+                        postListHtml += '<span>收藏：' + (post.favoriteCount || 0) + '</span>';
+                        postListHtml += '<span>评论：' + (post.commentCount || 0) + '</span>';
+                        postListHtml += '</div>';
+
+                        postListHtml += '</div>';
+                    });
+                }
+                $('#postList').html(postListHtml);
+            }
+            
+            // 格式化日期
+            function formatDate(dateString) {
+                var date = new Date(dateString);
+                var year = date.getFullYear();
+                var month = (date.getMonth() + 1).toString().padStart(2, '0');
+                var day = date.getDate().toString().padStart(2, '0');
+                var hours = date.getHours().toString().padStart(2, '0');
+                var minutes = date.getMinutes().toString().padStart(2, '0');
+                var seconds = date.getSeconds().toString().padStart(2, '0');
+                return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+            }
+            
+            // 初始化加载帖子列表
+            getPostList();
+            
+            // 分类筛选点击事件
+            $('.category-list a').click(function(e) {
+                e.preventDefault();
+                var categoryId = $(this).attr('href').split('categoryId=')[1];
+                if (!categoryId || categoryId === '/post/list') {
+                    categoryId = '';
+                }
+                // 更新激活状态
+                $('.category-list a').removeClass('active');
+                $(this).addClass('active');
+                // 重新加载帖子列表
+                getPostList(categoryId);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "BiyeshijiApplication",
+            "request": "launch",
+            "mainClass": "com.example.biyeshiji.BiyeshijiApplication",
+            "projectName": "biyeshiji"
+        },
+        {
+            // 以下是新增的浏览器启动配置
+            "type": "pwa-chrome", // 指定调试器为Chrome浏览器
+            "request": "launch",   // 启动一个实例
+            "name": "启动Chrome打开Web程序", // 在调试下拉菜单中显示的名称
+            "url": "http://localhost:8081", // 请确保这是你Spring Boot应用运行的地址
+            "webRoot": "${workspaceFolder}" // 工作根目录，通常指向你的项目文件夹
+        }
+    ]
+}

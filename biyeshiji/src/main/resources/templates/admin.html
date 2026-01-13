@@ -1,0 +1,2438 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 小说发布与讨论论坛</title>
+    <!-- 引入layui CSS -->
+    <link rel="stylesheet" href="/layui/css/layui.css">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 120px);
+        }
+        .admin-sidebar {
+            width: 220px;
+            background-color: #f8f8f8;
+            border-right: 1px solid #e6e6e6;
+            padding: 20px 0;
+        }
+        .admin-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .admin-stat-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .admin-stat-card h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .admin-stat-card .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #009688;
+        }
+        .admin-stat-card .stat-desc {
+            color: #666;
+            font-size: 14px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .admin-table th, .admin-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .admin-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <!-- 标题区域 -->
+    <div class="header-title">小说发布与讨论论坛 - 管理后台</div>
+    
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+        <div class="layui-container">
+            <ul class="layui-nav" lay-filter="">
+                <li class="layui-nav-item"><a href="/index">首页</a></li>
+                <li class="layui-nav-item"><a href="/post/list">广场（论坛）</a></li>
+                <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
+                <li class="layui-nav-item admin-menu layui-this" style="display: none;"><a href="/admin">管理后台</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/profile">个人中心</a></dd>
+                        <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 管理后台主内容区域 -->
+    <div class="admin-container">
+        <!-- 侧边栏 -->
+        <div class="admin-sidebar">
+            <ul class="layui-nav layui-nav-tree" lay-filter="admin-sidebar">
+                <li class="layui-nav-item layui-this"><a href="javascript:;" data-page="dashboard">汇总</a></li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">审核管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" data-page="approval-posts">帖子审核</a></dd>
+                        <dd><a href="javascript:;" data-page="approval-novels">小说审核</a></dd>
+                        <dd><a href="javascript:;" data-page="approval-chapters">章节审核</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">用户管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" data-page="user-list">用户列表</a></dd>
+                        <dd><a href="javascript:;" data-page="user-roles">角色权限</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">内容管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" data-page="content-posts">帖子管理</a></dd>
+                        <dd><a href="javascript:;" data-page="content-novels">小说管理</a></dd>
+                        <dd><a href="javascript:;" data-page="content-chapters">章节管理</a></dd>
+                        <dd><a href="javascript:;" data-page="content-categories">分类管理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a href="javascript:;">通知中心</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" data-page="unban-requests">解封请求</a></dd>
+                        <dd><a href="javascript:;" data-page="report-management">举报管理</a></dd>
+                    </dl>
+                </li>
+            </ul>
+        </div>
+        
+        <!-- 右侧内容区域 -->
+        <div class="admin-content">
+            <!-- 仪表盘页面 -->
+            <div id="dashboard-page" class="admin-page">
+                <h2>汇总</h2>
+                <div class="layui-row layui-col-space15">
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>总用户数</h3>
+                            <div class="stat-number" id="stat-users">0</div>
+                            <div class="stat-desc">注册用户总数</div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>总小说数</h3>
+                            <div class="stat-number" id="stat-novels">0</div>
+                            <div class="stat-desc">已发布小说总数</div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>总帖子数</h3>
+                            <div class="stat-number" id="stat-posts">0</div>
+                            <div class="stat-desc">已发布帖子总数</div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>待审核</h3>
+                            <div class="stat-number" id="stat-pending">0</div>
+                            <div class="stat-desc">待审核内容总数</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-row layui-col-space15" style="margin-top: 20px;">
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>未读通知</h3>
+                            <div class="stat-number" id="stat-unread-notifications">0</div>
+                            <div class="stat-desc">解封请求、举报等</div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>待处理举报</h3>
+                            <div class="stat-number" id="stat-pending-reports">0</div>
+                            <div class="stat-desc">未处理的举报</div>
+                        </div>
+                    </div>
+                    <div class="layui-col-md3">
+                        <div class="admin-stat-card">
+                            <h3>待处理解封请求</h3>
+                            <div class="stat-number" id="stat-pending-unban">0</div>
+                            <div class="stat-desc">未处理的解封请求</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-card layui-card-normal" style="margin-top: 20px;">
+                    <div class="layui-card-header">最近活动</div>
+                    <div class="layui-card-body">
+                        <div id="recent-activities">加载中...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 帖子审核页面 -->
+            <div id="approval-posts-page" class="admin-page" style="display: none;">
+                <h2>帖子审核</h2>
+                <div id="pending-posts-container"></div>
+            </div>
+            
+            <!-- 小说审核页面 -->
+            <div id="approval-novels-page" class="admin-page" style="display: none;">
+                <h2>小说审核</h2>
+                <div id="pending-novels-container"></div>
+            </div>
+            
+            <!-- 章节审核页面 -->
+            <div id="approval-chapters-page" class="admin-page" style="display: none;">
+                <h2>章节审核</h2>
+                <div id="pending-chapters-container"></div>
+            </div>
+            
+            <!-- 用户列表页面 -->
+            <div id="user-list-page" class="admin-page" style="display: none;">
+                <h2>用户列表</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadUsers()">刷新</button>
+                    <button class="layui-btn layui-btn-primary" onclick="showAddUserModal()">添加用户</button>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>搜索：</label>
+                        <input type="text" id="user-search-input" placeholder="用户名/昵称/角色/状态" class="layui-input" style="width: 200px; display: inline-block;">
+                        <button class="layui-btn layui-btn-sm" onclick="searchUsers()">搜索</button>
+                        <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearSearch()">清空</button>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>昵称</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list-body">
+                        <tr><td colspan="6">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 分类管理页面 -->
+            <div id="content-categories-page" class="admin-page" style="display: none;">
+                <h2>分类管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadCategories()">刷新</button>
+                    <button class="layui-btn layui-btn-primary" onclick="showAddCategoryModal()">添加分类</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>分类名称</th>
+                            <th>描述</th>
+                            <th>父分类</th>
+                            <th>排序</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="category-list-body">
+                        <tr><td colspan="7">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 角色权限页面 -->
+            <div id="user-roles-page" class="admin-page" style="display: none;">
+                <h2>角色权限管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadUserRoles()">刷新</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户名</th>
+                            <th>昵称</th>
+                            <th>当前角色</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-roles-body">
+                        <tr><td colspan="6">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 解封请求页面 -->
+            <div id="unban-requests-page" class="admin-page" style="display: none;">
+                <h2>解封请求</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadUnbanRequests()">刷新</button>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>请求内容</th>
+                            <th>状态</th>
+                            <th>提交时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="unban-requests-body">
+                        <tr><td colspan="5">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 举报管理页面 -->
+            <div id="report-management-page" class="admin-page" style="display: none;">
+                <h2>举报管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadReports()">刷新</button>
+                    <div class="layui-inline">
+                        <label>类型筛选：</label>
+                        <select id="report-type-filter" onchange="loadReports()">
+                            <option value="">全部</option>
+                            <option value="POST">帖子</option>
+                            <option value="NOVEL">小说</option>
+                            <option value="CHAPTER">章节</option>
+                            <option value="COMMENT">评论</option>
+                            <option value="USER">用户</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>状态筛选：</label>
+                        <select id="report-status-filter" onchange="loadReports()">
+                            <option value="">全部</option>
+                            <option value="0">待处理</option>
+                            <option value="1">已处理</option>
+                            <option value="2">已忽略</option>
+                        </select>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>举报类型</th>
+                            <th>目标内容</th>
+                            <th>举报人</th>
+                            <th>举报原因</th>
+                            <th>状态</th>
+                            <th>举报时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-management-body">
+                        <tr><td colspan="7">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+
+            <!-- 帖子管理页面 -->
+            <div id="content-posts-page" class="admin-page" style="display: none;">
+                <h2>帖子管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentPosts()">刷新</button>
+                    <div class="layui-inline">
+                        <label>分类筛选：</label>
+                        <select id="post-category-filter" onchange="loadContentPosts()">
+                            <option value="">全部</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>状态筛选：</label>
+                        <select id="post-status-filter" onchange="loadContentPosts()">
+                            <option value="">全部</option>
+                            <option value="0">正常</option>
+                            <option value="1">审核中</option>
+                            <option value="2">封禁</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>搜索：</label>
+                        <input type="text" id="post-search-input" placeholder="标题/作者/分类" class="layui-input" style="width: 200px; display: inline-block;">
+                        <button class="layui-btn layui-btn-sm" onclick="searchPosts()">搜索</button>
+                        <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearPostSearch()">清空</button>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>标题</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>状态</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-posts-body">
+                        <tr><td colspan="7">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 小说管理页面 -->
+            <div id="content-novels-page" class="admin-page" style="display: none;">
+                <h2>小说管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentNovels()">刷新</button>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>状态筛选：</label>
+                        <select id="novel-status-filter" onchange="loadContentNovels()">
+                            <option value="">全部</option>
+                            <option value="0">待审核</option>
+                            <option value="1">审核通过</option>
+                            <option value="2">审核拒绝</option>
+                            <option value="3">封禁</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>搜索：</label>
+                        <input type="text" id="novel-search-input" placeholder="标题/作者/分类名称" class="layui-input" style="width: 250px; display: inline-block;">
+                        <button class="layui-btn layui-btn-sm" onclick="searchNovels()">搜索</button>
+                        <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearNovelSearch()">清空</button>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>作者</th>
+                            <th>分类</th>
+                            <th>状态</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-novels-body">
+                        <tr><td colspan="6">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 章节管理页面 -->
+            <div id="content-chapters-page" class="admin-page" style="display: none;">
+                <h2>章节管理</h2>
+                <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentChapters()">刷新</button>
+                    <div class="layui-inline">
+                        <label>状态筛选：</label>
+                        <select id="chapter-status-filter" onchange="loadContentChapters()">
+                            <option value="">全部</option>
+                            <option value="0">待审核</option>
+                            <option value="1">审核通过</option>
+                            <option value="2">审核拒绝</option>
+                            <option value="3">封禁</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>搜索：</label>
+                        <input type="text" id="chapter-search-input" placeholder="章节标题/小说标题/作者/封禁" class="layui-input" style="width: 250px; display: inline-block;">
+                        <button class="layui-btn layui-btn-sm" onclick="searchChapters()">搜索</button>
+                        <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearChapterSearch()">清空</button>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>所属小说</th>
+                            <th>状态</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="content-chapters-body">
+                        <tr><td colspan="5">加载中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 其他页面占位 -->
+            <div id="other-pages" class="admin-page" style="display: none;">
+                <h2>功能开发中</h2>
+                <p>该功能正在开发中，敬请期待。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入layui JS -->
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['layer', 'element', 'form', 'jquery'], function() {
+            var layer = layui.layer;
+            var element = layui.element;
+            var form = layui.form;
+            var $ = layui.jquery;
+            
+            // 全局变量存储当前用户角色
+            window.currentUserRole = 0;
+            
+            // 退出登录确认函数
+            window.logoutConfirm = function() {
+                layer.confirm('确定要退出登录吗？', {
+                    title: '退出确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    window.location.href = '/logout';
+                    layer.close(index);
+                });
+            };
+            
+            // 获取当前登录用户信息
+            $.ajax({
+                url: '/user/current',
+                type: 'GET',
+                dataType: 'json',
+                success: function(res) {
+                    if (res.code === 200 && res.data) {
+                        $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        // 存储当前用户角色和ID
+                        window.currentUserRole = res.data.role;
+                        window.currentUserId = res.data.id;
+                        // 检查是否为管理员，如果不是则跳转
+                        if (res.data.role !== 1 && res.data.role !== 2) {
+                            layer.msg('您不是管理员，无权访问管理后台', {icon: 2});
+                            setTimeout(() => window.location.href = '/index', 2000);
+                        } else {
+                            // 如果是管理员，显示管理后台菜单
+                            $('.admin-menu').show();
+                            loadDashboardStats();
+                        }
+                    } else {
+                        layer.msg('获取用户信息失败', {icon: 2});
+                    }
+                },
+                error: function() {
+                    layer.msg('服务器错误', {icon: 2});
+                }
+            });
+            
+            // 侧边栏点击切换页面
+            $('.admin-sidebar a[data-page]').on('click', function() {
+                var page = $(this).data('page');
+                showPage(page);
+            });
+            
+            // 显示指定页面
+            function showPage(page) {
+                $('.admin-page').hide();
+                var pageId = page + '-page';
+                var $page = $('#' + pageId);
+                if ($page.length) {
+                    $page.show();
+                    // 加载对应数据
+                    switch(page) {
+                        case 'dashboard':
+                            loadDashboardStats();
+                            break;
+                        case 'approval-posts':
+                            loadPendingPosts();
+                            break;
+                        case 'approval-novels':
+                            loadPendingNovels();
+                            break;
+                        case 'approval-chapters':
+                            loadPendingChapters();
+                            break;
+                        case 'user-list':
+                            loadUsers();
+                            break;
+                        case 'user-roles':
+                            loadUserRoles();
+                            break;
+                        case 'content-categories':
+                            loadCategories();
+                            break;
+                        case 'unban-requests':
+                            loadUnbanRequests();
+                            break;
+                        case 'report-management':
+                            loadReports();
+                            break;
+                        case 'content-posts':
+                            loadContentPosts();
+                            loadPostCategories();
+                            break;
+                        case 'content-novels':
+                            loadContentNovels();
+                            break;
+                        case 'content-chapters':
+                            loadContentChapters();
+                            break;
+                        default:
+                            // 其他页面暂不加载
+                            break;
+                    }
+                } else {
+                    $('#other-pages').show();
+                }
+            }
+            
+            // 加载仪表盘统计数据
+            function loadDashboardStats() {
+                // 总用户数
+                $.ajax({
+                    url: '/user/count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-users').text(res.data);
+                        }
+                    }
+                });
+                // 总小说数
+                $.ajax({
+                    url: '/novel/count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-novels').text(res.data);
+                        }
+                    }
+                });
+                // 总帖子数
+                $.ajax({
+                    url: '/post/count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-posts').text(res.data);
+                        }
+                    }
+                });
+                // 待审核总数（小说+帖子+章节）
+                $.ajax({
+                    url: '/novel/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res1) {
+                        var pendingNovels = res1.code === 200 ? res1.data.length : 0;
+                        $.ajax({
+                            url: '/post/pending',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res2) {
+                                var pendingPosts = res2.code === 200 ? res2.data.length : 0;
+                                $.ajax({
+                                    url: '/chapter/pending',
+                                    type: 'GET',
+                                    dataType: 'json',
+                                    success: function(res3) {
+                                        var pendingChapters = res3.code === 200 ? res3.data.length : 0;
+                                        $('#stat-pending').text(pendingNovels + pendingPosts + pendingChapters);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // 加载未读通知数量（解封请求、举报等）
+                $.ajax({
+                    url: '/admin/notifications/unread-count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-unread-notifications').text(res.data);
+                        }
+                    }
+                });
+
+                // 加载待处理举报数量
+                $.ajax({
+                    url: '/admin/reports/pending-count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-pending-reports').text(res.data);
+                        }
+                    }
+                });
+
+                // 加载待处理解封请求数量
+                $.ajax({
+                    url: '/admin/unban-requests/pending-count',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            $('#stat-pending-unban').text(res.data);
+                        }
+                    }
+                });
+
+            }
+            
+            // 加载解封请求
+            function loadUnbanRequests() {
+                $.ajax({
+                    url: '/admin/unban-requests/list',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderUnbanRequests(res.data, '#unban-requests-body');
+                        } else {
+                            layer.msg('获取解封请求失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 渲染解封请求
+            function renderUnbanRequests(requests, container) {
+                var html = '';
+                if (requests.length === 0) {
+                    html = '<tr><td colspan="5">暂无解封请求</td></tr>';
+                } else {
+                    requests.forEach(function(req) {
+                        // 状态映射：0=待处理，1=已通过，2=已拒绝
+                        var statusText = '未知';
+                        if (req.status === 0) statusText = '待处理';
+                        else if (req.status === 1) statusText = '已通过';
+                        else if (req.status === 2) statusText = '已拒绝';
+                        var actionButtons = '';
+                        if (req.status === 0) {
+                            actionButtons = `
+                                <button class="layui-btn layui-btn-xs layui-btn-success" onclick="processUnbanRequest(${req.id}, 'APPROVED')">通过</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="processUnbanRequest(${req.id}, 'REJECTED')">拒绝</button>
+                            `;
+                        }
+                        html += `
+                            <tr>
+                                <td>${req.username || '未知用户'}</td>
+                                <td>${req.content}</td>
+                                <td>${statusText}</td>
+                                <td>${new Date(req.createTime).toLocaleString()}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+
+            // 处理解封请求
+            window.processUnbanRequest = function(requestId, action) {
+                var confirmMsg = action === 'APPROVED' ? '确定要通过此解封请求吗？' : '确定要拒绝此解封请求吗？';
+                layer.confirm(confirmMsg, {
+                    title: '处理确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/admin/unban-requests/process',
+                        type: 'POST',
+                        data: { requestId: requestId, action: action },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('处理成功', {icon: 1});
+                                loadUnbanRequests();
+                            } else {
+                                layer.msg('处理失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 加载举报列表
+            function loadReports() {
+                var type = $('#report-type-filter').val();
+                var status = $('#report-status-filter').val();
+                $.ajax({
+                    url: '/admin/reports/list',
+                    type: 'GET',
+                    data: { type: type, status: status },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderReports(res.data, '#report-management-body');
+                        } else {
+                            layer.msg('获取举报列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 渲染举报列表
+            function renderReports(reports, container) {
+                var html = '';
+                if (reports.length === 0) {
+                    html = '<tr><td colspan="7">暂无举报</td></tr>';
+                } else {
+                    reports.forEach(function(report) {
+                        var statusText = report.status === 0 ? '待处理' : report.status === 1 ? '已处理' : '已忽略';
+                        // 举报类型翻译为中文（支持大小写）
+                        var typeText = report.targetType;
+                        var upperType = typeText ? typeText.toUpperCase() : '';
+                        if (upperType === 'POST' || upperType === '帖子') typeText = '帖子';
+                        else if (upperType === 'NOVEL' || upperType === '小说') typeText = '小说';
+                        else if (upperType === 'CHAPTER' || upperType === '章节') typeText = '章节';
+                        else if (upperType === 'COMMENT' || upperType === '评论') typeText = '评论';
+                        else if (upperType === 'USER' || upperType === '用户') typeText = '用户';
+                        else typeText = typeText || '未知';
+                        
+                        // 目标内容显示（添加跳转链接）
+                        var targetName = report.targetName || (typeText + '(ID:' + report.targetId + ')');
+                        var targetLink = '#';
+                        var upperType = report.targetType ? report.targetType.toUpperCase() : '';
+                        if (upperType === 'POST') {
+                            targetLink = '/post/' + report.targetId;
+                        } else if (upperType === 'NOVEL') {
+                            targetLink = '/novel/view/' + report.targetId;
+                        } else if (upperType === 'CHAPTER') {
+                            targetLink = '/chapter/' + report.targetId;
+                        } else if (upperType === 'COMMENT') {
+                            targetLink = '/comment/' + report.targetId;
+                        } else if (upperType === 'USER') {
+                            targetLink = '/profile/' + report.targetId;
+                        }
+                        var targetDisplay = targetLink !== '#' ?
+                            '<a href="' + targetLink + '" target="_blank" style="color: #009688;">' + targetName + '</a>' :
+                            targetName;
+                        
+                        // 举报人显示（去掉ID和括号）
+                        var reporterInfo = report.reporterName || '用户';
+                        
+                        var actionButtons = '';
+                        if (report.status === 0) {
+                            actionButtons = `
+                                <button class="layui-btn layui-btn-xs layui-btn-success" onclick="processReport(${report.id}, 'RESOLVED')">标记为已处理</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="processReport(${report.id}, 'IGNORED')">忽略</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="banReportedContent(${report.id}, '${report.targetType}', ${report.targetId})">封禁内容</button>
+                            `;
+                        }
+                        html += `
+                            <tr>
+                                <td>${typeText}</td>
+                                <td>${targetDisplay}</td>
+                                <td>${reporterInfo}</td>
+                                <td>${report.reason}</td>
+                                <td>${statusText}</td>
+                                <td>${new Date(report.createTime).toLocaleString()}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+
+            // 处理举报
+            window.processReport = function(reportId, action) {
+                var confirmMsg = action === 'RESOLVED' ? '确定要将此举报标记为已处理吗？' : '确定要忽略此举报吗？';
+                layer.confirm(confirmMsg, {
+                    title: '处理确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/admin/reports/process',
+                        type: 'POST',
+                        data: { reportId: reportId, action: action },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('处理成功', {icon: 1});
+                                loadReports();
+                            } else {
+                                layer.msg('处理失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 封禁被举报的内容
+            window.banReportedContent = function(reportId, targetType, targetId) {
+                layer.confirm('确定要封禁此内容吗？封禁后用户将无法查看该内容。', {
+                    title: '封禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    // 根据类型调用不同的封禁API（支持大小写）
+                    var url = '';
+                    var upperType = targetType ? targetType.toUpperCase() : '';
+                    if (upperType === 'POST') {
+                        url = '/post/ban/' + targetId;
+                    } else if (upperType === 'NOVEL') {
+                        url = '/novel/ban/' + targetId;
+                    } else if (upperType === 'CHAPTER') {
+                        url = '/chapter/ban/' + targetId;
+                    } else {
+                        layer.msg('不支持的内容类型', {icon: 2});
+                        layer.close(index);
+                        return;
+                    }
+                    
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: { reason: '根据举报封禁' },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('内容封禁成功', {icon: 1});
+                                // 同时标记举报为已处理
+                                processReport(reportId, 'RESOLVED');
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+
+            // 加载待审核帖子
+            function loadPendingPosts() {
+                $.ajax({
+                    url: '/post/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingPosts(res.data, '#pending-posts-container');
+                        } else {
+                            layer.msg('获取待审核帖子失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载待审核小说
+            function loadPendingNovels() {
+                $.ajax({
+                    url: '/novel/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingNovels(res.data, '#pending-novels-container');
+                        } else {
+                            layer.msg('获取待审核小说失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 加载待审核章节
+            function loadPendingChapters() {
+                $.ajax({
+                    url: '/chapter/pending',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderPendingChapters(res.data, '#pending-chapters-container');
+                        } else {
+                            layer.msg('获取待审核章节失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 渲染待审核帖子
+            function renderPendingPosts(posts, container) {
+                var html = '';
+                if (posts.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核帖子</div>';
+                } else {
+                    posts.forEach(function(post) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/post/${post.id}" style="color: #333;">${post.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approvePost(${post.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectPost(${post.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        发布者ID: ${post.authorId} | 发布时间: ${new Date(post.createTime).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染待审核小说
+            function renderPendingNovels(novels, container) {
+                var html = '';
+                if (novels.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核小说</div>';
+                } else {
+                    novels.forEach(function(novel) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/novel/view/${novel.id}" style="color: #333;">${novel.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approveNovel(${novel.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectNovel(${novel.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${novel.description ? novel.description.substring(0, 100) : ''}${novel.description && novel.description.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        作者: ${novel.penName} | 章节数: ${novel.chapterCount} | 浏览量: ${novel.viewCount} | 点赞: ${novel.likeCount} | 收藏: ${novel.favoriteCount}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染待审核章节
+            function renderPendingChapters(chapters, container) {
+                var html = '';
+                if (chapters.length === 0) {
+                    html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无待审核章节</div>';
+                } else {
+                    chapters.forEach(function(chapter) {
+                        html += `
+                            <div class="layui-card layui-card-normal" style="margin: 10px 0;">
+                                <div class="layui-card-header">
+                                    <a href="/chapter/${chapter.id}" style="color: #333;">${chapter.title}</a>
+                                    <div style="float: right;">
+                                        <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approveChapter(${chapter.id})">通过</button>
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectChapter(${chapter.id})">拒绝</button>
+                                    </div>
+                                </div>
+                                <div class="layui-card-body">
+                                    <p>${chapter.content ? chapter.content.substring(0, 100) : ''}${chapter.content && chapter.content.length > 100 ? '...' : ''}</p>
+                                    <div style="margin-top: 10px; color: #999; font-size: 12px;">
+                                        所属小说ID: ${chapter.novelId} | 字数: ${chapter.wordCount} | 排序: ${chapter.sortOrder} | 发布时间: ${new Date(chapter.createTime).toLocaleString()}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载用户列表
+            function loadUsers(searchKeyword) {
+                var params = {};
+                if (searchKeyword && searchKeyword.trim() !== '') {
+                    params.search = searchKeyword.trim();
+                }
+                $.ajax({
+                    url: '/user/all',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderUsers(res.data, '#user-list-body');
+                        } else {
+                            layer.msg('获取用户列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 搜索用户
+            window.searchUsers = function() {
+                var keyword = $('#user-search-input').val();
+                loadUsers(keyword);
+            };
+            
+            // 清空搜索
+            window.clearSearch = function() {
+                $('#user-search-input').val('');
+                loadUsers();
+            };
+            
+            // 渲染用户列表
+            function renderUsers(users, container) {
+                var html = '';
+                if (users.length === 0) {
+                    html = '<tr><td colspan="6">暂无用户</td></tr>';
+                } else {
+                    users.forEach(function(user) {
+                        var roleText = '普通用户';
+                        if (user.role === 1) roleText = '管理员';
+                        if (user.role === 2) roleText = '高级管理员';
+                        var statusText = user.status === 0 ? '正常' : '封禁';
+                        var banButtonText = user.status === 0 ? '封禁' : '解封';
+                        var banButtonClass = user.status === 0 ? 'layui-btn-warm' : 'layui-btn-normal';
+                        
+                        // 权限分级检查
+                        var currentRole = window.currentUserRole;
+                        var currentId = window.currentUserId;
+                        var showActions = true;
+                        
+                        // 不能操作自己
+                        if (user.id === currentId) {
+                            showActions = false;
+                        }
+                        // 普通管理员不能操作高级管理员
+                        if (currentRole === 1 && user.role === 2) {
+                            showActions = false;
+                        }
+                        // 同级管理员之间不能相互操作
+                        if (currentRole === user.role && (currentRole === 1 || currentRole === 2)) {
+                            showActions = false;
+                        }
+                        
+                        var actionButtons = '';
+                        if (showActions) {
+                            actionButtons = `
+                                <button class="layui-btn layui-btn-xs layui-btn-warm" onclick="resetPassword(${user.id})">重置密码</button>
+                                <button class="layui-btn layui-btn-xs ${banButtonClass}" onclick="toggleBanWithDuration(${user.id}, ${user.status})">${banButtonText}</button>
+                                <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteUser(${user.id})">删除</button>
+                            `;
+                        } else {
+                            actionButtons = `<span style="color: #999;">无权限</span>`;
+                        }
+                        
+                        html += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.nickname}</td>
+                                <td>${roleText}</td>
+                                <td>${statusText}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载角色权限列表
+            function loadUserRoles() {
+                $.ajax({
+                    url: '/user/all',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderUserRoles(res.data, '#user-roles-body');
+                        } else {
+                            layer.msg('获取用户列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 渲染角色权限列表
+            function renderUserRoles(users, container) {
+                var html = '';
+                if (users.length === 0) {
+                    html = '<tr><td colspan="6">暂无用户</td></tr>';
+                } else {
+                    users.forEach(function(user) {
+                        var roleText = '普通用户';
+                        if (user.role === 1) roleText = '管理员';
+                        if (user.role === 2) roleText = '高级管理员';
+                        var statusText = user.status === 0 ? '正常' : '封禁';
+                        // 操作按钮：仅高级管理员可操作，且不能操作自己
+                        var actionButtons = '';
+                        if (window.currentUserRole === 2 && user.id !== window.currentUserId) {
+                            if (user.role === 0) {
+                                actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-success" onclick="promoteUser(${user.id})">提升为管理员</button>`;
+                            } else if (user.role === 1) {
+                                actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="demoteUser(${user.id})">降级为普通用户</button>`;
+                            }
+                        }
+                        html += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.nickname}</td>
+                                <td>${roleText}</td>
+                                <td>${statusText}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载分类列表
+            function loadCategories() {
+                $.ajax({
+                    url: '/category/list',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderCategories(res.data, '#category-list-body');
+                        } else {
+                            layer.msg('获取分类列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 渲染分类列表
+            function renderCategories(categories, container) {
+                var html = '';
+                if (categories.length === 0) {
+                    html = '<tr><td colspan="7">暂无分类</td></tr>';
+                } else {
+                    // 创建父分类ID到名称的映射
+                    var parentMap = {};
+                    categories.forEach(function(cat) {
+                        parentMap[cat.id] = cat.name;
+                    });
+                    categories.forEach(function(category) {
+                        var parentName = '无';
+                        if (category.parentId && category.parentId !== 0) {
+                            parentName = parentMap[category.parentId] || ('ID:' + category.parentId);
+                        }
+                        var statusText = category.isActive === 1 ? '启用' : '禁用';
+                        var deletedText = category.isDeleted === 1 ? '已删除' : '正常';
+                        html += `
+                            <tr>
+                                <td>${category.id}</td>
+                                <td>${category.name}</td>
+                                <td>${category.description || ''}</td>
+                                <td>${parentName}</td>
+                                <td>${category.sortOrder}</td>
+                                <td>${statusText} / ${deletedText}</td>
+                                <td>
+                                    <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="editCategory(${category.id})">编辑</button>
+                                    <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteCategory(${category.id})">删除</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 显示添加分类模态框
+            window.showAddCategoryModal = function() {
+                layer.open({
+                    type: 1,
+                    title: '添加分类',
+                    area: ['500px', '400px'],
+                    content: `
+                        <div style="padding: 20px;">
+                            <form class="layui-form" id="add-category-form">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">分类名称</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="name" required lay-verify="required" placeholder="请输入分类名称" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">描述</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="description" placeholder="请输入分类描述" class="layui-textarea"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">父分类</label>
+                                    <div class="layui-input-block">
+                                        <select name="parentId" lay-verify="">
+                                            <option value="0">无父分类</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">排序</label>
+                                    <div class="layui-input-block">
+                                        <input type="number" name="sortOrder" value="0" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">状态</label>
+                                    <div class="layui-input-block">
+                                        <input type="checkbox" name="isActive" lay-skin="switch" lay-text="启用|禁用" checked value="1">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button class="layui-btn" lay-submit lay-filter="add-category-submit">提交</button>
+                                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    `,
+                    success: function(layero, index) {
+                        // 加载父分类选项
+                        $.ajax({
+                            url: '/category/list',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code === 200) {
+                                    var select = $(layero).find('select[name="parentId"]');
+                                    select.empty();
+                                    select.append('<option value="0">无父分类</option>');
+                                    res.data.forEach(function(cat) {
+                                        if (cat.isActive && !cat.isDeleted) {
+                                            select.append('<option value="' + cat.id + '">' + cat.name + '</option>');
+                                        }
+                                    });
+                                    layui.form.render('select');
+                                }
+                            }
+                        });
+                        // 渲染开关组件
+                        layui.form.render('checkbox');
+                        // 表单提交
+                        layui.form.on('submit(add-category-submit)', function(data) {
+                            var formData = data.field;
+                            formData.isActive = formData.isActive === 'on' ? 1 : 0;
+                            addCategory(formData);
+                            layer.close(index);
+                            return false;
+                        });
+                    }
+                });
+            };
+            
+            // 添加分类
+            window.addCategory = function(formData) {
+                $.ajax({
+                    url: '/category/create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('分类添加成功', {icon: 1});
+                            loadCategories();
+                        } else {
+                            layer.msg('添加失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            };
+            
+            // 编辑分类
+            window.editCategory = function(id) {
+                // 获取分类详情
+                $.ajax({
+                    url: '/category/detail/' + id,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            var category = res.data;
+                            layer.open({
+                                type: 1,
+                                title: '编辑分类',
+                                area: ['500px', '400px'],
+                                content: `
+                                    <div style="padding: 20px;">
+                                        <form class="layui-form" id="edit-category-form">
+                                            <input type="hidden" name="id" value="${category.id}">
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">分类名称</label>
+                                                <div class="layui-input-block">
+                                                    <input type="text" name="name" required lay-verify="required" placeholder="请输入分类名称" class="layui-input" value="${category.name || ''}">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">描述</label>
+                                                <div class="layui-input-block">
+                                                    <textarea name="description" placeholder="请输入分类描述" class="layui-textarea">${category.description || ''}</textarea>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">父分类</label>
+                                                <div class="layui-input-block">
+                                                    <select name="parentId" lay-verify="">
+                                                        <option value="0">无父分类</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">排序</label>
+                                                <div class="layui-input-block">
+                                                    <input type="number" name="sortOrder" value="${category.sortOrder || 0}" class="layui-input">
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <label class="layui-form-label">状态</label>
+                                                <div class="layui-input-block">
+                                                    <input type="checkbox" name="isActive" lay-skin="switch" lay-text="启用|禁用" ${category.isActive == 1 ? 'checked' : ''}>
+                                                </div>
+                                            </div>
+                                            <div class="layui-form-item">
+                                                <div class="layui-input-block">
+                                                    <button class="layui-btn" lay-submit lay-filter="edit-category-submit">提交</button>
+                                                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                `,
+                                success: function(layero, index) {
+                                    // 加载父分类选项
+                                    $.ajax({
+                                        url: '/category/list',
+                                        type: 'GET',
+                                        dataType: 'json',
+                                        success: function(res) {
+                                            if (res.code === 200) {
+                                                var select = $(layero).find('select[name="parentId"]');
+                                                select.empty();
+                                                select.append('<option value="0">无父分类</option>');
+                                                res.data.forEach(function(cat) {
+                                                    if (cat.isActive && !cat.isDeleted && cat.id !== category.id) { // 不能选择自己作为父分类
+                                                        select.append('<option value="' + cat.id + '">' + cat.name + '</option>');
+                                                    }
+                                                });
+                                                // 设置当前父分类
+                                                select.val(category.parentId || 0);
+                                                layui.form.render('select');
+                                            }
+                                        }
+                                    });
+                                    // 渲染开关组件
+                                    layui.form.render('checkbox');
+                                    // 表单提交
+                                    layui.form.on('submit(edit-category-submit)', function(data) {
+                                        var formData = data.field;
+                                        formData.isActive = formData.isActive === 'on' ? 1 : 0;
+                                        updateCategory(formData);
+                                        layer.close(index);
+                                        return false;
+                                    });
+                                }
+                            });
+                        } else {
+                            layer.msg('获取分类详情失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            };
+
+            // 更新分类
+            window.updateCategory = function(formData) {
+                $.ajax({
+                    url: '/category/update',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('分类更新成功', {icon: 1});
+                            loadCategories();
+                        } else {
+                            layer.msg('更新失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            };
+            
+            // 删除分类（暂未实现）
+            window.deleteCategory = function(id) {
+                layer.confirm('确定要删除这个分类吗？', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/category/delete/' + id,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('分类已删除', {icon: 1});
+                                loadCategories();
+                            } else {
+                                layer.msg('删除失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 审核通过帖子
+            window.approvePost = function(postId) {
+                layer.confirm('确定要通过这篇帖子吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/approve/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子审核通过', {icon: 1});
+                                loadPendingPosts();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 拒绝帖子
+            window.rejectPost = function(postId) {
+                layer.confirm('确定要拒绝这篇帖子吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/reject/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子已拒绝', {icon: 1});
+                                loadPendingPosts();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 审核通过小说
+            window.approveNovel = function(novelId) {
+                layer.confirm('确定要通过这篇小说吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/approve/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说审核通过', {icon: 1});
+                                loadPendingNovels();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 拒绝小说
+            window.rejectNovel = function(novelId) {
+                layer.confirm('确定要拒绝这篇小说吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/reject/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说已拒绝', {icon: 1});
+                                loadPendingNovels();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 审核通过章节
+            window.approveChapter = function(chapterId) {
+                layer.confirm('确定要通过这个章节吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/approve/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节审核通过', {icon: 1});
+                                loadPendingChapters();
+                            } else {
+                                layer.msg('审核失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 拒绝章节
+            window.rejectChapter = function(chapterId) {
+                layer.confirm('确定要拒绝这个章节吗？', {
+                    title: '审核确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/reject/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节已拒绝', {icon: 1});
+                                loadPendingChapters();
+                            } else {
+                                layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 重置用户密码
+            window.resetPassword = function(userId) {
+                layer.confirm('确定要将用户密码重置为"123456"吗？', {
+                    title: '重置密码确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/reset-password',
+                        type: 'POST',
+                        data: { userId: userId },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('密码重置成功', {icon: 1});
+                            } else {
+                                layer.msg('重置失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 删除用户
+            window.deleteUser = function(userId) {
+                layer.confirm('确定要删除这个用户吗？此操作不可恢复！', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/delete',
+                        type: 'POST',
+                        data: { userId: userId },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('用户删除成功', {icon: 1});
+                                loadUsers(); // 刷新用户列表
+                            } else {
+                                layer.msg('删除失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 封禁/解封用户（支持时长选择）
+            window.toggleBanWithDuration = function(userId, currentStatus) {
+                // currentStatus: 0=正常，1=封禁
+                if (currentStatus === 0) {
+                    // 弹出时长选择
+                    layer.open({
+                        type: 1,
+                        title: '选择封禁时长',
+                        area: ['400px', '300px'],
+                        content: `
+                            <div style="padding: 20px;">
+                                <p>请选择封禁时长：</p>
+                                <div class="layui-form">
+                                    <div class="layui-form-item">
+                                        <div class="layui-input-block">
+                                            <input type="radio" name="duration" value="1h" title="1小时">
+                                            <input type="radio" name="duration" value="1d" title="1天">
+                                            <input type="radio" name="duration" value="1w" title="1周">
+                                            <input type="radio" name="duration" value="1M" title="1月">
+                                            <input type="radio" name="duration" value="1y" title="1年">
+                                            <input type="radio" name="duration" value="permanent" title="永久封禁" checked>
+                                        </div>
+                                    </div>
+                                    <div class="layui-form-item">
+                                        <div class="layui-input-block">
+                                            <button class="layui-btn layui-btn-normal" id="confirm-ban">确认封禁</button>
+                                            <button class="layui-btn layui-btn-primary" id="cancel-ban">取消</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        success: function(layero, index) {
+                            layui.form.render('radio');
+                            $('#confirm-ban').on('click', function() {
+                                var duration = $('input[name="duration"]:checked').val();
+                                if (!duration) {
+                                    layer.msg('请选择时长', {icon: 2});
+                                    return;
+                                }
+                                layer.close(index);
+                                banUser(userId, duration);
+                            });
+                            $('#cancel-ban').on('click', function() {
+                                layer.close(index);
+                            });
+                        }
+                    });
+                } else {
+                    // 解封
+                    layer.confirm('确定要解封该用户吗？', {
+                        title: '解封确认',
+                        btn: ['确定', '取消']
+                    }, function(index) {
+                        banUser(userId, '0'); // duration=0表示解封
+                        layer.close(index);
+                    });
+                }
+            };
+
+            // 封禁/解封用户（旧版，保留兼容）
+            window.toggleBan = function(userId) {
+                // 获取当前状态（需要从DOM或重新请求，这里简单调用toggleBanWithDuration并假设状态未知）
+                // 为了兼容，我们直接调用toggleBanWithDuration并传递状态0（假设正常）
+                // 更好的做法是获取状态，但这里简化
+                layer.msg('请使用新的封禁按钮', {icon: 3});
+            };
+
+            // 封禁用户（内部函数）
+            function banUser(userId, duration) {
+                $.ajax({
+                    url: '/user/ban',
+                    type: 'POST',
+                    data: { userId: userId, duration: duration },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            layer.msg('操作成功', {icon: 1});
+                            loadUsers(); // 刷新用户列表
+                        } else {
+                            layer.msg('操作失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+
+            // 显示添加用户模态框
+            window.showAddUserModal = function() {
+                layer.msg('添加用户功能开发中', {icon: 3});
+            };
+
+            // 提升用户为管理员（仅高级管理员可调用）
+            window.promoteUser = function(userId) {
+                layer.confirm('确定要将此用户提升为管理员吗？', {
+                    title: '提升确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/promote?userId=' + userId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('用户已提升为管理员', {icon: 1});
+                                loadUsers(); // 刷新用户列表
+                            } else {
+                                layer.msg('提升失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 降级管理员为普通用户（仅高级管理员可调用）
+            window.demoteUser = function(userId) {
+                layer.confirm('确定要将此管理员降级为普通用户吗？', {
+                    title: '降级确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/user/demote?userId=' + userId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('用户已降级为普通用户', {icon: 1});
+                                loadUsers(); // 刷新用户列表
+                            } else {
+                                layer.msg('降级失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 加载帖子分类选项
+            function loadPostCategories() {
+                $.ajax({
+                    url: '/category/list',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            var select = $('#post-category-filter');
+                            select.empty();
+                            select.append('<option value="">全部</option>');
+                            res.data.forEach(function(category) {
+                                if (category.isActive === 1 && category.isDeleted !== 1) {
+                                    select.append('<option value="' + category.id + '">' + category.name + '</option>');
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        console.error('加载分类失败');
+                    }
+                });
+            }
+
+            // 加载帖子管理数据
+            function loadContentPosts(searchKeyword) {
+                var status = $('#post-status-filter').val();
+                var categoryId = $('#post-category-filter').val();
+                var params = { status: status };
+                if (categoryId && categoryId !== '') {
+                    params.categoryId = categoryId;
+                }
+                if (searchKeyword && searchKeyword.trim() !== '') {
+                    params.search = searchKeyword.trim();
+                }
+                $.ajax({
+                    url: '/post/all',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderContentPosts(res.data, '#content-posts-body');
+                        } else {
+                            layer.msg('获取帖子列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            window.loadContentPosts = loadContentPosts;
+            
+            // 搜索帖子
+            window.searchPosts = function() {
+                var keyword = $('#post-search-input').val();
+                loadContentPosts(keyword);
+            };
+            
+            // 清空帖子搜索
+            window.clearPostSearch = function() {
+                $('#post-search-input').val('');
+                loadContentPosts();
+            };
+            
+            // 渲染帖子管理列表
+            function renderContentPosts(posts, container) {
+                var html = '';
+                if (posts.length === 0) {
+                    html = '<tr><td colspan="7">暂无帖子</td></tr>';
+                } else {
+                    posts.forEach(function(post) {
+                        var statusText = '未知';
+                        if (post.status === 0) statusText = '正常';
+                        else if (post.status === 1) statusText = '审核中';
+                        else if (post.status === 2) statusText = '封禁';
+                        
+                        // 获取作者名称
+                        var authorName = '未知';
+                        if (post.author && post.author.nickname) {
+                            authorName = post.author.nickname;
+                        } else if (post.authorName) {
+                            authorName = post.authorName; // 兼容旧字段
+                        }
+                        
+                        // 获取分类名称
+                        var categoryName = '无';
+                        if (post.category && post.category.name) {
+                            categoryName = post.category.name;
+                        } else if (post.categoryName) {
+                            categoryName = post.categoryName; // 兼容旧字段
+                        }
+                        
+                        var actionButtons = '';
+                        if (post.status === 2) {
+                            // 封禁状态，显示解禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-success" onclick="unbanPost(${post.id})">解禁</button>`;
+                        } else {
+                            // 正常或审核中状态，显示封禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="banPost(${post.id})">封禁</button>`;
+                        }
+                        actionButtons += ` <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deletePost(${post.id})">删除</button>`;
+                        
+                        html += `
+                            <tr>
+                                <td>${post.id}</td>
+                                <td><a href="/post/${post.id}" target="_blank">${post.title}</a></td>
+                                <td>${authorName}</td>
+                                <td>${categoryName}</td>
+                                <td>${statusText}</td>
+                                <td>${new Date(post.createTime).toLocaleString()}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+
+            // 加载小说管理数据
+            function loadContentNovels(searchKeyword) {
+                console.log('loadContentNovels called with searchKeyword:', searchKeyword);
+                var status = $('#novel-status-filter').val();
+                console.log('Status filter:', status);
+                var params = { status: status };
+                if (searchKeyword && searchKeyword.trim() !== '') {
+                    params.keyword = searchKeyword.trim();
+                }
+                console.log('AJAX params:', params);
+                $.ajax({
+                    url: '/novel/all',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        console.log('AJAX success, response:', res);
+                        if (res.code === 200) {
+                            console.log('Rendering novels, count:', res.data.length);
+                            renderContentNovels(res.data, '#content-novels-body');
+                        } else {
+                            console.error('Failed to get novels:', res.message);
+                            layer.msg('获取小说列表失败', {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('AJAX error:', status, error);
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 搜索小说
+            window.searchNovels = function() {
+                console.log('searchNovels called');
+                var keyword = $('#novel-search-input').val();
+                console.log('Search keyword:', keyword);
+                loadContentNovels(keyword);
+            };
+            
+            // 清空小说搜索
+            window.clearNovelSearch = function() {
+                $('#novel-search-input').val('');
+                loadContentNovels();
+            };
+            
+            // 渲染小说管理列表
+            function renderContentNovels(novels, container) {
+                var html = '';
+                if (novels.length === 0) {
+                    html = '<tr><td colspan="7">暂无小说</td></tr>';
+                } else {
+                    novels.forEach(function(novel) {
+                        var statusText = '未知';
+                        if (novel.auditStatus === 0) statusText = '待审核';
+                        else if (novel.auditStatus === 1) statusText = '审核通过';
+                        else if (novel.auditStatus === 2) statusText = '审核拒绝';
+                        else if (novel.auditStatus === 3) statusText = '封禁';
+                        
+                        // 获取作者笔名
+                        var penName = novel.penName || '未知';
+                        if (!penName || penName === '未知') {
+                            // 尝试从author对象获取昵称
+                            if (novel.author && novel.author.nickname) {
+                                penName = novel.author.nickname;
+                            }
+                        }
+                        
+                        // 获取分类名称
+                        var categoryNames = '无';
+                        if (novel.categories && novel.categories.length > 0) {
+                            // 提取分类名称
+                            var names = [];
+                            novel.categories.forEach(function(category) {
+                                if (category.name) {
+                                    names.push(category.name);
+                                }
+                            });
+                            if (names.length > 0) {
+                                categoryNames = names.join(', ');
+                            }
+                        } else if (novel.categoryNames) {
+                            // 兼容旧字段
+                            categoryNames = novel.categoryNames.join(', ');
+                        }
+                        
+                        var actionButtons = '';
+                        if (novel.auditStatus === 3) {
+                            // 封禁状态，显示解禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-success" onclick="unbanNovel(${novel.id})">解禁</button>`;
+                        } else {
+                            // 其他状态，显示封禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="banNovel(${novel.id})">封禁</button>`;
+                        }
+                        actionButtons += ` <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNovel(${novel.id})">删除</button>`;
+                        
+                        html += `
+                            <tr>
+                                <td><a href="/novel/view/${novel.id}" target="_blank">${novel.title}</a></td>
+                                <td>${penName}</td>
+                                <td>${categoryNames}</td>
+                                <td>${statusText}</td>
+                                <td>${new Date(novel.createTime).toLocaleString()}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 加载章节管理数据
+            function loadContentChapters(searchKeyword) {
+                var status = $('#chapter-status-filter').val();
+                var params = { status: status };
+                if (searchKeyword && searchKeyword.trim() !== '') {
+                    params.search = searchKeyword.trim();
+                }
+                $.ajax({
+                    url: '/chapter/all',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderContentChapters(res.data, '#content-chapters-body');
+                        } else {
+                            layer.msg('获取章节列表失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            }
+            
+            // 搜索章节
+            window.searchChapters = function() {
+                var keyword = $('#chapter-search-input').val();
+                loadContentChapters(keyword);
+            };
+            
+            // 清空章节搜索
+            window.clearChapterSearch = function() {
+                $('#chapter-search-input').val('');
+                loadContentChapters();
+            };
+            
+            // 渲染章节管理列表
+            function renderContentChapters(chapters, container) {
+                var html = '';
+                if (chapters.length === 0) {
+                    html = '<tr><td colspan="6">暂无章节</td></tr>';
+                } else {
+                    chapters.forEach(function(chapter) {
+                        var statusText = '未知';
+                        if (chapter.auditStatus === 0) statusText = '待审核';
+                        else if (chapter.auditStatus === 1) statusText = '审核通过';
+                        else if (chapter.auditStatus === 2) statusText = '审核拒绝';
+                        else if (chapter.auditStatus === 3) statusText = '封禁';
+                        
+                        // 获取小说标题
+                        var novelTitle = '未知小说';
+                        if (chapter.novel && chapter.novel.title) {
+                            novelTitle = chapter.novel.title;
+                        } else if (chapter.novelTitle) {
+                            novelTitle = chapter.novelTitle; // 兼容旧字段
+                        }
+                        
+                        var actionButtons = '';
+                        if (chapter.auditStatus === 3) {
+                            // 封禁状态，显示解禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-success" onclick="unbanChapter(${chapter.id})">解禁</button>`;
+                        } else {
+                            // 其他状态，显示封禁按钮
+                            actionButtons = `<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="banChapter(${chapter.id})">封禁</button>`;
+                        }
+                        actionButtons += ` <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteChapter(${chapter.id})">删除</button>`;
+                        
+                        html += `
+                            <tr>
+                                <td><a href="/chapter/${chapter.id}" target="_blank">${chapter.title}</a></td>
+                                <td>${novelTitle}</td>
+                                <td>${statusText}</td>
+                                <td>${new Date(chapter.createTime).toLocaleString()}</td>
+                                <td>${actionButtons}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                $(container).html(html);
+            }
+            
+            // 封禁帖子
+            window.banPost = function(postId) {
+                layer.confirm('确定要封禁这篇帖子吗？封禁后用户将无法查看该帖子。', {
+                    title: '封禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/ban/' + postId,
+                        type: 'POST',
+                        data: { reason: '管理员手动封禁' },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子封禁成功', {icon: 1});
+                                loadContentPosts();
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 解禁帖子
+            window.unbanPost = function(postId) {
+                layer.confirm('确定要解禁这篇帖子吗？解禁后用户可以正常查看。', {
+                    title: '解禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/unban/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子解禁成功', {icon: 1});
+                                loadContentPosts();
+                            } else {
+                                layer.msg('解禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 封禁小说
+            window.banNovel = function(novelId) {
+                layer.confirm('确定要封禁这篇小说吗？封禁后用户将无法查看该小说及其章节。', {
+                    title: '封禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/ban/' + novelId,
+                        type: 'POST',
+                        data: { reason: '管理员手动封禁' },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说封禁成功', {icon: 1});
+                                loadContentNovels();
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 解禁小说
+            window.unbanNovel = function(novelId) {
+                layer.confirm('确定要解禁这篇小说吗？解禁后用户可以正常查看。', {
+                    title: '解禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/unban/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说解禁成功', {icon: 1});
+                                loadContentNovels();
+                            } else {
+                                layer.msg('解禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 封禁章节
+            window.banChapter = function(chapterId) {
+                layer.confirm('确定要封禁这个章节吗？封禁后用户将无法查看该章节。', {
+                    title: '封禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/ban/' + chapterId,
+                        type: 'POST',
+                        data: { reason: '管理员手动封禁' },
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节封禁成功', {icon: 1});
+                                loadContentChapters();
+                            } else {
+                                layer.msg('封禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 解禁章节
+            window.unbanChapter = function(chapterId) {
+                layer.confirm('确定要解禁这个章节吗？解禁后用户可以正常查看。', {
+                    title: '解禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/unban/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节解禁成功', {icon: 1});
+                                loadContentChapters();
+                            } else {
+                                layer.msg('解禁失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 删除帖子
+            window.deletePost = function(postId) {
+                layer.confirm('确定要删除这篇帖子吗？此操作不可恢复！', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/delete/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子删除成功', {icon: 1});
+                                loadContentPosts();
+                            } else {
+                                layer.msg('删除失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 删除小说
+            window.deleteNovel = function(novelId) {
+                layer.confirm('确定要删除这篇小说吗？此操作不可恢复！', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/delete/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说删除成功', {icon: 1});
+                                loadContentNovels();
+                            } else {
+                                layer.msg('删除失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 删除章节
+            window.deleteChapter = function(chapterId) {
+                layer.confirm('确定要删除这个章节吗？此操作不可恢复！', {
+                    title: '删除确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/chapter/delete/' + chapterId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('章节删除成功', {icon: 1});
+                                loadContentChapters();
+                            } else {
+                                layer.msg('删除失败: ' + res.message, {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+            
+            // 将内部函数暴露给全局作用域，以便刷新按钮调用
+            window.loadContentPosts = loadContentPosts;
+            window.loadContentNovels = loadContentNovels;
+            window.loadContentChapters = loadContentChapters;
+            window.loadReports = loadReports;
+            window.loadUnbanRequests = loadUnbanRequests;
+            window.loadUsers = loadUsers;
+            window.loadUserRoles = loadUserRoles;
+            window.loadCategories = loadCategories;
+            window.loadPendingPosts = loadPendingPosts;
+            window.loadPendingNovels = loadPendingNovels;
+            window.loadPendingChapters = loadPendingChapters;
+            
+            // 页面加载完成后显示仪表盘
+            $(document).ready(function() {
+                showPage('dashboard');
+            });
+        });
+    </script>
+</body>
+</html>
