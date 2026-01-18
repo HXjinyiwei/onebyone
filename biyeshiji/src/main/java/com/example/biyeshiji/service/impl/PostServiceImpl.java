@@ -434,6 +434,30 @@ public class PostServiceImpl implements PostService {
             Post post = postOpt.get();
             post.setStatus(status);
             post.setUpdateTime(LocalDateTime.now());
+            // 如果是审核拒绝（状态2），清空拒绝原因（因为旧方法不支持设置原因）
+            if (status == 2) {
+                post.setRejectReason(null);
+            }
+            postRepository.save(post);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean updatePostStatusWithReason(Long postId, Integer status, String rejectReason) {
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isPresent()) {
+            Post post = postOpt.get();
+            post.setStatus(status);
+            post.setUpdateTime(LocalDateTime.now());
+            // 如果是审核拒绝（状态2），设置拒绝原因
+            if (status == 2) {
+                post.setRejectReason(rejectReason);
+            } else {
+                // 其他状态清空拒绝原因
+                post.setRejectReason(null);
+            }
             postRepository.save(post);
             return true;
         }
@@ -615,5 +639,37 @@ public class PostServiceImpl implements PostService {
                 .filter(post -> post.getStatus() != null && post.getStatus() == 2)
                 .sorted((p1, p2) -> p2.getUpdateTime().compareTo(p1.getUpdateTime()))
                 .toList();
+    }
+    
+    @Override
+    @Transactional
+    public boolean resubmitPost(Long postId) {
+        Optional<Post> postOpt = postRepository.findById(postId);
+        if (postOpt.isPresent()) {
+            Post post = postOpt.get();
+            // 检查当前状态是否为已拒绝（2）
+            if (post.getStatus() != null && post.getStatus() == 2) {
+                // 将状态改为审核中（1），清空拒绝原因
+                post.setStatus(1);
+                post.setRejectReason(null);
+                post.setUpdateTime(LocalDateTime.now());
+                postRepository.save(post);
+                
+                // 发送消息通知给帖子作者
+                Long authorId = post.getAuthorId();
+                String content = "您的帖子《" + post.getTitle() + "》已重新提交，等待审核。";
+                Message message = new Message();
+                message.setUserId(authorId);
+                message.setContent(content);
+                message.setCreateTime(LocalDateTime.now());
+                message.setIsRead(0);
+                messageService.createMessage(message);
+                
+                return true;
+            } else {
+                throw new RuntimeException("只有被拒绝的帖子才能重新提交");
+            }
+        }
+        return false;
     }
 }

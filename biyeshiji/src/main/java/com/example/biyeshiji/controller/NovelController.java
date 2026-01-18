@@ -1,9 +1,11 @@
 package com.example.biyeshiji.controller;
 
 import com.example.biyeshiji.common.Response;
+import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.entity.Novel;
 import com.example.biyeshiji.entity.User;
 import com.example.biyeshiji.repository.UserRepository;
+import com.example.biyeshiji.service.MessageService;
 import com.example.biyeshiji.service.NovelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/novel")
@@ -27,6 +30,9 @@ public class NovelController {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private MessageService messageService;
 
 
     @PostMapping("/create")
@@ -220,6 +226,25 @@ public class NovelController {
         }
     }
 
+    @PostMapping("/reject-with-reason/{id}")
+    public Response<Void> rejectNovelWithReason(@PathVariable Long id, @RequestBody Map<String, String> requestBody) {
+        String reason = requestBody.get("reason");
+        boolean result = novelService.updateNovelAuditStatusWithReason(id, 2, reason); // 2=审核拒绝
+        if (result) {
+            // 创建消息通知给作者
+            Novel novel = novelService.getNovelById(id);
+            if (novel != null) {
+                Message message = new Message();
+                message.setUserId(novel.getAuthorId());
+                message.setContent("您的小说《" + novel.getTitle() + "》审核未通过。拒绝原因：" + (reason != null ? reason : "未提供具体原因") + "。请修改后重新提交。");
+                messageService.createMessage(message);
+            }
+            return Response.success("小说审核拒绝，已通知作者", null);
+        } else {
+            return Response.error("小说审核拒绝失败");
+        }
+    }
+
     // 热门排序
     @GetMapping("/top/view")
     public Response<List<Novel>> getTopByView(@RequestParam(required = false, defaultValue = "10") Integer limit,
@@ -301,5 +326,32 @@ public class NovelController {
         
         List<Novel> novels = novelService.getBannedNovels();
         return Response.success("获取封禁小说列表成功", novels);
+    }
+
+    // 检查标题是否已存在
+    @GetMapping("/check-title")
+    public Response<Map<String, Object>> checkTitleExists(@RequestParam String title,
+                                                          @RequestParam(required = false) Long excludeId) {
+        if (title == null || title.trim().isEmpty()) {
+            return Response.success("标题为空", Map.of("exists", false));
+        }
+        
+        boolean exists = novelService.isTitleExists(title.trim(), excludeId);
+        return Response.success("检查完成", Map.of("exists", exists));
+    }
+
+    // 重新提交小说（从拒绝状态改为待审核）
+    @PostMapping("/resubmit/{id}")
+    public Response<Void> resubmitNovel(@PathVariable Long id) {
+        try {
+            boolean result = novelService.resubmitNovel(id);
+            if (result) {
+                return Response.success("小说已重新提交，等待审核", null);
+            } else {
+                return Response.error("重新提交失败");
+            }
+        } catch (RuntimeException e) {
+            return Response.error(e.getMessage());
+        }
     }
 }

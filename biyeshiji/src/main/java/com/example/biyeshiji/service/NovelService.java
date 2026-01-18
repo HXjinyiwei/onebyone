@@ -30,10 +30,16 @@ public interface NovelService {
     // 审核相关
     List<Novel> getNovelsByAuditStatus(Integer auditStatus);
     boolean updateNovelAuditStatus(Long novelId, Integer auditStatus);
+    boolean updateNovelAuditStatusWithReason(Long novelId, Integer auditStatus, String rejectReason);
     // 封禁/解禁功能
     boolean banNovel(Long novelId, String reason);
     boolean unbanNovel(Long novelId);
     List<Novel> getBannedNovels();
     // 统计
     long countNovels();
+    // 重名检查
+    boolean isTitleExists(String title, Long excludeNovelId);
+    
+    // 重新提交（从拒绝状态改为审核中）
+    boolean resubmitNovel(Long novelId);
 }

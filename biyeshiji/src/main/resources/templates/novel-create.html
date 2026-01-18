@@ -134,6 +134,7 @@
             <h2 class="form-title" id="formTitle" th:text="${novel != null ? '编辑小说' : '发布小说'}">发布小说</h2>
             
             <input type="hidden" id="novelId" name="id" th:value="${novel?.id}">
+            <input type="hidden" id="auditStatus" name="auditStatus" th:value="${novel?.auditStatus}">
             
             <div class="layui-form-item">
                 <label class="layui-form-label">小说标题</label>
@@ -184,6 +185,24 @@
                         <option value="2" th:selected="${novel?.status == 2}">草稿</option>
                         <option value="3" th:selected="${novel?.status == 3}">锁定</option>
                     </select>
+                </div>
+            </div>
+            
+            <!-- 拒绝原因显示（如果存在） -->
+            <div class="layui-form-item" th:if="${novel?.rejectReason != null and novel?.rejectReason != ''}">
+                <label class="layui-form-label">拒绝原因</label>
+                <div class="layui-input-block">
+                    <div class="layui-card" style="background-color: #fff5f5; border-left: 4px solid #ff5722;">
+                        <div class="layui-card-body">
+                            <p style="color: #ff5722; font-weight: bold; margin-bottom: 5px;">
+                                <i class="layui-icon layui-icon-close-fill"></i> 审核被拒绝
+                            </p>
+                            <p th:text="${novel?.rejectReason}" style="color: #666; margin: 0;"></p>
+                            <p style="color: #999; font-size: 12px; margin-top: 5px;">
+                                请根据上述原因修改内容后重新提交审核
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -476,11 +495,68 @@
                 }
             });
             
+            // 检查标题是否已存在
+            function checkTitleExists(title, callback) {
+                if (!title || title.trim() === '') {
+                    callback(false);
+                    return;
+                }
+                
+                var novelId = $('#novelId').val();
+                var excludeId = novelId && novelId.trim() !== '' ? novelId : null;
+                
+                $.ajax({
+                    url: '/novel/check-title',
+                    type: 'GET',
+                    data: {
+                        title: title.trim(),
+                        excludeId: excludeId
+                    },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            callback(res.data.exists || false);
+                        } else {
+                            callback(false); // 如果检查失败，假设不存在
+                        }
+                    },
+                    error: function() {
+                        callback(false); // 如果请求失败，假设不存在
+                    }
+                });
+            }
+            
             // 表单验证和提交
             form.on('submit(novelSubmit)', function(data) {
                 var formData = data.field;
                 console.log('表单数据:', formData);
                 
+                // 检查标题是否已存在
+                var title = formData.title;
+                if (title && title.trim() !== '') {
+                    // 显示加载提示
+                    var loadingIndex = layer.load(1, {shade: [0.1, '#fff']});
+                    
+                    checkTitleExists(title, function(exists) {
+                        layer.close(loadingIndex);
+                        
+                        if (exists) {
+                            layer.msg('小说标题已存在，请使用其他标题', {icon: 2});
+                            return false;
+                        }
+                        
+                        // 继续提交表单
+                        submitForm(formData);
+                    });
+                } else {
+                    // 标题为空，直接提交
+                    submitForm(formData);
+                }
+                
+                return false; // 阻止表单默认提交
+            });
+            
+            // 提交表单的函数
+            function submitForm(formData) {
                 // 如果没有封面，使用默认封面
                 if (!formData.coverImage) {
                     formData.coverImage = '/images/默认图片.jpg';
@@ -493,8 +569,17 @@
                 });
                 formData.categoryIds = selectedCategoryIds;
                 
+                // 如果是编辑模式且小说处于拒绝状态（auditStatus=2），则自动设置为待审核状态（auditStatus=0）
+                if (isEdit) {
+                    var currentAuditStatus = $('#auditStatus').val();
+                    if (currentAuditStatus === '2') { // 2表示已拒绝
+                        formData.auditStatus = 0; // 设置为待审核
+                        console.log('检测到小说处于拒绝状态，自动设置为待审核状态');
+                    }
+                }
+                
                 var url = isEdit ? '/novel/update' : '/novel/create';
-                var method = isEdit ? 'PUT' : 'POST';
+                var method = 'POST'; // 两个端点都使用POST方法（update支持PUT和POST）
                 
                 $.ajax({
                     url: url,
@@ -515,9 +600,7 @@
                         console.error('请求失败:', error);
                     }
                 });
-                
-                return false; // 阻止表单默认提交
-            });
+            }
         });
     </script>
 </body>

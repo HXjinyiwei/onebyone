@@ -63,6 +63,9 @@ public interface NovelRepository extends JpaRepository<Novel, Long> {
     @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.createTime DESC")
     List<Novel> findAllOrderByCreateTimeDesc(@Param("categoryId") Long categoryId);
 
+    // 根据标题和删除状态查询小说
+    List<Novel> findByTitleAndIsDeleted(String title, Integer isDeleted);
+
     // 统计未删除的小说数量
     long countByIsDeleted(Integer isDeleted);
 }

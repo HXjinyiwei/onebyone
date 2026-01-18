@@ -1,9 +1,11 @@
 package com.example.biyeshiji.controller;
 
 import com.example.biyeshiji.common.Response;
+import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.entity.Post;
 import com.example.biyeshiji.entity.User;
 import com.example.biyeshiji.repository.UserRepository;
+import com.example.biyeshiji.service.MessageService;
 import com.example.biyeshiji.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -15,6 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/post")
@@ -25,6 +28,9 @@ public class PostController {
     
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private MessageService messageService;
 
 
     @PostMapping("/create")
@@ -163,6 +169,25 @@ public class PostController {
         }
     }
 
+    @PostMapping("/reject-with-reason/{id}")
+    public Response<Void> rejectPostWithReason(@PathVariable Long id, @RequestBody Map<String, String> requestBody) {
+        String reason = requestBody.get("reason");
+        boolean result = postService.updatePostStatusWithReason(id, 2, reason); // 2表示已拒绝
+        if (result) {
+            // 创建消息通知给作者
+            Post post = postService.getPostById(id);
+            if (post != null) {
+                Message message = new Message();
+                message.setUserId(post.getAuthorId());
+                message.setContent("您的帖子《" + post.getTitle() + "》审核未通过。拒绝原因：" + (reason != null ? reason : "未提供具体原因") + "。请修改后重新提交。");
+                messageService.createMessage(message);
+            }
+            return Response.success("帖子审核拒绝，已通知作者", null);
+        } else {
+            return Response.error("帖子审核拒绝失败");
+        }
+    }
+
     @GetMapping("/liked/{userId}")
     public Response<List<Post>> getPostsLikedByUser(@PathVariable Long userId) {
         List<Post> posts = postService.getPostsLikedByUser(userId);
@@ -253,5 +278,20 @@ public class PostController {
         
         List<Post> posts = postService.getBannedPosts();
         return Response.success("获取封禁帖子列表成功", posts);
+    }
+
+    // 重新提交帖子（从拒绝状态改为审核中）
+    @PostMapping("/resubmit/{id}")
+    public Response<Void> resubmitPost(@PathVariable Long id) {
+        try {
+            boolean result = postService.resubmitPost(id);
+            if (result) {
+                return Response.success("帖子已重新提交，等待审核", null);
+            } else {
+                return Response.error("重新提交失败");
+            }
+        } catch (RuntimeException e) {
+            return Response.error(e.getMessage());
+        }
     }
 }

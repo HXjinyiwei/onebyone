@@ -1598,28 +1598,59 @@
                 });
             };
             
-            // 拒绝帖子
+            // 拒绝帖子（带原因）
             window.rejectPost = function(postId) {
-                layer.confirm('确定要拒绝这篇帖子吗？', {
-                    title: '审核确认',
-                    btn: ['确定', '取消']
-                }, function(index) {
-                    $.ajax({
-                        url: '/post/reject/' + postId,
-                        type: 'POST',
-                        success: function(res) {
-                            if (res.code === 200) {
-                                layer.msg('帖子已拒绝', {icon: 1});
-                                loadPendingPosts();
-                            } else {
-                                layer.msg('拒绝失败', {icon: 2});
+                // 存储当前帖子ID到全局变量
+                window.currentRejectPostId = postId;
+                window.currentRejectType = 'post';
+                
+                // 清空之前的输入
+                $('#reject-reason-textarea').val('');
+                
+                // 弹出拒绝原因输入模态框
+                layer.open({
+                    type: 1,
+                    title: '输入拒绝原因',
+                    area: ['500px', '350px'],
+                    content: $('#reject-reason-modal'),
+                    btn: [],
+                    success: function(layero, index) {
+                        // 绑定表单提交事件
+                        layui.form.on('submit(reject-reason-submit)', function(data) {
+                            var reason = data.field.reason;
+                            if (!reason || reason.trim() === '') {
+                                layer.msg('请输入拒绝原因', {icon: 2});
+                                return false;
                             }
-                        },
-                        error: function() {
-                            layer.msg('服务器错误', {icon: 2});
-                        }
-                    });
-                    layer.close(index);
+                            
+                            // 调用带原因的拒绝API
+                            $.ajax({
+                                url: '/post/reject-with-reason/' + postId,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ reason: reason }),
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('帖子已拒绝，原因已保存', {icon: 1});
+                                        loadPendingPosts();
+                                    } else {
+                                        layer.msg('拒绝失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                            
+                            layer.close(index);
+                            return false;
+                        });
+                        
+                        // 绑定取消按钮事件
+                        $('#reject-reason-cancel').off('click').on('click', function() {
+                            layer.close(index);
+                        });
+                    }
                 });
             };
             
@@ -1648,28 +1679,59 @@
                 });
             };
             
-            // 拒绝小说
+            // 拒绝小说（带原因）
             window.rejectNovel = function(novelId) {
-                layer.confirm('确定要拒绝这篇小说吗？', {
-                    title: '审核确认',
-                    btn: ['确定', '取消']
-                }, function(index) {
-                    $.ajax({
-                        url: '/novel/reject/' + novelId,
-                        type: 'POST',
-                        success: function(res) {
-                            if (res.code === 200) {
-                                layer.msg('小说已拒绝', {icon: 1});
-                                loadPendingNovels();
-                            } else {
-                                layer.msg('拒绝失败', {icon: 2});
+                // 存储当前小说ID到全局变量
+                window.currentRejectNovelId = novelId;
+                window.currentRejectType = 'novel';
+                
+                // 清空之前的输入
+                $('#reject-reason-textarea').val('');
+                
+                // 弹出拒绝原因输入模态框
+                layer.open({
+                    type: 1,
+                    title: '输入拒绝原因',
+                    area: ['500px', '350px'],
+                    content: $('#reject-reason-modal'),
+                    btn: [],
+                    success: function(layero, index) {
+                        // 绑定表单提交事件
+                        layui.form.on('submit(reject-reason-submit)', function(data) {
+                            var reason = data.field.reason;
+                            if (!reason || reason.trim() === '') {
+                                layer.msg('请输入拒绝原因', {icon: 2});
+                                return false;
                             }
-                        },
-                        error: function() {
-                            layer.msg('服务器错误', {icon: 2});
-                        }
-                    });
-                    layer.close(index);
+                            
+                            // 调用带原因的拒绝API
+                            $.ajax({
+                                url: '/novel/reject-with-reason/' + novelId,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ reason: reason }),
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('小说已拒绝，原因已保存', {icon: 1});
+                                        loadPendingNovels();
+                                    } else {
+                                        layer.msg('拒绝失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                            
+                            layer.close(index);
+                            return false;
+                        });
+                        
+                        // 绑定取消按钮事件
+                        $('#reject-reason-cancel').off('click').on('click', function() {
+                            layer.close(index);
+                        });
+                    }
                 });
             };
             
@@ -1698,28 +1760,59 @@
                 });
             };
             
-            // 拒绝章节
+            // 拒绝章节（带原因）
             window.rejectChapter = function(chapterId) {
-                layer.confirm('确定要拒绝这个章节吗？', {
-                    title: '审核确认',
-                    btn: ['确定', '取消']
-                }, function(index) {
-                    $.ajax({
-                        url: '/chapter/reject/' + chapterId,
-                        type: 'POST',
-                        success: function(res) {
-                            if (res.code === 200) {
-                                layer.msg('章节已拒绝', {icon: 1});
-                                loadPendingChapters();
-                            } else {
-                                layer.msg('拒绝失败', {icon: 2});
+                // 存储当前章节ID到全局变量
+                window.currentRejectChapterId = chapterId;
+                window.currentRejectType = 'chapter';
+                
+                // 清空之前的输入
+                $('#reject-reason-textarea').val('');
+                
+                // 弹出拒绝原因输入模态框
+                layer.open({
+                    type: 1,
+                    title: '输入拒绝原因',
+                    area: ['500px', '350px'],
+                    content: $('#reject-reason-modal'),
+                    btn: [],
+                    success: function(layero, index) {
+                        // 绑定表单提交事件
+                        layui.form.on('submit(reject-reason-submit)', function(data) {
+                            var reason = data.field.reason;
+                            if (!reason || reason.trim() === '') {
+                                layer.msg('请输入拒绝原因', {icon: 2});
+                                return false;
                             }
-                        },
-                        error: function() {
-                            layer.msg('服务器错误', {icon: 2});
-                        }
-                    });
-                    layer.close(index);
+                            
+                            // 调用带原因的拒绝API（章节暂时使用普通拒绝，后续可以添加带原因的API）
+                            $.ajax({
+                                url: '/chapter/reject/' + chapterId,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({ reason: reason }),
+                                success: function(res) {
+                                    if (res.code === 200) {
+                                        layer.msg('章节已拒绝，原因已保存', {icon: 1});
+                                        loadPendingChapters();
+                                    } else {
+                                        layer.msg('拒绝失败: ' + res.message, {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                            
+                            layer.close(index);
+                            return false;
+                        });
+                        
+                        // 绑定取消按钮事件
+                        $('#reject-reason-cancel').off('click').on('click', function() {
+                            layer.close(index);
+                        });
+                    }
                 });
             };
             
@@ -2493,5 +2586,23 @@
             });
         });
     </script>
+    
+    <!-- 拒绝原因输入模态框 -->
+    <div id="reject-reason-modal" style="display: none; padding: 20px;">
+        <form class="layui-form" id="reject-reason-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">拒绝原因</label>
+                <div class="layui-input-block">
+                    <textarea name="reason" id="reject-reason-textarea" placeholder="请输入拒绝原因，建议详细说明以便用户修改" class="layui-textarea" style="min-height: 120px;" required lay-verify="required"></textarea>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="reject-reason-submit">提交</button>
+                    <button type="button" class="layui-btn layui-btn-primary" id="reject-reason-cancel">取消</button>
+                </div>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

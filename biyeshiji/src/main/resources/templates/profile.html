@@ -912,6 +912,12 @@
                                     <div style="margin-top: 10px; color: #999; font-size: 12px;">
                                         发布时间: ${new Date(post.createTime).toLocaleString()} | 浏览量: ${post.viewCount} | 评论数: ${post.commentCount}
                                     </div>
+                                    <div style="margin-top: 5px;">
+                                        <a href="/post/edit/${post.id}" class="layui-btn layui-btn-xs layui-btn-normal">编辑</a>
+                                        ${post.status === 2 ? '<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="resubmitPost(' + post.id + ')">重新提交</button>' : ''}
+                                        <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deletePost(' + post.id + ')">删除</button>
+                                    </div>
+                                    ${post.status === 2 && post.rejectReason ? '<div style="margin-top: 10px; padding: 10px; background-color: #fff2f0; border-left: 4px solid #ff4d4f; font-size: 12px; color: #666;"><strong>拒绝原因：</strong>' + post.rejectReason + '</div>' : ''}
                                 </div>
                             </div>
                         `;
@@ -947,8 +953,10 @@
                                     <div style="margin-top: 5px;">
                                         <a href="/novel/edit/${novel.id}" class="layui-btn layui-btn-xs layui-btn-normal">编辑</a>
                                         <a href="/chapter/create?novelId=${novel.id}" class="layui-btn layui-btn-xs layui-btn-primary">写章节</a>
+                                        ${novel.status === 2 ? '<button class="layui-btn layui-btn-xs layui-btn-warm" onclick="resubmitNovel(' + novel.id + ')">重新提交</button>' : ''}
                                         <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteNovel(${novel.id})">删除</button>
                                     </div>
+                                    ${novel.status === 2 && novel.rejectReason ? '<div style="margin-top: 10px; padding: 10px; background-color: #fff2f0; border-left: 4px solid #ff4d4f; font-size: 12px; color: #666;"><strong>拒绝原因：</strong>' + novel.rejectReason + '</div>' : ''}
                                 </div>
                             </div>
                         `;
@@ -1286,6 +1294,58 @@
                                 loadPendingChapters();
                             } else {
                                 layer.msg('拒绝失败', {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 重新提交小说
+            window.resubmitNovel = function(novelId) {
+                layer.confirm('确定要重新提交这篇小说吗？重新提交后，小说将进入审核状态。', {
+                    title: '重新提交确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/resubmit/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说已重新提交，等待审核', {icon: 1});
+                                // 刷新当前页面
+                                loadMyNovels();
+                            } else {
+                                layer.msg('重新提交失败: ' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            }
+            
+            // 重新提交帖子
+            window.resubmitPost = function(postId) {
+                layer.confirm('确定要重新提交这篇帖子吗？重新提交后，帖子将进入审核状态。', {
+                    title: '重新提交确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/post/resubmit/' + postId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('帖子已重新提交，等待审核', {icon: 1});
+                                // 刷新当前页面
+                                loadMyPosts();
+                            } else {
+                                layer.msg('重新提交失败: ' + (res.message || '未知错误'), {icon: 2});
                             }
                         },
                         error: function() {

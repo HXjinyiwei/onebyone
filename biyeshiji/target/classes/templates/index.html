@@ -38,6 +38,7 @@
             background: #f2f2f2;
             margin-right: 15px;
             font-weight: bold;
+            flex-shrink: 0;
         }
         .rank-number.top1 {
             background: #ffd700;
@@ -51,15 +52,45 @@
             background: #cd7f32;
             color: #fff;
         }
+        .cover-image {
+            width: 60px;
+            height: 80px;
+            margin-right: 15px;
+            border-radius: 4px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cover-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .cover-image .default-cover {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            padding: 5px;
+        }
         .novel-info {
             flex: 1;
+            min-width: 0; /* 防止内容溢出 */
         }
         .novel-title {
             font-weight: bold;
             margin-bottom: 5px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .novel-title a {
             color: #333;
+        }
+        .novel-title a:hover {
+            color: #1E9FFF;
         }
         .novel-meta {
             font-size: 12px;
@@ -234,10 +265,20 @@
                                 else if (metricName === 'like') metricValue = novel.likeCount || 0;
                                 else if (metricName === 'favorite') metricValue = novel.favoriteCount || 0;
                                 else if (metricName === 'new') metricValue = novel.createTime ? new Date(novel.createTime).toLocaleDateString() : '';
+                                
+                                // 处理封面图片
+                                var coverImageHtml = '';
+                                if (novel.coverImage) {
+                                    coverImageHtml = '<div class="cover-image"><img src="' + novel.coverImage + '" alt="' + novel.title + '" onerror="this.onerror=null;this.parentElement.innerHTML=\'<div class=\\"default-cover\\">无封面</div>\';"></div>';
+                                } else {
+                                    coverImageHtml = '<div class="cover-image"><div class="default-cover">无封面</div></div>';
+                                }
+                                
                                 var itemHtml = '<li class="ranking-item">' +
                                     '<div class="rank-number ' + rankClass + '">' + (index + 1) + '</div>' +
+                                    coverImageHtml +
                                     '<div class="novel-info">' +
-                                    '<div class="novel-title"><a href="/novel/detail/' + novel.id + '" style="color:#333;">' + novel.title + '</a></div>' +
+                                    '<div class="novel-title"><a href="/novel/detail/' + novel.id + '">' + novel.title + '</a></div>' +
                                     '<div class="novel-meta">' +
                                     '<span>作者：' + (novel.author ? novel.author.nickname : '未知') + '</span>' +
                                     '<span>' + (metricName === 'view' ? '阅读' : metricName === 'like' ? '点赞' : metricName === 'favorite' ? '收藏' : '更新') + '：' + metricValue + '</span>' +

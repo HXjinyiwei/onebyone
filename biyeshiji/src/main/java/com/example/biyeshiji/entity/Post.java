@@ -28,6 +28,9 @@ public class Post {
     @Column(nullable = false, columnDefinition = "tinyint default 0")
     private Integer status; // 0正常，1审核中，2封禁
 
+    @Column(name = "reject_reason", length = 500)
+    private String rejectReason; // 审核拒绝原因
+
     @Column(name = "view_count", columnDefinition = "int default 0")
     private Integer viewCount;
 

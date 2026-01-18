@@ -37,6 +37,9 @@ public class Chapter {
     @Column(name = "audit_status", columnDefinition = "tinyint default 0")
     private Integer auditStatus; // 0=待审核，1=审核通过，2=审核拒绝，3=封禁
 
+    @Column(name = "reject_reason", length = 500)
+    private String rejectReason; // 审核拒绝原因
+
     @Column(name = "create_time", nullable = false)
     private LocalDateTime createTime;
 

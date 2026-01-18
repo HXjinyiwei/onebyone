@@ -26,6 +26,7 @@ public interface PostService {
     boolean unlockPost(Long postId);
     List<Post> getPostsByStatus(Integer status);
     boolean updatePostStatus(Long postId, Integer status);
+    boolean updatePostStatusWithReason(Long postId, Integer status, String rejectReason);
     List<Post> searchPosts(String keyword);
     List<Post> searchPostsWithStatus(String keyword, Integer status);
     List<Post> getDeletedPostsByAuthorId(Long authorId);
@@ -35,4 +36,7 @@ public interface PostService {
     List<Post> getBannedPosts();
     // 统计
     long countPosts();
+    
+    // 重新提交（从拒绝状态改为审核中）
+    boolean resubmitPost(Long postId);
 }

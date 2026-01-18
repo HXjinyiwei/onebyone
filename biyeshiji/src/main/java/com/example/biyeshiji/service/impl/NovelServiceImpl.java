@@ -48,6 +48,14 @@ public class NovelServiceImpl implements NovelService {
             throw new RuntimeException("用户未登录");
         }
 
+        // 检查小说标题是否已存在
+        if (novel.getTitle() != null && !novel.getTitle().trim().isEmpty()) {
+            boolean titleExists = isTitleExists(novel.getTitle().trim(), null);
+            if (titleExists) {
+                throw new RuntimeException("小说标题已存在，请使用其他标题");
+            }
+        }
+
         // 设置作者ID
         novel.setAuthorId(currentUser.getId());
 
@@ -87,6 +95,15 @@ public class NovelServiceImpl implements NovelService {
 
             if (!isAuthor && !isAdmin) {
                 throw new RuntimeException("无权修改此小说");
+            }
+
+            // 检查小说标题是否已存在（排除当前小说）
+            if (novel.getTitle() != null && !novel.getTitle().trim().isEmpty() &&
+                !novel.getTitle().trim().equals(existingNovel.getTitle())) {
+                boolean titleExists = isTitleExists(novel.getTitle().trim(), novel.getId());
+                if (titleExists) {
+                    throw new RuntimeException("小说标题已存在，请使用其他标题");
+                }
             }
 
             // 更新字段
@@ -499,6 +516,30 @@ public class NovelServiceImpl implements NovelService {
             Novel novel = novelOpt.get();
             novel.setAuditStatus(auditStatus);
             novel.setUpdateTime(LocalDateTime.now());
+            // 如果是审核拒绝（状态2），清空拒绝原因（因为旧方法不支持设置原因）
+            if (auditStatus == 2) {
+                novel.setRejectReason(null);
+            }
+            novelRepository.save(novel);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean updateNovelAuditStatusWithReason(Long novelId, Integer auditStatus, String rejectReason) {
+        Optional<Novel> novelOpt = novelRepository.findById(novelId);
+        if (novelOpt.isPresent()) {
+            Novel novel = novelOpt.get();
+            novel.setAuditStatus(auditStatus);
+            novel.setUpdateTime(LocalDateTime.now());
+            // 如果是审核拒绝（状态2），设置拒绝原因
+            if (auditStatus == 2) {
+                novel.setRejectReason(rejectReason);
+            } else {
+                // 其他状态清空拒绝原因
+                novel.setRejectReason(null);
+            }
             novelRepository.save(novel);
             return true;
         }
@@ -576,5 +617,57 @@ public class NovelServiceImpl implements NovelService {
                 .filter(novel -> novel.getAuditStatus() != null && novel.getAuditStatus() == 3)
                 .sorted((n1, n2) -> n2.getUpdateTime().compareTo(n1.getUpdateTime()))
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isTitleExists(String title, Long excludeNovelId) {
+        if (title == null || title.trim().isEmpty()) {
+            return false;
+        }
+        
+        // 查询是否存在相同标题的小说（排除已删除的）
+        List<Novel> existingNovels = novelRepository.findByTitleAndIsDeleted(title.trim(), 0);
+        
+        if (excludeNovelId != null) {
+            // 排除当前正在编辑的小说
+            existingNovels = existingNovels.stream()
+                    .filter(novel -> !novel.getId().equals(excludeNovelId))
+                    .toList();
+        }
+        
+        return !existingNovels.isEmpty();
+    }
+    
+    @Override
+    @Transactional
+    public boolean resubmitNovel(Long novelId) {
+        Optional<Novel> novelOpt = novelRepository.findById(novelId);
+        if (novelOpt.isPresent()) {
+            Novel novel = novelOpt.get();
+            // 检查当前状态是否为已拒绝（2）
+            if (novel.getAuditStatus() != null && novel.getAuditStatus() == 2) {
+                // 将状态改为待审核（0），清空拒绝原因
+                novel.setAuditStatus(0);
+                novel.setRejectReason(null);
+                novel.setUpdateTime(LocalDateTime.now());
+                novelRepository.save(novel);
+                
+                // 发送消息通知给小说作者
+                Long authorId = novel.getAuthorId();
+                String content = "您的小说《" + novel.getTitle() + "》已重新提交，等待审核。";
+                Message message = new Message();
+                message.setUserId(authorId);
+                message.setContent(content);
+                message.setCreateTime(LocalDateTime.now());
+                message.setIsRead(0);
+                messageService.createMessage(message);
+                
+                return true;
+            } else {
+                throw new RuntimeException("只有被拒绝的小说才能重新提交");
+            }
+        }
+        return false;
     }
 }

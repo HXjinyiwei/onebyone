@@ -106,7 +106,9 @@
         
         <!-- 发帖表单 -->
         <form class="post-form layui-form" id="postForm">
-            <h2 class="form-title">发布帖子</h2>
+            <h2 class="form-title" id="formTitle">发布帖子</h2>
+            
+            <input type="hidden" id="postId" name="id" th:value="${postId}">
             
             <div class="layui-form-item">
                 <label class="layui-form-label">帖子标题</label>
@@ -152,6 +154,26 @@
                 </div>
             </div>
             
+            <!-- 拒绝原因显示区域（通过JavaScript动态添加） -->
+            <div id="rejectReasonContainer" style="display: none;">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">拒绝原因</label>
+                    <div class="layui-input-block">
+                        <div class="layui-card" style="background-color: #fff5f5; border-left: 4px solid #ff5722;">
+                            <div class="layui-card-body">
+                                <p style="color: #ff5722; font-weight: bold; margin-bottom: 5px;">
+                                    <i class="layui-icon layui-icon-close-fill"></i> 审核被拒绝
+                                </p>
+                                <p id="rejectReasonText" style="color: #666; margin: 0;"></p>
+                                <p style="color: #999; font-size: 12px; margin-top: 5px;">
+                                    请根据上述原因修改内容后重新提交审核
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- 表单按钮 -->
             <div class="form-buttons">
                 <button type="submit" class="layui-btn layui-btn-normal" lay-submit lay-filter="postSubmit">发布帖子</button>
@@ -168,6 +190,10 @@
             var element = layui.element;
             var $ = layui.jquery;
             var form = layui.form;
+            
+            var postId = $('#postId').val();
+            var isEdit = postId != null && postId.trim() !== '';
+            var currentUser = null;
             
             // 退出登录确认函数
             window.logoutConfirm = function() {
@@ -193,14 +219,24 @@
                     console.log('获取当前用户信息成功:', res);
                     if (res.code === 200 && res.data) {
                         $('#welcomeText').text('欢迎，' + res.data.nickname);
+                        currentUser = res.data;
                         
                         // 加载帖子分类
                         loadPostCategories(res.data.role);
+                        
+                        // 如果是编辑模式，加载帖子数据
+                        if (isEdit) {
+                            loadPostData();
+                        }
                     } else {
                         $('#welcomeText').text('欢迎，未知用户');
                         console.log('获取当前用户信息失败:', res.message);
                         // 仍然尝试加载分类
                         loadPostCategories(0);
+                        // 如果是编辑模式，仍然尝试加载帖子数据
+                        if (isEdit) {
+                            loadPostData();
+                        }
                     }
                 },
                 error: function(xhr, status, error) {
@@ -210,6 +246,10 @@
                     console.log('响应内容:', xhr.responseText);
                     // 仍然尝试加载分类
                     loadPostCategories(0);
+                    // 如果是编辑模式，仍然尝试加载帖子数据
+                    if (isEdit) {
+                        loadPostData();
+                    }
                 }
             });
             
@@ -274,28 +314,88 @@
                 console.log('使用回退分类选项');
             }
             
+            // 加载帖子数据（编辑模式）
+            function loadPostData() {
+                $.ajax({
+                    url: '/post/detail/' + postId,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var post = res.data;
+                            $('#formTitle').text('编辑帖子');
+                            $('input[name="title"]').val(post.title);
+                            $('textarea[name="content"]').val(post.content);
+                            $('select[name="categoryId"]').val(post.categoryId);
+                            
+                            // 设置状态
+                            if (post.status === 0) {
+                                $('input[name="status"][value="0"]').prop('checked', true);
+                            } else {
+                                $('input[name="status"][value="1"]').prop('checked', true);
+                            }
+                            
+                            // 设置锁定状态
+                            if (post.isLocked === 1) {
+                                $('input[name="isLocked"]').prop('checked', true);
+                            }
+                            
+                            // 显示拒绝原因（如果存在）
+                            if (post.rejectReason && post.rejectReason.trim() !== '') {
+                                $('#rejectReasonText').text(post.rejectReason);
+                                $('#rejectReasonContainer').show();
+                            }
+                            
+                            form.render();
+                            console.log('帖子数据加载成功');
+                        } else {
+                            layer.msg('加载帖子数据失败: ' + res.message, {icon: 2});
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('加载帖子数据请求失败:', error);
+                        layer.msg('加载帖子数据失败', {icon: 2});
+                    }
+                });
+            }
+            
             // 表单验证和提交
             form.on('submit(postSubmit)', function(data) {
                 // 这里可以添加异步请求，提交表单数据
                 console.log('表单数据:', data.field);
                 
+                var formData = data.field;
+                
+                // 如果是编辑模式且帖子处于拒绝状态（status=2），则自动设置为审核中状态（status=1）
+                if (isEdit) {
+                    // 需要先获取当前帖子的状态
+                    // 为了简化，我们假设如果显示了拒绝原因，那么帖子就是被拒绝的
+                    if ($('#rejectReasonContainer').is(':visible')) {
+                        formData.status = 1; // 设置为审核中
+                        console.log('检测到帖子处于拒绝状态，自动设置为审核中状态');
+                    }
+                }
+                
+                var url = isEdit ? '/post/update' : '/post/create';
+                var method = 'POST'; // 两个端点都使用POST方法
+                
                 // 实际提交到后端API
                 $.ajax({
-                    url: '/post/create',
-                    type: 'POST',
+                    url: url,
+                    type: method,
                     contentType: 'application/json',
-                    data: JSON.stringify(data.field),
+                    data: JSON.stringify(formData),
                     success: function(res) {
                         if (res.code === 200) {
-                            layer.msg('帖子发布成功！', {icon: 1}, function() {
+                            layer.msg(isEdit ? '帖子更新成功！' : '帖子发布成功！', {icon: 1}, function() {
                                 window.location.href = '/post/list';
                             });
                         } else {
-                            layer.msg(res.message || '帖子发布失败', {icon: 2});
+                            layer.msg(res.message || (isEdit ? '帖子更新失败' : '帖子发布失败'), {icon: 2});
                         }
                     },
                     error: function(xhr, status, error) {
-                        layer.msg('帖子发布失败：' + error, {icon: 2});
+                        layer.msg((isEdit ? '帖子更新失败：' : '帖子发布失败：') + error, {icon: 2});
                         console.error('帖子发布请求失败:', error);
                     }
                 });
