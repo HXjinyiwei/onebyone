@@ -21,7 +21,7 @@ public class CategoryController {
         if (createdCategory != null) {
             return Response.success("分类创建成功", createdCategory);
         } else {
-            return Response.error("分类创建失败");
+            return Response.error("分类名称已存在");
         }
     }
 
@@ -31,7 +31,7 @@ public class CategoryController {
         if (updatedCategory != null) {
             return Response.success("分类更新成功", updatedCategory);
         } else {
-            return Response.error("分类更新失败");
+            return Response.error("分类名称已存在或分类不存在");
         }
     }
 
@@ -61,9 +61,38 @@ public class CategoryController {
         return Response.success("获取分类列表成功", categories);
     }
 
-    @GetMapping("/child/{parentId}")
-    public Response<List<Category>> getChildCategories(@PathVariable Long parentId) {
-        List<Category> categories = categoryService.getChildCategories(parentId);
-        return Response.success("获取子分类成功", categories);
+    @GetMapping("/type/{type}")
+    public Response<List<Category>> getCategoriesByType(@PathVariable Integer type) {
+        List<Category> categories = categoryService.getCategoriesByType(type);
+        return Response.success("获取分类成功", categories);
+    }
+
+    @GetMapping("/type/{type}/status/{status}")
+    public Response<List<Category>> getCategoriesByTypeAndStatus(
+            @PathVariable Integer type,
+            @PathVariable Boolean status) {
+        List<Category> categories = categoryService.getCategoriesByTypeAndStatus(type, status);
+        return Response.success("获取分类成功", categories);
+    }
+
+    @GetMapping("/active")
+    public Response<List<Category>> getActiveCategories() {
+        List<Category> categories = categoryService.getActiveCategories();
+        return Response.success("获取有效分类成功", categories);
+    }
+
+    @GetMapping("/active/type/{type}")
+    public Response<List<Category>> getActiveCategoriesByType(@PathVariable Integer type) {
+        List<Category> categories = categoryService.getActiveCategoriesByType(type);
+        return Response.success("获取有效分类成功", categories);
+    }
+    
+    @GetMapping("/search")
+    public Response<List<Category>> searchCategories(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer isActive) {
+        List<Category> categories = categoryService.searchCategories(name, type, isActive);
+        return Response.success("搜索分类成功", categories);
     }
 }

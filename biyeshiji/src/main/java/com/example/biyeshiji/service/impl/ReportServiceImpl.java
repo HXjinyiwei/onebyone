@@ -53,16 +53,11 @@ public class ReportServiceImpl implements ReportService {
     public List<Report> getReports(String targetType, Integer status) {
         if (targetType != null && !targetType.isEmpty()) {
             if (status != null) {
-                // 根据类型和状态筛选
-                return reportRepository.findAll().stream()
-                        .filter(report -> targetType.equals(report.getTargetType()))
-                        .filter(report -> status.equals(report.getStatus()))
-                        .toList();
+                // 根据类型和状态筛选（不区分大小写）
+                return reportRepository.findByTargetTypeIgnoreCaseAndStatus(targetType, status);
             } else {
-                // 只根据类型筛选
-                return reportRepository.findAll().stream()
-                        .filter(report -> targetType.equals(report.getTargetType()))
-                        .toList();
+                // 只根据类型筛选（不区分大小写）
+                return reportRepository.findByTargetTypeIgnoreCase(targetType);
             }
         } else if (status != null) {
             // 只根据状态筛选

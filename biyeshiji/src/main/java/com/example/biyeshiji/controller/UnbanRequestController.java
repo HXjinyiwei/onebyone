@@ -36,9 +36,27 @@ public class UnbanRequestController {
     }
 
     @GetMapping("/list")
-    public Response<List<Map<String, Object>>> listUnbanRequests() {
-        // 查询所有解封请求（type=1）
-        List<AdminNotification> notifications = adminNotificationRepository.findByTypeOrderByCreateTimeDesc(1);
+    public Response<List<Map<String, Object>>> listUnbanRequests(@RequestParam(required = false) String status) {
+        // 查询解封请求（type=1），支持状态筛选
+        List<AdminNotification> notifications;
+        
+        if (status != null && !status.isEmpty()) {
+            if ("processed".equalsIgnoreCase(status)) {
+                // 已处理：状态为1（已通过）或2（已拒绝）
+                notifications = adminNotificationRepository.findByTypeAndStatusInOrderByCreateTimeDesc(1, List.of(1, 2));
+            } else {
+                try {
+                    int statusInt = Integer.parseInt(status);
+                    notifications = adminNotificationRepository.findByTypeAndStatusOrderByCreateTimeDesc(1, statusInt);
+                } catch (NumberFormatException e) {
+                    // 如果status不是数字，返回空列表
+                    notifications = new ArrayList<>();
+                }
+            }
+        } else {
+            notifications = adminNotificationRepository.findByTypeOrderByCreateTimeDesc(1);
+        }
+        
         List<Map<String, Object>> list = new ArrayList<>();
         for (AdminNotification notification : notifications) {
             Map<String, Object> map = new HashMap<>();
@@ -66,22 +84,58 @@ public class UnbanRequestController {
         if (notification.getStatus() != 0) {
             return Response.error("该请求已处理，不能重复操作");
         }
+        
+        Long userId = notification.getSenderId();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return Response.error("用户不存在");
+        }
+        
+        // 智能处理逻辑：检查用户是否已经被解封（通过其他请求）
+        boolean userAlreadyUnbanned = false;
+        if ("REJECTED".equalsIgnoreCase(action)) {
+            // 检查该用户是否有已通过的解封请求
+            List<AdminNotification> approvedRequests = adminNotificationRepository.findBySenderIdAndTypeAndStatus(userId, 1, 1);
+            if (!approvedRequests.isEmpty()) {
+                userAlreadyUnbanned = true;
+            }
+        }
+        
         // 根据action更新状态
         int newStatus;
         if ("APPROVED".equalsIgnoreCase(action)) {
             newStatus = 1; // 已通过
             // 解封用户
-            User user = userRepository.findById(notification.getSenderId()).orElse(null);
-            if (user != null) {
-                user.setStatus(0); // 解封
-                user.setBanUntil(null);
-                userRepository.save(user);
+            user.setStatus(0); // 解封
+            user.setBanUntil(null);
+            userRepository.save(user);
+            
+            // 将该用户其他待处理的解封请求自动标记为"已处理-重复"
+            List<AdminNotification> pendingRequests = adminNotificationRepository.findBySenderIdAndTypeAndStatus(userId, 1, 0);
+            for (AdminNotification pending : pendingRequests) {
+                if (!pending.getId().equals(requestId)) {
+                    pending.setStatus(3); // 3 = 已处理-重复
+                    pending.setUpdateTime(LocalDateTime.now());
+                    adminNotificationRepository.save(pending);
+                }
             }
         } else if ("REJECTED".equalsIgnoreCase(action)) {
             newStatus = 2; // 已拒绝
+            
+            // 如果用户已经被解封（通过其他请求），则拒绝操作不重新封禁用户
+            if (!userAlreadyUnbanned) {
+                // 用户没有被解封，可以执行拒绝逻辑
+                // 这里可以添加拒绝后的处理，比如保持封禁状态或延长封禁时间
+                // 当前逻辑：保持用户当前状态不变
+            } else {
+                // 用户已经被解封，拒绝操作不影响用户状态
+                // 可以添加日志记录
+                System.out.println("用户 " + userId + " 已被解封，拒绝操作不影响用户状态");
+            }
         } else {
             return Response.error("无效的操作类型");
         }
+        
         notification.setStatus(newStatus);
         notification.setUpdateTime(LocalDateTime.now());
         adminNotificationRepository.save(notification);
@@ -118,6 +172,22 @@ public class UnbanRequestController {
             // 用户未被封禁
             return Response.error("你未被封禁，无法提交解封申诉");
         }
+        
+        // 频率限制：检查用户最近1小时内是否已提交过解封请求
+        LocalDateTime oneHourAgo = LocalDateTime.now().minusHours(1);
+        List<AdminNotification> recentRequests = adminNotificationRepository.findBySenderIdAndTypeAndCreateTimeAfter(
+            user.getId(), 1, oneHourAgo);
+        if (!recentRequests.isEmpty()) {
+            // 找到最近1小时内的请求，检查是否有待处理的
+            for (AdminNotification req : recentRequests) {
+                if (req.getStatus() == 0) {
+                    // 有未处理的请求
+                    return Response.error("您最近1小时内已提交过解封请求，请等待管理员处理");
+                }
+            }
+            // 虽然有请求，但都已处理，可以继续提交
+        }
+        
         // 创建解封请求通知
         AdminNotification notification = new AdminNotification();
         notification.setType(1); // 1=解封请求

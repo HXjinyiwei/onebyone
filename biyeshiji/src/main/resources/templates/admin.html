@@ -240,6 +240,28 @@
                 <div style="margin-bottom: 20px;">
                     <button class="layui-btn layui-btn-normal" onclick="loadCategories()">刷新</button>
                     <button class="layui-btn layui-btn-primary" onclick="showAddCategoryModal()">添加分类</button>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>类型筛选：</label>
+                        <select id="category-type-filter" onchange="searchCategories()">
+                            <option value="">全部</option>
+                            <option value="0">帖子分类</option>
+                            <option value="1">小说分类</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>状态筛选：</label>
+                        <select id="category-status-filter" onchange="searchCategories()">
+                            <option value="">全部</option>
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>搜索：</label>
+                        <input type="text" id="category-search-input" placeholder="分类名称" class="layui-input" style="width: 200px; display: inline-block;">
+                        <button class="layui-btn layui-btn-sm" onclick="searchCategories()">搜索</button>
+                        <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearCategorySearch()">清空</button>
+                    </div>
                 </div>
                 <table class="admin-table">
                     <thead>
@@ -247,14 +269,13 @@
                             <th>ID</th>
                             <th>分类名称</th>
                             <th>描述</th>
-                            <th>父分类</th>
-                            <th>排序</th>
+                            <th>类型</th>
                             <th>状态</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody id="category-list-body">
-                        <tr><td colspan="7">加载中...</td></tr>
+                        <tr><td colspan="6">加载中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -287,6 +308,16 @@
                 <h2>解封请求</h2>
                 <div style="margin-bottom: 20px;">
                     <button class="layui-btn layui-btn-normal" onclick="loadUnbanRequests()">刷新</button>
+                    <div class="layui-inline" style="margin-left: 20px;">
+                        <label>状态筛选：</label>
+                        <select id="unban-status-filter" onchange="loadUnbanRequests()">
+                            <option value="">全部</option>
+                            <option value="0">待处理</option>
+                            <option value="1">已通过</option>
+                            <option value="2">已拒绝</option>
+                            <option value="processed">已处理（已通过+已拒绝）</option>
+                        </select>
+                    </div>
                 </div>
                 <table class="admin-table">
                     <thead>
@@ -379,7 +410,6 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>标题</th>
                             <th>作者</th>
                             <th>分类</th>
@@ -694,9 +724,11 @@
             
             // 加载解封请求
             function loadUnbanRequests() {
+                var status = $('#unban-status-filter').val();
                 $.ajax({
                     url: '/admin/unban-requests/list',
                     type: 'GET',
+                    data: { status: status },
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
@@ -800,7 +832,24 @@
                     html = '<tr><td colspan="7">暂无举报</td></tr>';
                 } else {
                     reports.forEach(function(report) {
-                        var statusText = report.status === 0 ? '待处理' : report.status === 1 ? '已处理' : '已忽略';
+                        // 优化状态显示：根据status和handleResult显示更详细的状态信息
+                        var statusText = '未知';
+                        if (report.status === 0) {
+                            statusText = '待处理';
+                        } else if (report.status === 1) {
+                            // 已处理状态，根据handleResult判断具体操作
+                            if (report.handleResult && report.handleResult.includes('封禁')) {
+                                statusText = '已处理：封禁';
+                            } else if (report.handleResult && report.handleResult.includes('忽略')) {
+                                statusText = '已处理：忽略';
+                            } else {
+                                statusText = '已处理';
+                            }
+                        } else if (report.status === 2) {
+                            // 已忽略状态，显示为"已处理：忽略"
+                            statusText = '已处理：忽略';
+                        }
+                        
                         // 举报类型翻译为中文（支持大小写）
                         var typeText = report.targetType;
                         var upperType = typeText ? typeText.toUpperCase() : '';
@@ -858,16 +907,20 @@
             }
 
             // 处理举报
-            window.processReport = function(reportId, action) {
+            window.processReport = function(reportId, action, result) {
                 var confirmMsg = action === 'RESOLVED' ? '确定要将此举报标记为已处理吗？' : '确定要忽略此举报吗？';
                 layer.confirm(confirmMsg, {
                     title: '处理确认',
                     btn: ['确定', '取消']
                 }, function(index) {
+                    var data = { reportId: reportId, action: action };
+                    if (result !== undefined && result !== null) {
+                        data.result = result;
+                    }
                     $.ajax({
                         url: '/admin/reports/process',
                         type: 'POST',
-                        data: { reportId: reportId, action: action },
+                        data: data,
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('处理成功', {icon: 1});
@@ -912,8 +965,8 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('内容封禁成功', {icon: 1});
-                                // 同时标记举报为已处理
-                                processReport(reportId, 'RESOLVED');
+                                // 同时标记举报为已处理，并传递封禁结果
+                                processReport(reportId, 'RESOLVED', '已封禁内容');
                             } else {
                                 layer.msg('封禁失败: ' + res.message, {icon: 2});
                             }
@@ -1052,7 +1105,7 @@
                         html += `
                             <div class="layui-card layui-card-normal" style="margin: 10px 0;">
                                 <div class="layui-card-header">
-                                    <a href="/chapter/${chapter.id}" style="color: #333;">${chapter.title}</a>
+                                    <a href="/chapter/view/${chapter.id}" style="color: #333;">${chapter.title}</a>
                                     <div style="float: right;">
                                         <button class="layui-btn layui-btn-xs layui-btn-success" onclick="approveChapter(${chapter.id})">通过</button>
                                         <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="rejectChapter(${chapter.id})">拒绝</button>
@@ -1238,32 +1291,66 @@
                 });
             }
             
+            // 搜索分类
+            window.searchCategories = function() {
+                var name = $('#category-search-input').val();
+                var type = $('#category-type-filter').val();
+                var isActive = $('#category-status-filter').val();
+                
+                // 构建查询参数
+                var params = {};
+                if (name && name.trim() !== '') {
+                    params.name = name.trim();
+                }
+                if (type !== '') {
+                    params.type = parseInt(type);
+                }
+                if (isActive !== '') {
+                    params.isActive = parseInt(isActive);
+                }
+                
+                $.ajax({
+                    url: '/category/search',
+                    type: 'GET',
+                    data: params,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            renderCategories(res.data, '#category-list-body');
+                        } else {
+                            layer.msg('搜索分类失败', {icon: 2});
+                        }
+                    },
+                    error: function() {
+                        layer.msg('服务器错误', {icon: 2});
+                    }
+                });
+            };
+            
+            // 清空分类搜索
+            window.clearCategorySearch = function() {
+                $('#category-search-input').val('');
+                $('#category-type-filter').val('');
+                $('#category-status-filter').val('');
+                loadCategories();
+            };
+            
             // 渲染分类列表
             function renderCategories(categories, container) {
                 var html = '';
                 if (categories.length === 0) {
-                    html = '<tr><td colspan="7">暂无分类</td></tr>';
+                    html = '<tr><td colspan="6">暂无分类</td></tr>';
                 } else {
-                    // 创建父分类ID到名称的映射
-                    var parentMap = {};
-                    categories.forEach(function(cat) {
-                        parentMap[cat.id] = cat.name;
-                    });
                     categories.forEach(function(category) {
-                        var parentName = '无';
-                        if (category.parentId && category.parentId !== 0) {
-                            parentName = parentMap[category.parentId] || ('ID:' + category.parentId);
-                        }
                         var statusText = category.isActive === 1 ? '启用' : '禁用';
-                        var deletedText = category.isDeleted === 1 ? '已删除' : '正常';
+                        var typeText = category.type === 0 ? '帖子分类' : '小说分类';
                         html += `
                             <tr>
                                 <td>${category.id}</td>
                                 <td>${category.name}</td>
                                 <td>${category.description || ''}</td>
-                                <td>${parentName}</td>
-                                <td>${category.sortOrder}</td>
-                                <td>${statusText} / ${deletedText}</td>
+                                <td>${typeText}</td>
+                                <td>${statusText}</td>
                                 <td>
                                     <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="editCategory(${category.id})">编辑</button>
                                     <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteCategory(${category.id})">删除</button>
@@ -1280,7 +1367,7 @@
                 layer.open({
                     type: 1,
                     title: '添加分类',
-                    area: ['500px', '400px'],
+                    area: ['500px', '350px'],
                     content: `
                         <div style="padding: 20px;">
                             <form class="layui-form" id="add-category-form">
@@ -1297,17 +1384,12 @@
                                     </div>
                                 </div>
                                 <div class="layui-form-item">
-                                    <label class="layui-form-label">父分类</label>
+                                    <label class="layui-form-label">分类类型</label>
                                     <div class="layui-input-block">
-                                        <select name="parentId" lay-verify="">
-                                            <option value="0">无父分类</option>
+                                        <select name="type" lay-verify="required">
+                                            <option value="0">帖子分类</option>
+                                            <option value="1">小说分类</option>
                                         </select>
-                                    </div>
-                                </div>
-                                <div class="layui-form-item">
-                                    <label class="layui-form-label">排序</label>
-                                    <div class="layui-input-block">
-                                        <input type="number" name="sortOrder" value="0" class="layui-input">
                                     </div>
                                 </div>
                                 <div class="layui-form-item">
@@ -1326,31 +1408,15 @@
                         </div>
                     `,
                     success: function(layero, index) {
-                        // 加载父分类选项
-                        $.ajax({
-                            url: '/category/list',
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(res) {
-                                if (res.code === 200) {
-                                    var select = $(layero).find('select[name="parentId"]');
-                                    select.empty();
-                                    select.append('<option value="0">无父分类</option>');
-                                    res.data.forEach(function(cat) {
-                                        if (cat.isActive && !cat.isDeleted) {
-                                            select.append('<option value="' + cat.id + '">' + cat.name + '</option>');
-                                        }
-                                    });
-                                    layui.form.render('select');
-                                }
-                            }
-                        });
-                        // 渲染开关组件
+                        // 渲染表单组件（包括select和checkbox）
+                        layui.form.render('select');
                         layui.form.render('checkbox');
                         // 表单提交
                         layui.form.on('submit(add-category-submit)', function(data) {
                             var formData = data.field;
                             formData.isActive = formData.isActive === 'on' ? 1 : 0;
+                            // 确保type是数字
+                            formData.type = parseInt(formData.type);
                             addCategory(formData);
                             layer.close(index);
                             return false;
@@ -1393,7 +1459,7 @@
                             layer.open({
                                 type: 1,
                                 title: '编辑分类',
-                                area: ['500px', '400px'],
+                                area: ['500px', '350px'],
                                 content: `
                                     <div style="padding: 20px;">
                                         <form class="layui-form" id="edit-category-form">
@@ -1411,17 +1477,12 @@
                                                 </div>
                                             </div>
                                             <div class="layui-form-item">
-                                                <label class="layui-form-label">父分类</label>
+                                                <label class="layui-form-label">分类类型</label>
                                                 <div class="layui-input-block">
-                                                    <select name="parentId" lay-verify="">
-                                                        <option value="0">无父分类</option>
+                                                    <select name="type" lay-verify="required">
+                                                        <option value="0" ${category.type === 0 ? 'selected' : ''}>帖子分类</option>
+                                                        <option value="1" ${category.type === 1 ? 'selected' : ''}>小说分类</option>
                                                     </select>
-                                                </div>
-                                            </div>
-                                            <div class="layui-form-item">
-                                                <label class="layui-form-label">排序</label>
-                                                <div class="layui-input-block">
-                                                    <input type="number" name="sortOrder" value="${category.sortOrder || 0}" class="layui-input">
                                                 </div>
                                             </div>
                                             <div class="layui-form-item">
@@ -1440,33 +1501,15 @@
                                     </div>
                                 `,
                                 success: function(layero, index) {
-                                    // 加载父分类选项
-                                    $.ajax({
-                                        url: '/category/list',
-                                        type: 'GET',
-                                        dataType: 'json',
-                                        success: function(res) {
-                                            if (res.code === 200) {
-                                                var select = $(layero).find('select[name="parentId"]');
-                                                select.empty();
-                                                select.append('<option value="0">无父分类</option>');
-                                                res.data.forEach(function(cat) {
-                                                    if (cat.isActive && !cat.isDeleted && cat.id !== category.id) { // 不能选择自己作为父分类
-                                                        select.append('<option value="' + cat.id + '">' + cat.name + '</option>');
-                                                    }
-                                                });
-                                                // 设置当前父分类
-                                                select.val(category.parentId || 0);
-                                                layui.form.render('select');
-                                            }
-                                        }
-                                    });
-                                    // 渲染开关组件
+                                    // 渲染表单组件（包括select和checkbox）
+                                    layui.form.render('select');
                                     layui.form.render('checkbox');
                                     // 表单提交
                                     layui.form.on('submit(edit-category-submit)', function(data) {
                                         var formData = data.field;
                                         formData.isActive = formData.isActive === 'on' ? 1 : 0;
+                                        // 确保type是数字
+                                        formData.type = parseInt(formData.type);
                                         updateCategory(formData);
                                         layer.close(index);
                                         return false;
@@ -1504,21 +1547,21 @@
                 });
             };
             
-            // 删除分类（暂未实现）
-            window.deleteCategory = function(id) {
-                layer.confirm('确定要删除这个分类吗？', {
+            // 删除分类
+            window.deleteCategory = function(categoryId) {
+                layer.confirm('确定要删除这个分类吗？此操作不可恢复！', {
                     title: '删除确认',
                     btn: ['确定', '取消']
                 }, function(index) {
                     $.ajax({
-                        url: '/category/delete/' + id,
+                        url: '/category/delete/' + categoryId,
                         type: 'POST',
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('分类已删除', {icon: 1});
-                                loadCategories();
+                                layer.msg('分类删除成功', {icon: 1});
+                                loadCategories(); // 刷新分类列表
                             } else {
-                                layer.msg('删除失败', {icon: 2});
+                                layer.msg('删除失败: ' + res.message, {icon: 2});
                             }
                         },
                         error: function() {
@@ -1528,6 +1571,7 @@
                     layer.close(index);
                 });
             };
+            
             
             // 审核通过帖子
             window.approvePost = function(postId) {
@@ -1873,10 +1917,10 @@
                 });
             };
             
-            // 加载帖子分类选项
+            // 加载帖子分类选项（只加载帖子分类，type=0）
             function loadPostCategories() {
                 $.ajax({
-                    url: '/category/list',
+                    url: '/category/active/type/0',
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
@@ -1885,14 +1929,30 @@
                             select.empty();
                             select.append('<option value="">全部</option>');
                             res.data.forEach(function(category) {
-                                if (category.isActive === 1 && category.isDeleted !== 1) {
-                                    select.append('<option value="' + category.id + '">' + category.name + '</option>');
-                                }
+                                select.append('<option value="' + category.id + '">' + category.name + '</option>');
                             });
                         }
                     },
                     error: function() {
-                        console.error('加载分类失败');
+                        console.error('加载帖子分类失败');
+                        // 如果新接口失败，回退到旧接口
+                        $.ajax({
+                            url: '/category/list',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code === 200) {
+                                    var select = $('#post-category-filter');
+                                    select.empty();
+                                    select.append('<option value="">全部</option>');
+                                    res.data.forEach(function(category) {
+                                        if (category.isActive === 1 && category.isDeleted !== 1 && category.type === 0) {
+                                            select.append('<option value="' + category.id + '">' + category.name + '</option>');
+                                        }
+                                    });
+                                }
+                            }
+                        });
                     }
                 });
             }
@@ -1943,7 +2003,7 @@
             function renderContentPosts(posts, container) {
                 var html = '';
                 if (posts.length === 0) {
-                    html = '<tr><td colspan="7">暂无帖子</td></tr>';
+                    html = '<tr><td colspan="6">暂无帖子</td></tr>';
                 } else {
                     posts.forEach(function(post) {
                         var statusText = '未知';
@@ -1979,7 +2039,6 @@
                         
                         html += `
                             <tr>
-                                <td>${post.id}</td>
                                 <td><a href="/post/${post.id}" target="_blank">${post.title}</a></td>
                                 <td>${authorName}</td>
                                 <td>${categoryName}</td>
@@ -2175,7 +2234,7 @@
                         
                         html += `
                             <tr>
-                                <td><a href="/chapter/${chapter.id}" target="_blank">${chapter.title}</a></td>
+                                <td><a href="/chapter/view/${chapter.id}" target="_blank">${chapter.title}</a></td>
                                 <td>${novelTitle}</td>
                                 <td>${statusText}</td>
                                 <td>${new Date(chapter.createTime).toLocaleString()}</td>

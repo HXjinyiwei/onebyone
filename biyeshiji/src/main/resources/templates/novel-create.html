@@ -292,25 +292,20 @@
                 }
             });
             
-            // 加载分类列表
+            // 加载分类列表（只加载小说分类，type=1）
             function loadCategories() {
                 $.ajax({
-                    url: '/category/list',
+                    url: '/category/active/type/1',
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200 && res.data) {
                             var categories = res.data;
-                            // 过滤掉帖子分类（公告、小说讨论、求助、建议、灌水、分享）
-                            var postCategoryNames = ["公告", "小说讨论", "求助", "建议", "灌水", "分享"];
-                            var novelCategories = categories.filter(function(category) {
-                                return !postCategoryNames.includes(category.name);
-                            });
                             var $container = $('#categoryCheckboxGroup');
                             // 清空容器，但保留提示文本
                             $container.find('.layui-inline').remove();
-                            console.log('加载分类数量:', categories.length, '过滤后:', novelCategories.length);
-                            $.each(novelCategories, function(index, category) {
+                            console.log('加载小说分类数量:', categories.length);
+                            $.each(categories, function(index, category) {
                                 // 使用layui推荐的复选框结构，每个复选框放在一个inline容器中
                                 var $item = $('<div class="layui-inline" style="margin-right: 15px; margin-bottom: 10px;">');
                                 var $checkbox = $('<input type="checkbox" name="categoryIds" lay-skin="primary" title="' + category.name + '" value="' + category.id + '">');
@@ -331,10 +326,76 @@
                             console.log('复选框渲染完成');
                         } else {
                             console.log('加载分类失败:', res.message);
+                            // 如果新接口失败，回退到旧接口并过滤
+                            $.ajax({
+                                url: '/category/list',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(res) {
+                                    if (res.code === 200 && res.data) {
+                                        var categories = res.data;
+                                        // 过滤掉帖子分类（type=0）
+                                        var novelCategories = categories.filter(function(category) {
+                                            return category.type === 1 && category.isActive === 1 && category.isDeleted !== 1;
+                                        });
+                                        var $container = $('#categoryCheckboxGroup');
+                                        $container.find('.layui-inline').remove();
+                                        console.log('回退加载分类数量:', categories.length, '过滤后:', novelCategories.length);
+                                        $.each(novelCategories, function(index, category) {
+                                            var $item = $('<div class="layui-inline" style="margin-right: 15px; margin-bottom: 10px;">');
+                                            var $checkbox = $('<input type="checkbox" name="categoryIds" lay-skin="primary" title="' + category.name + '" value="' + category.id + '">');
+                                            $item.append($checkbox);
+                                            $container.append($item);
+                                        });
+                                        // 设置选中的分类
+                                        var selectedCategoriesStr = $container.data('selected-categories');
+                                        if (selectedCategoriesStr && selectedCategoriesStr.trim() !== '') {
+                                            var selectedIds = selectedCategoriesStr.split(',').map(id => id.trim());
+                                            selectedIds.forEach(function(id) {
+                                                $container.find('input[value="' + id + '"]').prop('checked', true);
+                                            });
+                                        }
+                                        form.render('checkbox');
+                                    }
+                                }
+                            });
                         }
                     },
                     error: function(xhr, status, error) {
                         console.error('加载分类请求失败:', error);
+                        // 如果新接口失败，回退到旧接口并过滤
+                        $.ajax({
+                            url: '/category/list',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(res) {
+                                if (res.code === 200 && res.data) {
+                                    var categories = res.data;
+                                    // 过滤掉帖子分类（type=0）
+                                    var novelCategories = categories.filter(function(category) {
+                                        return category.type === 1 && category.isActive === 1 && category.isDeleted !== 1;
+                                    });
+                                    var $container = $('#categoryCheckboxGroup');
+                                    $container.find('.layui-inline').remove();
+                                    console.log('回退加载分类数量:', categories.length, '过滤后:', novelCategories.length);
+                                    $.each(novelCategories, function(index, category) {
+                                        var $item = $('<div class="layui-inline" style="margin-right: 15px; margin-bottom: 10px;">');
+                                        var $checkbox = $('<input type="checkbox" name="categoryIds" lay-skin="primary" title="' + category.name + '" value="' + category.id + '">');
+                                        $item.append($checkbox);
+                                        $container.append($item);
+                                    });
+                                    // 设置选中的分类
+                                    var selectedCategoriesStr = $container.data('selected-categories');
+                                    if (selectedCategoriesStr && selectedCategoriesStr.trim() !== '') {
+                                        var selectedIds = selectedCategoriesStr.split(',').map(id => id.trim());
+                                        selectedIds.forEach(function(id) {
+                                            $container.find('input[value="' + id + '"]').prop('checked', true);
+                                        });
+                                    }
+                                    form.render('checkbox');
+                                }
+                            }
+                        });
                     }
                 });
             }

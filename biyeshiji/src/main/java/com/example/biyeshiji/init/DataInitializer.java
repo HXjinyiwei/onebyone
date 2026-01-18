@@ -45,48 +45,36 @@ public class DataInitializer {
             Category category1 = new Category();
             category1.setName("公告");
             category1.setDescription("论坛公告");
-            category1.setParentId(0L);
-            category1.setSortOrder(1);
             category1.setIsActive(1);
             categories.add(category1);
             
             Category category2 = new Category();
             category2.setName("小说讨论");
             category2.setDescription("小说创作与讨论");
-            category2.setParentId(0L);
-            category2.setSortOrder(2);
             category2.setIsActive(1);
             categories.add(category2);
             
             Category category3 = new Category();
             category3.setName("求助");
             category3.setDescription("寻求帮助");
-            category3.setParentId(0L);
-            category3.setSortOrder(3);
             category3.setIsActive(1);
             categories.add(category3);
             
             Category category4 = new Category();
             category4.setName("建议");
             category4.setDescription("论坛建议");
-            category4.setParentId(0L);
-            category4.setSortOrder(4);
             category4.setIsActive(1);
             categories.add(category4);
             
             Category category5 = new Category();
             category5.setName("灌水");
             category5.setDescription("闲聊灌水");
-            category5.setParentId(0L);
-            category5.setSortOrder(5);
             category5.setIsActive(1);
             categories.add(category5);
             
             Category category6 = new Category();
             category6.setName("分享");
             category6.setDescription("资源分享");
-            category6.setParentId(0L);
-            category6.setSortOrder(6);
             category6.setIsActive(1);
             categories.add(category6);
             
@@ -101,8 +89,6 @@ public class DataInitializer {
                 Category novelCategory = new Category();
                 novelCategory.setName(name);
                 novelCategory.setDescription(name + "类小说");
-                novelCategory.setParentId(0L);
-                novelCategory.setSortOrder((int)(categoryRepository.count() + 1));
                 novelCategory.setIsActive(1);
                 categoryRepository.save(novelCategory);
             }

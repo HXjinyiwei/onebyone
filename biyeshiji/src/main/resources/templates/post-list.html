@@ -49,12 +49,9 @@
         <!-- 分类筛选 -->
         <div class="category-filter">
             <h3>分类筛选</h3>
-            <ul class="category-list">
+            <ul class="category-list" id="categoryList">
                 <li><a href="/post/list" class="active">全部</a></li>
-                <li><a href="/post/list?categoryId=1">公告</a></li>
-                <li><a href="/post/list?categoryId=2">讨论</a></li>
-                <li><a href="/post/list?categoryId=3">求助</a></li>
-                <li><a href="/post/list?categoryId=4">分享</a></li>
+                <!-- 分类将通过AJAX动态加载 -->
             </ul>
         </div>
         
@@ -130,6 +127,45 @@
                     console.log('响应内容:', xhr.responseText);
                 }
             });
+            
+            // 加载帖子分类
+            function loadPostCategories() {
+                $.ajax({
+                    url: '/category/active/type/0',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var $categoryList = $('#categoryList');
+                            // 清空除"全部"以外的项
+                            $categoryList.find('li:not(:first)').remove();
+                            $.each(res.data, function(index, category) {
+                                var li = $('<li><a href="/post/list?categoryId=' + category.id + '">' + category.name + '</a></li>');
+                                $categoryList.append(li);
+                            });
+                            // 重新绑定分类点击事件
+                            $categoryList.find('a').click(function(e) {
+                                e.preventDefault();
+                                var categoryId = $(this).attr('href').split('categoryId=')[1];
+                                if (!categoryId || categoryId === '/post/list') {
+                                    categoryId = '';
+                                }
+                                // 更新激活状态
+                                $categoryList.find('a').removeClass('active');
+                                $(this).addClass('active');
+                                // 重新加载帖子列表
+                                getPostList(categoryId);
+                            });
+                            console.log('加载帖子分类成功，数量:', res.data.length);
+                        } else {
+                            console.error('加载帖子分类失败:', res.message);
+                        }
+                    },
+                    error: function() {
+                        console.error('加载帖子分类请求失败');
+                    }
+                });
+            }
             
             // 获取帖子列表
             function getPostList(categoryId, page) {
@@ -313,22 +349,9 @@
                 return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
             }
             
-            // 初始化加载帖子列表
+            // 初始化加载帖子列表和分类
+            loadPostCategories();
             getPostList();
-            
-            // 分类筛选点击事件
-            $('.category-list a').click(function(e) {
-                e.preventDefault();
-                var categoryId = $(this).attr('href').split('categoryId=')[1];
-                if (!categoryId || categoryId === '/post/list') {
-                    categoryId = '';
-                }
-                // 更新激活状态
-                $('.category-list a').removeClass('active');
-                $(this).addClass('active');
-                // 重新加载帖子列表
-                getPostList(categoryId);
-            });
         });
     </script>
 </body>

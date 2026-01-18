@@ -120,9 +120,7 @@
                 <div class="layui-input-block">
                     <select name="categoryId" lay-verify="required" id="categorySelect">
                         <option value="">请选择分类</option>
-                        <option value="2">讨论</option>
-                        <option value="3">求助</option>
-                        <option value="4">分享</option>
+                        <!-- 分类选项将通过JavaScript动态加载 -->
                     </select>
                 </div>
             </div>
@@ -196,16 +194,13 @@
                     if (res.code === 200 && res.data) {
                         $('#welcomeText').text('欢迎，' + res.data.nickname);
                         
-                        // 如果是管理员，添加公告分类选项
-                        if (res.data.role === 1 || res.data.role === 2) {
-                            // 在分类选择框中添加公告选项（放在最前面）
-                            $('#categorySelect').prepend('<option value="1">公告</option>');
-                            // 重新渲染表单
-                            form.render('select');
-                        }
+                        // 加载帖子分类
+                        loadPostCategories(res.data.role);
                     } else {
                         $('#welcomeText').text('欢迎，未知用户');
                         console.log('获取当前用户信息失败:', res.message);
+                        // 仍然尝试加载分类
+                        loadPostCategories(0);
                     }
                 },
                 error: function(xhr, status, error) {
@@ -213,8 +208,71 @@
                     console.error('获取当前用户信息请求失败:', error);
                     console.log('响应状态:', status);
                     console.log('响应内容:', xhr.responseText);
+                    // 仍然尝试加载分类
+                    loadPostCategories(0);
                 }
             });
+            
+            // 加载帖子分类（type=0）
+            function loadPostCategories(userRole) {
+                $.ajax({
+                    url: '/category/active/type/0',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var categories = res.data;
+                            var $select = $('#categorySelect');
+                            // 清空现有选项（保留第一个"请选择分类"选项）
+                            $select.find('option:not(:first)').remove();
+                            
+                            // 添加分类选项
+                            categories.forEach(function(category) {
+                                $select.append('<option value="' + category.id + '">' + category.name + '</option>');
+                            });
+                            
+                            // 如果是管理员，添加公告分类选项（放在最前面）
+                            if (userRole === 1 || userRole === 2) {
+                                $select.prepend('<option value="1">公告</option>');
+                            }
+                            
+                            // 重新渲染表单
+                            form.render('select');
+                            console.log('加载帖子分类成功，数量:', categories.length);
+                        } else {
+                            console.log('加载分类失败:', res.message);
+                            // 如果新接口失败，回退到硬编码选项
+                            fallbackCategories(userRole);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('加载分类请求失败:', error);
+                        // 如果新接口失败，回退到硬编码选项
+                        fallbackCategories(userRole);
+                    }
+                });
+            }
+            
+            // 回退到硬编码分类选项
+            function fallbackCategories(userRole) {
+                var $select = $('#categorySelect');
+                $select.find('option:not(:first)').remove();
+                
+                // 添加默认分类选项
+                $select.append('<option value="2">讨论</option>');
+                $select.append('<option value="3">求助</option>');
+                $select.append('<option value="4">分享</option>');
+                $select.append('<option value="5">灌水</option>');
+                $select.append('<option value="6">分享</option>');
+                
+                // 如果是管理员，添加公告分类选项
+                if (userRole === 1 || userRole === 2) {
+                    $select.prepend('<option value="1">公告</option>');
+                }
+                
+                form.render('select');
+                console.log('使用回退分类选项');
+            }
             
             // 表单验证和提交
             form.on('submit(postSubmit)', function(data) {

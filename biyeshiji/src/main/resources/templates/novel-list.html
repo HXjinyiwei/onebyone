@@ -234,8 +234,43 @@
                 }
             });
             
-            // 加载分类列表
+            // 加载分类列表（只加载小说分类，type=1）
             function loadCategories() {
+                $.ajax({
+                    url: '/category/active/type/1',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var $categoryList = $('#categoryList');
+                            // 清空除“全部”以外的项
+                            $categoryList.find('li:not(:first)').remove();
+                            $.each(res.data, function(index, category) {
+                                var li = $('<li data-category-id="' + category.id + '"><a href="javascript:;">' + category.name + '</a></li>');
+                                $categoryList.append(li);
+                            });
+                            // 绑定分类点击事件
+                            $categoryList.find('li').on('click', function() {
+                                var categoryId = $(this).data('category-id');
+                                selectCategory(categoryId);
+                            });
+                            console.log('加载小说分类成功，数量:', res.data.length);
+                        } else {
+                            layer.msg('加载分类失败', {icon: 2});
+                            // 如果新接口失败，回退到旧接口并过滤
+                            fallbackCategories();
+                        }
+                    },
+                    error: function() {
+                        layer.msg('加载分类请求失败', {icon: 2});
+                        // 如果新接口失败，回退到旧接口并过滤
+                        fallbackCategories();
+                    }
+                });
+            }
+            
+            // 回退分类加载（使用旧接口并过滤）
+            function fallbackCategories() {
                 $.ajax({
                     url: '/category/list',
                     type: 'GET',
@@ -246,24 +281,22 @@
                             // 清空除“全部”以外的项
                             $categoryList.find('li:not(:first)').remove();
                             $.each(res.data, function(index, category) {
-                                // 过滤掉论坛分类（ID 1-6 或名称包含特定关键词）
-                                if (category.id >= 1 && category.id <= 6) {
-                                    return; // 跳过
+                                // 过滤掉帖子分类（type=0）
+                                if (category.type === 1 && category.isActive === 1 && category.isDeleted !== 1) {
+                                    var li = $('<li data-category-id="' + category.id + '"><a href="javascript:;">' + category.name + '</a></li>');
+                                    $categoryList.append(li);
                                 }
-                                var li = $('<li data-category-id="' + category.id + '"><a href="javascript:;">' + category.name + '</a></li>');
-                                $categoryList.append(li);
                             });
                             // 绑定分类点击事件
                             $categoryList.find('li').on('click', function() {
                                 var categoryId = $(this).data('category-id');
                                 selectCategory(categoryId);
                             });
-                        } else {
-                            layer.msg('加载分类失败', {icon: 2});
+                            console.log('回退加载小说分类成功');
                         }
                     },
                     error: function() {
-                        layer.msg('加载分类请求失败', {icon: 2});
+                        console.error('回退加载分类也失败');
                     }
                 });
             }

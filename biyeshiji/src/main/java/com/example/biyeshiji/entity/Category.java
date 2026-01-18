@@ -21,12 +21,6 @@ public class Category {
 
     private String description;
 
-    @Column(name = "parent_id", columnDefinition = "bigint default 0")
-    private Long parentId;
-
-    @Column(name = "sort_order", columnDefinition = "int default 0")
-    private Integer sortOrder;
-
     @Column(name = "is_active", columnDefinition = "tinyint default 1")
     private Integer isActive; // 0禁用，1启用
 
@@ -35,6 +29,9 @@ public class Category {
 
     @Column(name = "is_deleted", columnDefinition = "tinyint default 0")
     private Integer isDeleted; // 0正常，1软删除
+
+    @Column(name = "type", columnDefinition = "tinyint default 0")
+    private Integer type; // 0=帖子分类，1=小说分类
 
     // 多对多反向映射
     @ManyToMany(mappedBy = "categories")
@@ -45,17 +42,14 @@ public class Category {
     @PrePersist
     public void prePersist() {
         createTime = LocalDateTime.now();
-        if (parentId == null) {
-            parentId = 0L;
-        }
-        if (sortOrder == null) {
-            sortOrder = 0;
-        }
         if (isActive == null) {
             isActive = 1;
         }
         if (isDeleted == null) {
             isDeleted = 0;
+        }
+        if (type == null) {
+            type = 0; // 默认帖子分类
         }
     }
 }
