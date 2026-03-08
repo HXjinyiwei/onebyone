@@ -50,6 +50,7 @@
             <div class="form-group">
                 <label for="nickname">昵称</label>
                 <input type="text" name="nickname" id="nickname" placeholder="请输入昵称（可选，不填自动生成）" autocomplete="off" class="layui-input">
+                <div id="nicknameHint" class="layui-form-mid layui-word-aux" style="margin-top: 5px; color: #666; font-size: 12px;">昵称不能重复，如果为空将自动生成</div>
             </div>
             <div class="form-group">
                 <label for="password">密码</label>
@@ -66,11 +67,53 @@
 
     <!-- 引入layui JS -->
     <script src="/layui/layui.js"></script>
-    <script>
+        <script>
         layui.use(['form', 'layer'], function() {
             var form = layui.form;
             var layer = layui.layer;
             var $ = layui.jquery;
+
+            // 昵称实时验证
+            var nicknameCheckTimer = null;
+            $('#nickname').on('input', function() {
+                var nickname = $(this).val().trim();
+                var $hint = $('#nicknameHint');
+                
+                if (nickname.length === 0) {
+                    $hint.text('昵称不能重复，如果为空将自动生成');
+                    $hint.css('color', '#666');
+                    return;
+                }
+                
+                // 防抖处理，避免频繁请求
+                clearTimeout(nicknameCheckTimer);
+                nicknameCheckTimer = setTimeout(function() {
+                    if (nickname.length < 2) {
+                        $hint.text('昵称至少需要2个字符');
+                        $hint.css('color', '#ff5722');
+                        return;
+                    }
+                    
+                    if (nickname.length > 20) {
+                        $hint.text('昵称不能超过20个字符');
+                        $hint.css('color', '#ff5722');
+                        return;
+                    }
+                    
+                    // 检查昵称是否可用
+                    $.get('/user/check-nickname', {nickname: nickname}, function(res) {
+                        if (res.code === 200) {
+                            if (res.data) {
+                                $hint.text('该昵称已被使用，请换一个');
+                                $hint.css('color', '#ff5722');
+                            } else {
+                                $hint.text('该昵称可用');
+                                $hint.css('color', '#5FB878');
+                            }
+                        }
+                    }, 'json');
+                }, 500);
+            });
 
             $('#registerBtn').on('click', function() {
                 var username = $('#username').val();
@@ -90,6 +133,25 @@
                     return;
                 }
 
+                // 如果填写了昵称，检查是否可用
+                if (nickname && nickname.trim().length > 0) {
+                    var nicknameTrimmed = nickname.trim();
+                    $.get('/user/check-nickname', {nickname: nicknameTrimmed}, function(res) {
+                        if (res.code === 200 && res.data) {
+                            layer.msg('该昵称已被使用，请换一个', {icon: 2});
+                            return;
+                        }
+                        
+                        // 昵称可用，提交注册
+                        submitRegistration(username, nicknameTrimmed, password);
+                    }, 'json');
+                } else {
+                    // 昵称为空，直接提交
+                    submitRegistration(username, '', password);
+                }
+            });
+            
+            function submitRegistration(username, nickname, password) {
                 $.post('/user/register', {
                     username: username,
                     nickname: nickname,
@@ -104,7 +166,7 @@
                         layer.msg(res.message, {icon: 2});
                     }
                 }, 'json');
-            });
+            }
         });
         </script>
 </body>

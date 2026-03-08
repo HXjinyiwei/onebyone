@@ -83,7 +83,14 @@ public class UserController {
     public Response<User> register(@RequestParam String username, @RequestParam String password, @RequestParam(required = false) String nickname) {
         User user = userService.register(username, password, nickname);
         if (user == null) {
-            return Response.error("用户名已存在");
+            // 检查是用户名已存在还是昵称已存在
+            if (userRepository.findByUsername(username) != null) {
+                return Response.error("用户名已存在");
+            } else if (nickname != null && !nickname.trim().isEmpty() && userRepository.findByNickname(nickname.trim()) != null) {
+                return Response.error("昵称已被使用");
+            } else {
+                return Response.error("注册失败");
+            }
         }
         return Response.success("注册成功", user);
     }
@@ -119,7 +126,13 @@ public class UserController {
         if (result) {
             return Response.success("昵称修改成功", null);
         } else {
-            return Response.error("昵称修改失败");
+            // 检查是否是昵称已被使用
+            User existingUser = userRepository.findByNickname(nickname);
+            if (existingUser != null && !existingUser.getId().equals(user.getId())) {
+                return Response.error("昵称已被使用");
+            } else {
+                return Response.error("昵称修改失败");
+            }
         }
     }
 
@@ -355,5 +368,27 @@ public class UserController {
         } else {
             return Response.error("降级失败，用户不存在或不是管理员");
         }
+    }
+
+    @GetMapping("/check-nickname")
+    public Response<Boolean> checkNickname(@RequestParam String nickname, @RequestParam(required = false) Long excludeUserId) {
+        if (nickname == null || nickname.trim().isEmpty()) {
+            return Response.success("昵称为空", false);
+        }
+        
+        User existingUser = userRepository.findByNickname(nickname.trim());
+        boolean isDuplicate = false;
+        
+        if (existingUser != null) {
+            if (excludeUserId != null) {
+                // 排除指定用户（用于修改昵称时检查）
+                isDuplicate = !existingUser.getId().equals(excludeUserId);
+            } else {
+                // 注册时检查
+                isDuplicate = true;
+            }
+        }
+        
+        return Response.success("检查完成", isDuplicate);
     }
 }

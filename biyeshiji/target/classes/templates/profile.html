@@ -21,7 +21,10 @@
                 <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
                 <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
                 <li class="layui-nav-item layui-this">
-                        <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                        <div class="welcome-container">
+                            <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                            <span id="messageBadge" class="message-badge hidden"></span>
+                        </div>
                         <dl class="layui-nav-child">
                             <dd><a href="/profile">个人中心</a></dd>
                             <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
@@ -65,6 +68,7 @@
                                 <div class="layui-input-inline">
                                     <input type="text" name="newNickname" id="newNickname" lay-verify="required" placeholder="请输入新昵称" autocomplete="off" class="layui-input">
                                 </div>
+                                <div class="layui-form-mid layui-word-aux nickname-hint" id="nicknameHint" style="color: #999; padding-left: 10px;">请输入新昵称</div>
                             </div>
                             <div class="layui-form-item">
                                 <div class="layui-input-block">
@@ -252,6 +256,12 @@
                         if (res.data.role === 1 || res.data.role === 2) {
                             $('.admin-menu').show();
                         }
+                        
+                        // 初始化红点消息提示
+                        initMessageBadge(res.data.id);
+                        
+                        // 初始化昵称验证功能
+                        initNicknameValidation(res.data.id, res.data.nickname);
                     } else {
                         $('#welcomeText').text('欢迎，未知用户');
                         $('#currentNickname').val('未知用户');
@@ -267,10 +277,134 @@
                 }
             });
             
+            // 初始化昵称验证功能
+            function initNicknameValidation(userId, currentNickname) {
+                var nicknameCheckTimer = null;
+                
+                // 监听昵称输入变化
+                $('#newNickname').on('input', function() {
+                    var newNickname = $(this).val().trim();
+                    
+                    // 清空之前的定时器
+                    if (nicknameCheckTimer) {
+                        clearTimeout(nicknameCheckTimer);
+                    }
+                    
+                    // 如果输入为空，显示默认提示
+                    if (!newNickname) {
+                        $('#nicknameHint').text('请输入新昵称').css('color', '#999');
+                        return;
+                    }
+                    
+                    // 如果新昵称和当前昵称相同，显示提示
+                    if (newNickname === currentNickname) {
+                        $('#nicknameHint').text('新昵称与当前昵称相同').css('color', '#FFB800');
+                        return;
+                    }
+                    
+                    // 显示检查中
+                    $('#nicknameHint').text('检查中...').css('color', '#FFB800');
+                    
+                    // 防抖处理：500ms后检查
+                    nicknameCheckTimer = setTimeout(function() {
+                        checkNicknameAvailability(newNickname, userId);
+                    }, 500);
+                });
+            }
+            
+            // 检查昵称是否可用
+            function checkNicknameAvailability(nickname, excludeUserId) {
+                $.ajax({
+                    url: '/user/check-nickname',
+                    type: 'GET',
+                    data: {
+                        nickname: nickname,
+                        excludeUserId: excludeUserId
+                    },
+                    success: function(res) {
+                        if (res.code === 200) {
+                            if (res.data === true) {
+                                $('#nicknameHint').text('昵称已被使用').css('color', '#FF5722');
+                            } else {
+                                $('#nicknameHint').text('昵称可用').css('color', '#5FB878');
+                            }
+                        } else {
+                            $('#nicknameHint').text('检查失败').css('color', '#FF5722');
+                        }
+                    },
+                    error: function() {
+                        $('#nicknameHint').text('服务器错误').css('color', '#FF5722');
+                    }
+                });
+            }
+            
             // 监听昵称修改表单提交
             form.on('submit(nicknameSubmit)', function(data) {
-                var newNickname = $('#newNickname').val();
+                var newNickname = $('#newNickname').val().trim();
+                var currentNickname = $('#currentNickname').val();
                 
+                // 验证新昵称是否为空
+                if (!newNickname) {
+                    layer.msg('请输入新昵称', {icon: 2});
+                    return false;
+                }
+                
+                // 验证新昵称是否与当前昵称相同
+                if (newNickname === currentNickname) {
+                    layer.msg('新昵称与当前昵称相同，无需修改', {icon: 2});
+                    return false;
+                }
+                
+                // 获取当前用户ID
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(userRes) {
+                        if (userRes.code === 200 && userRes.data) {
+                            var userId = userRes.data.id;
+                            
+                            // 先检查昵称是否可用
+                            $.ajax({
+                                url: '/user/check-nickname',
+                                type: 'GET',
+                                data: {
+                                    nickname: newNickname,
+                                    excludeUserId: userId
+                                },
+                                success: function(checkRes) {
+                                    if (checkRes.code === 200) {
+                                        if (checkRes.data === true) {
+                                            // 昵称已被使用，弹窗提示
+                                            layer.alert('该昵称已被使用，请选择其他昵称', {
+                                                title: '昵称重复',
+                                                icon: 2,
+                                                btn: ['确定']
+                                            });
+                                        } else {
+                                            // 昵称可用，提交修改
+                                            submitNicknameUpdate(newNickname);
+                                        }
+                                    } else {
+                                        layer.msg('昵称检查失败', {icon: 2});
+                                    }
+                                },
+                                error: function() {
+                                    layer.msg('服务器错误', {icon: 2});
+                                }
+                            });
+                        }
+                    },
+                    error: function() {
+                        layer.msg('获取用户信息失败', {icon: 2});
+                    }
+                });
+                
+                return false; // 阻止表单跳转
+            });
+            
+            // 提交昵称修改
+            function submitNicknameUpdate(newNickname) {
                 $.ajax({
                     url: '/user/update-nickname',
                     type: 'POST',
@@ -281,6 +415,7 @@
                             $('#currentNickname').val(newNickname);
                             $('#newNickname').val('');
                             $('#welcomeText').text('欢迎，' + newNickname);
+                            $('#nicknameHint').text('请输入新昵称').css('color', '#999');
                         } else {
                             layer.msg(res.message || '昵称修改失败', {icon: 2});
                         }
@@ -289,9 +424,7 @@
                         layer.msg('服务器错误', {icon: 2});
                     }
                 });
-                
-                return false; // 阻止表单跳转
-            });
+            }
             
             // 监听密码修改表单提交
             form.on('submit(passwordSubmit)', function(data) {
@@ -780,6 +913,17 @@
                         if (res.code === 200) {
                             layer.msg('标记为已读成功', {icon: 1});
                             refreshCurrentMessageTab();
+                            // 立即更新红点
+                            $.ajax({
+                                url: '/user/current',
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(userRes) {
+                                    if (userRes.code === 200 && userRes.data) {
+                                        fetchUnreadMessageCount(userRes.data.id);
+                                    }
+                                }
+                            });
                         } else {
                             layer.msg('标记失败', {icon: 2});
                         }
@@ -811,6 +955,8 @@
                                         if (res.code === 200) {
                                             layer.msg('全部标记为已读成功', {icon: 1});
                                             refreshCurrentMessageTab();
+                                            // 立即更新红点
+                                            fetchUnreadMessageCount(userId);
                                         } else {
                                             layer.msg('标记失败', {icon: 2});
                                         }
@@ -840,6 +986,17 @@
                             if (res.code === 200) {
                                 layer.msg('删除成功', {icon: 1});
                                 refreshCurrentMessageTab();
+                                // 立即更新红点
+                                $.ajax({
+                                    url: '/user/current',
+                                    type: 'GET',
+                                    dataType: 'json',
+                                    success: function(userRes) {
+                                        if (userRes.code === 200 && userRes.data) {
+                                            fetchUnreadMessageCount(userRes.data.id);
+                                        }
+                                    }
+                                });
                             } else {
                                 layer.msg('删除失败', {icon: 2});
                             }
@@ -873,6 +1030,8 @@
                                         if (res.code === 200) {
                                             layer.msg('清空成功', {icon: 1});
                                             refreshCurrentMessageTab();
+                                            // 立即更新红点
+                                            fetchUnreadMessageCount(userId);
                                         } else {
                                             layer.msg('清空失败', {icon: 2});
                                         }
@@ -1359,6 +1518,48 @@
             // 页面加载完成后执行
             $(document).ready(function() {
                 loadContent();
+            });
+            
+            // 红点消息提示功能
+            function initMessageBadge(userId) {
+                // 立即获取未读消息数
+                fetchUnreadMessageCount(userId);
+                
+                // 设置定时轮询（每30秒）
+                window.messageBadgeInterval = setInterval(() => {
+                    fetchUnreadMessageCount(userId);
+                }, 30000);
+            }
+            
+            function fetchUnreadMessageCount(userId) {
+                $.ajax({
+                    url: '/message/unread-count/' + userId,
+                    type: 'GET',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            updateMessageBadge(res.data);
+                        }
+                    }
+                });
+            }
+            
+            function updateMessageBadge(count) {
+                var $badge = $('#messageBadge');
+                if (count > 0) {
+                    $badge.removeClass('hidden');
+                    $badge.text(count > 99 ? '99+' : count);
+                    if (count > 9) $badge.addClass('large');
+                    else $badge.removeClass('large');
+                } else {
+                    $badge.addClass('hidden');
+                }
+            }
+            
+            // 页面卸载时清理定时器
+            $(window).on('beforeunload', function() {
+                if (window.messageBadgeInterval) {
+                    clearInterval(window.messageBadgeInterval);
+                }
             });
         });
     </script>

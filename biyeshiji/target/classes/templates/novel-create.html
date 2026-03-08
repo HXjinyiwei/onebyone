@@ -117,6 +117,8 @@
                         <dd><a href="/profile">个人中心</a></dd>
                         <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
                     </dl>
+                    <!-- 红点消息提示 -->
+                    <div id="messageBadge" class="message-badge hidden"></div>
                 </li>
             </ul>
         </div>
@@ -182,8 +184,6 @@
                     <select name="status" lay-verify="required">
                         <option value="0" th:selected="${novel?.status == 0}">连载中</option>
                         <option value="1" th:selected="${novel?.status == 1}">已完结</option>
-                        <option value="2" th:selected="${novel?.status == 2}">草稿</option>
-                        <option value="3" th:selected="${novel?.status == 3}">锁定</option>
                     </select>
                 </div>
             </div>
@@ -597,11 +597,67 @@
                     },
                     error: function(xhr, status, error) {
                         layer.msg((isEdit ? '小说更新失败：' : '小说发布失败：') + error, {icon: 2});
-                        console.error('请求失败:', error);
-                    }
-                });
-            }
-        });
-    </script>
+                         console.error('请求失败:', error);
+                     }
+                 });
+             }
+             
+             // 红点消息提示功能
+             var messageBadgeInterval = null;
+             
+             // 初始化红点功能
+             function initMessageBadge() {
+                 if (currentUser && currentUser.id) {
+                     // 立即获取未读消息数
+                     fetchUnreadMessageCount(currentUser.id);
+                     
+                     // 设置定时轮询（每30秒）
+                     messageBadgeInterval = setInterval(() => {
+                         fetchUnreadMessageCount(currentUser.id);
+                     }, 30000);
+                 }
+             }
+             
+             // 获取未读消息数
+             function fetchUnreadMessageCount(userId) {
+                 if (!userId) return;
+                 
+                 $.ajax({
+                     url: '/message/unread-count/' + userId,
+                     type: 'GET',
+                     success: function(res) {
+                         if (res.code === 200) {
+                             updateMessageBadge(res.data);
+                         }
+                     }
+                 });
+             }
+             
+             // 更新红点显示
+             function updateMessageBadge(count) {
+                 var $badge = $('#messageBadge');
+                 if (count > 0) {
+                     $badge.removeClass('hidden');
+                     $badge.text(count > 99 ? '99+' : count);
+                     if (count > 9) $badge.addClass('large');
+                     else $badge.removeClass('large');
+                 } else {
+                     $badge.addClass('hidden');
+                 }
+             }
+             
+             // 页面卸载时清理定时器
+             $(window).on('beforeunload', function() {
+                 if (messageBadgeInterval) {
+                     clearInterval(messageBadgeInterval);
+                 }
+             });
+             
+             // 初始化红点功能
+             setTimeout(function() {
+                 initMessageBadge();
+             }, 1000);
+         });
+     </script>
 </body>
 </html>

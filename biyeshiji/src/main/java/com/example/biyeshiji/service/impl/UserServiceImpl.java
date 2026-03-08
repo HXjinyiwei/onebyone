@@ -60,15 +60,21 @@ public class UserServiceImpl implements UserService {
         if (userRepository.findByUsername(username) != null) {
             return null; // 用户名已存在
         }
-        User user = new User();
-        user.setUsername(username);
         
         // 处理昵称，如果为空则自动生成
         if (nickname == null || nickname.trim().isEmpty()) {
             // 生成随机数，格式为用户xxxx
             int randomNum = (int) (Math.random() * 9000) + 1000;
             nickname = "用户" + randomNum;
+        } else {
+            // 检查昵称是否已存在
+            if (userRepository.findByNickname(nickname.trim()) != null) {
+                return null; // 昵称已存在
+            }
         }
+        
+        User user = new User();
+        user.setUsername(username);
         user.setNickname(nickname);
         
         user.setUserPassword(passwordEncoder.encode(password));
@@ -83,6 +89,13 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             return false;
         }
+        
+        // 检查昵称是否已存在（排除当前用户）
+        User existingUser = userRepository.findByNickname(nickname);
+        if (existingUser != null && !existingUser.getId().equals(userId)) {
+            return false; // 昵称已被其他用户使用
+        }
+        
         user.setNickname(nickname);
         userRepository.save(user);
         return true;

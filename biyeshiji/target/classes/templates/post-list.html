@@ -21,7 +21,10 @@
                     <li class="layui-nav-item"><a href="/novel/list">小说（排行榜）</a></li>
                     <li class="layui-nav-item admin-menu" style="display: none;"><a href="/admin">管理后台</a></li>
                     <li class="layui-nav-item">
-                        <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                        <div class="welcome-container">
+                            <a href="javascript:;" id="welcomeText">欢迎，加载中...</a>
+                            <span id="messageBadge" class="message-badge hidden"></span>
+                        </div>
                         <dl class="layui-nav-child">
                             <dd><a href="/profile">个人中心</a></dd>
                             <dd><a href="javascript:;" onclick="logoutConfirm()">退出登录</a></dd>
@@ -115,6 +118,8 @@
                         if (res.data.role === 1 || res.data.role === 2) {
                             $('.admin-menu').show();
                         }
+                        // 初始化红点消息提示
+                        initMessageBadge(res.data.id);
                     } else {
                         $('#welcomeText').text('欢迎，未知用户');
                         console.log('获取当前用户信息失败:', res.message);
@@ -352,6 +357,51 @@
             // 初始化加载帖子列表和分类
             loadPostCategories();
             getPostList();
+            
+            // 红点消息提示相关函数
+            function initMessageBadge(userId) {
+                // 立即获取未读消息数
+                fetchUnreadMessageCount(userId);
+                
+                // 设置定时轮询（每30秒）
+                window.messageBadgeInterval = setInterval(() => {
+                    fetchUnreadMessageCount(userId);
+                }, 30000);
+            }
+            
+            function fetchUnreadMessageCount(userId) {
+                $.ajax({
+                    url: '/message/unread-count/' + userId,
+                    type: 'GET',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            updateMessageBadge(res.data);
+                        }
+                    },
+                    error: function() {
+                        console.error('获取未读消息数失败');
+                    }
+                });
+            }
+            
+            function updateMessageBadge(count) {
+                var $badge = $('#messageBadge');
+                if (count > 0) {
+                    $badge.removeClass('hidden');
+                    $badge.text(count > 99 ? '99+' : count);
+                    if (count > 9) $badge.addClass('large');
+                    else $badge.removeClass('large');
+                } else {
+                    $badge.addClass('hidden');
+                }
+            }
+            
+            // 页面卸载时清理定时器
+            $(window).on('beforeunload', function() {
+                if (window.messageBadgeInterval) {
+                    clearInterval(window.messageBadgeInterval);
+                }
+            });
         });
     </script>
 </body>
