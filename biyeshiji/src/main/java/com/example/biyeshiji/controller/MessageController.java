@@ -4,6 +4,7 @@ import com.example.biyeshiji.common.Response;
 import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,14 @@ public class MessageController {
         return Response.success("获取消息列表成功", messages);
     }
 
+    @GetMapping("/user/{userId}/page")
+    public Response<Page<Message>> getMessagesByUserIdWithPagination(@PathVariable Long userId,
+                                                                     @RequestParam(defaultValue = "0") int page,
+                                                                     @RequestParam(defaultValue = "10") int size) {
+        Page<Message> messages = messageService.getMessagesByUserIdWithPagination(userId, page, size);
+        return Response.success("获取消息列表成功", messages);
+    }
+
     @GetMapping("/user/{userId}/filter")
     public Response<List<Message>> getMessagesByUserIdAndIsRead(@PathVariable Long userId,
                                                                 @RequestParam(required = false) Integer isRead) {
@@ -29,6 +38,20 @@ public class MessageController {
             messages = messageService.getMessagesByUserId(userId);
         } else {
             messages = messageService.getMessagesByUserIdAndIsRead(userId, isRead);
+        }
+        return Response.success("获取消息列表成功", messages);
+    }
+
+    @GetMapping("/user/{userId}/filter/page")
+    public Response<Page<Message>> getMessagesByUserIdAndIsReadWithPagination(@PathVariable Long userId,
+                                                                              @RequestParam(required = false) Integer isRead,
+                                                                              @RequestParam(defaultValue = "0") int page,
+                                                                              @RequestParam(defaultValue = "10") int size) {
+        Page<Message> messages;
+        if (isRead == null) {
+            messages = messageService.getMessagesByUserIdWithPagination(userId, page, size);
+        } else {
+            messages = messageService.getMessagesByUserIdAndIsReadWithPagination(userId, isRead, page, size);
         }
         return Response.success("获取消息列表成功", messages);
     }

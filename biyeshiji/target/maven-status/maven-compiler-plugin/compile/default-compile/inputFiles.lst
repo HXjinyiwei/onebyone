@@ -41,6 +41,7 @@ d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\service\MessageSe
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\repository\ReportRepository.java
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\service\impl\CategoryServiceImpl.java
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\BiyeshijiApplication.java
+d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\common\PaginationResponse.java
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\controller\UserController.java
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\repository\ChapterRepository.java
 d:\trae\onebyone\biyeshiji\src\main\java\com\example\biyeshiji\entity\Post.java

@@ -44,6 +44,19 @@ public class CommentController {
         if (currentUser == null) {
             return Response.error("用户不存在");
         }
+        
+        // 检查帖子状态，未审核或已拒绝的帖子不允许评论
+        if (comment.getPostId() != null) {
+            Post post = postService.getPostById(comment.getPostId());
+            if (post == null || post.getIsDeleted() == 1) {
+                return Response.error("帖子不存在");
+            }
+            // 帖子状态：0=正常，1=审核中，2=已拒绝
+            if (post.getStatus() != 0) {
+                return Response.error("未审核或已拒绝的帖子不允许评论");
+            }
+        }
+        
         comment.setAuthorId(currentUser.getId());
         Comment createdComment = commentService.createComment(comment);
         if (createdComment != null) {

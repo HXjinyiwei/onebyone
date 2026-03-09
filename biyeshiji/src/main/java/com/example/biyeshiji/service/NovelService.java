@@ -1,5 +1,6 @@
 package com.example.biyeshiji.service;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.Novel;
 
 import java.util.List;
@@ -12,6 +13,7 @@ public interface NovelService {
     List<Novel> getAllNovels();
     List<Novel> getNovelsByAuthorId(Long authorId);
     List<Novel> getNovelsWithFilter(String keyword, Integer status, Long categoryId, Integer page, Integer pageSize);
+    PaginationResponse<Novel> getNovelsWithFilterPagination(String keyword, Integer status, Long categoryId, Integer page, Integer pageSize);
     List<Novel> getNovelsLikedByUser(Long userId);
     List<Novel> getNovelsFavoritedByUser(Long userId);
     void increaseViewCount(Long novelId);
@@ -24,9 +26,17 @@ public interface NovelService {
     List<Novel> getDeletedNovelsByAuthorId(Long authorId);
     List<Novel> getNovelsByStatus(Integer status);
     List<Novel> getNovelsOrderByViewCountDesc(Integer limit, Long categoryId);
+    List<Novel> getNovelsOrderByViewCountDescWithPagination(Integer page, Integer pageSize, Long categoryId);
+    PaginationResponse<Novel> getNovelsOrderByViewCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId);
     List<Novel> getNovelsOrderByLikeCountDesc(Integer limit, Long categoryId);
+    List<Novel> getNovelsOrderByLikeCountDescWithPagination(Integer page, Integer pageSize, Long categoryId);
+    PaginationResponse<Novel> getNovelsOrderByLikeCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId);
     List<Novel> getNovelsOrderByFavoriteCountDesc(Integer limit, Long categoryId);
+    List<Novel> getNovelsOrderByFavoriteCountDescWithPagination(Integer page, Integer pageSize, Long categoryId);
+    PaginationResponse<Novel> getNovelsOrderByFavoriteCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId);
     List<Novel> getNovelsOrderByCreateTimeDesc(Integer limit, Long categoryId);
+    List<Novel> getNovelsOrderByCreateTimeDescWithPagination(Integer page, Integer pageSize, Long categoryId);
+    PaginationResponse<Novel> getNovelsOrderByCreateTimeDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId);
     // 审核相关
     List<Novel> getNovelsByAuditStatus(Integer auditStatus);
     boolean updateNovelAuditStatus(Long novelId, Integer auditStatus);

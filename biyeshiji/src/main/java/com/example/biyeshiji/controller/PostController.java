@@ -82,7 +82,7 @@ public class PostController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (post.getStatus() != 0) {
             User currentUser = userRepository.findByUsername(auth.getName());
-            if (currentUser == null || (!currentUser.getId().equals(post.getAuthorId()) && currentUser.getRole() != 1)) {
+            if (currentUser == null || (!currentUser.getId().equals(post.getAuthorId()) && currentUser.getRole() != 1 && currentUser.getRole() != 2)) {
                 return Response.error("您无权查看此帖子");
             }
         }

@@ -6,6 +6,7 @@ com\example\biyeshiji\entity\User.class
 com\example\biyeshiji\exception\UserBannedException.class
 com\example\biyeshiji\service\ReportService.class
 com\example\biyeshiji\entity\Chapter.class
+com\example\biyeshiji\common\PaginationResponse.class
 com\example\biyeshiji\service\CommentService.class
 com\example\biyeshiji\repository\AdminNotificationRepository.class
 com\example\biyeshiji\repository\LikeRecordRepository.class

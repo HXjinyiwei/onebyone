@@ -31,36 +31,36 @@ public interface NovelRepository extends JpaRepository<Novel, Long> {
     @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN FETCH n.author LEFT JOIN FETCH n.categories WHERE n.authorId = :authorId AND n.isDeleted = 1")
     List<Novel> findDeletedByAuthorId(@Param("authorId") Long authorId);
 
-    // 按浏览量降序排序
-    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 ORDER BY n.viewCount DESC")
+    // 按浏览量降序排序（只显示审核通过的小说）
+    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 AND n.auditStatus = 1 ORDER BY n.viewCount DESC")
     List<Novel> findAllOrderByViewCountDesc();
 
-    // 按点赞数降序排序
-    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 ORDER BY n.likeCount DESC")
+    // 按点赞数降序排序（只显示审核通过的小说）
+    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 AND n.auditStatus = 1 ORDER BY n.likeCount DESC")
     List<Novel> findAllOrderByLikeCountDesc();
 
-    // 按收藏数降序排序
-    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 ORDER BY n.favoriteCount DESC")
+    // 按收藏数降序排序（只显示审核通过的小说）
+    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 AND n.auditStatus = 1 ORDER BY n.favoriteCount DESC")
     List<Novel> findAllOrderByFavoriteCountDesc();
 
-    // 按创建时间降序排序
-    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 ORDER BY n.createTime DESC")
+    // 按创建时间降序排序（只显示审核通过的小说）
+    @Query("SELECT n FROM Novel n WHERE n.isDeleted = 0 AND n.auditStatus = 1 ORDER BY n.createTime DESC")
     List<Novel> findAllOrderByCreateTimeDesc();
 
-    // 按分类和浏览量降序排序
-    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.viewCount DESC")
+    // 按分类和浏览量降序排序（只显示审核通过的小说）
+    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND n.auditStatus = 1 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.viewCount DESC")
     List<Novel> findAllOrderByViewCountDesc(@Param("categoryId") Long categoryId);
 
-    // 按分类和点赞数降序排序
-    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.likeCount DESC")
+    // 按分类和点赞数降序排序（只显示审核通过的小说）
+    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND n.auditStatus = 1 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.likeCount DESC")
     List<Novel> findAllOrderByLikeCountDesc(@Param("categoryId") Long categoryId);
 
-    // 按分类和收藏数降序排序
-    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.favoriteCount DESC")
+    // 按分类和收藏数降序排序（只显示审核通过的小说）
+    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND n.auditStatus = 1 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.favoriteCount DESC")
     List<Novel> findAllOrderByFavoriteCountDesc(@Param("categoryId") Long categoryId);
 
-    // 按分类和创建时间降序排序
-    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.createTime DESC")
+    // 按分类和创建时间降序排序（只显示审核通过的小说）
+    @Query("SELECT DISTINCT n FROM Novel n LEFT JOIN n.categories c WHERE n.isDeleted = 0 AND n.auditStatus = 1 AND (:categoryId IS NULL OR c.id = :categoryId) ORDER BY n.createTime DESC")
     List<Novel> findAllOrderByCreateTimeDesc(@Param("categoryId") Long categoryId);
 
     // 根据标题和删除状态查询小说

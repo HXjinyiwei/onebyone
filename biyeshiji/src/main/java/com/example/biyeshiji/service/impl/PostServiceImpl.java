@@ -1,11 +1,13 @@
 package com.example.biyeshiji.service.impl;
 
 import com.example.biyeshiji.entity.FavoritePost;
+import com.example.biyeshiji.entity.FavoriteRecord;
 import com.example.biyeshiji.entity.LikeRecord;
 import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.entity.Post;
 import com.example.biyeshiji.entity.User;
 import com.example.biyeshiji.repository.FavoritePostRepository;
+import com.example.biyeshiji.repository.FavoriteRecordRepository;
 import com.example.biyeshiji.repository.LikeRecordRepository;
 import com.example.biyeshiji.repository.MessageRepository;
 import com.example.biyeshiji.repository.PostRepository;
@@ -38,6 +40,9 @@ public class PostServiceImpl implements PostService {
     
     @Autowired
     private FavoritePostRepository favoritePostRepository;
+
+    @Autowired
+    private FavoriteRecordRepository favoriteRecordRepository;
 
     @Autowired
     private MessageService messageService;
@@ -487,13 +492,30 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(readOnly = true)
     public List<Post> getPostsFavoritedByUser(Long userId) {
-        // 查询用户收藏的帖子记录
+        // 查询用户收藏的帖子记录（从两个表查询）
         List<FavoritePost> favoritePosts = favoritePostRepository.findByUserId(userId);
+        List<FavoriteRecord> favoriteRecords = favoriteRecordRepository.findByUserIdAndTargetType(userId, 1); // target_type=1 表示帖子
         
-        // 提取帖子ID列表
-        List<Long> postIds = favoritePosts.stream()
-                .map(FavoritePost::getPostId)
-                .collect(Collectors.toList());
+        // 提取帖子ID列表（从两个表合并）
+        List<Long> postIds = new java.util.ArrayList<>();
+        
+        // 从旧的favorite_post表提取
+        for (FavoritePost favoritePost : favoritePosts) {
+            postIds.add(favoritePost.getPostId());
+        }
+        
+        // 从新的favorite_record表提取
+        for (FavoriteRecord favoriteRecord : favoriteRecords) {
+            postIds.add(favoriteRecord.getTargetId());
+        }
+        
+        // 去重
+        postIds = postIds.stream().distinct().collect(Collectors.toList());
+        
+        // 如果没有收藏的帖子，返回空列表
+        if (postIds.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
         
         // 查询并返回帖子列表，使用fetch join加载作者和分类信息
         List<Post> posts = postRepository.findByIdsWithAuthorAndCategory(postIds);

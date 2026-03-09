@@ -1,5 +1,6 @@
 package com.example.biyeshiji.controller;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.common.Response;
 import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.entity.Novel;
@@ -136,21 +137,40 @@ public class NovelController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Response.error("小说不存在"));
         }
-        // 权限检查：未审核小说只能被作者和管理员看到（如果需要审核）
-        // 暂时跳过，因为小说状态字段status用于连载状态，不是审核状态
+        // 权限检查：未审核小说只能被作者和管理员看到
+        if (novel.getAuditStatus() != 1) { // 1=审核通过
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || auth.getName() == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Response.error("您无权查看此小说"));
+            }
+            User currentUser = userRepository.findByUsername(auth.getName());
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Response.error("您无权查看此小说"));
+            }
+            // 检查是否为作者或管理员
+            boolean canView = currentUser.getId().equals(novel.getAuthorId()) || 
+                             currentUser.getRole() == 1 || 
+                             currentUser.getRole() == 2;
+            if (!canView) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Response.error("您无权查看此小说"));
+            }
+        }
         // 增加浏览量
         novelService.increaseViewCount(id);
         return ResponseEntity.ok(Response.success("获取小说成功", novel));
     }
 
     @GetMapping("/all")
-    public Response<List<Novel>> getAllNovels(
+    public Response<PaginationResponse<Novel>> getAllNovels(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-        List<Novel> novels = novelService.getNovelsWithFilter(keyword, status, categoryId, page, pageSize);
+        PaginationResponse<Novel> novels = novelService.getNovelsWithFilterPagination(keyword, status, categoryId, page, pageSize);
         return Response.success("获取小说列表成功", novels);
     }
 
@@ -247,30 +267,70 @@ public class NovelController {
 
     // 热门排序
     @GetMapping("/top/view")
-    public Response<List<Novel>> getTopByView(@RequestParam(required = false, defaultValue = "10") Integer limit,
-                                              @RequestParam(required = false) Long categoryId) {
-        List<Novel> novels = novelService.getNovelsOrderByViewCountDesc(limit, categoryId);
+    public Response<PaginationResponse<Novel>> getTopByView(@RequestParam(required = false, defaultValue = "10") Integer limit,
+                                              @RequestParam(required = false) Long categoryId,
+                                              @RequestParam(required = false, defaultValue = "1") Integer page,
+                                              @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels;
+        // 如果提供了limit参数，使用旧方法（兼容性）
+        if (limit != null && limit > 0) {
+            List<Novel> novelList = novelService.getNovelsOrderByViewCountDesc(limit, categoryId);
+            novels = PaginationResponse.of(novelList, 1, limit, novelList.size());
+        } else {
+            // 使用分页方法
+            novels = novelService.getNovelsOrderByViewCountDescWithPaginationResponse(page, pageSize, categoryId);
+        }
         return Response.success("获取热门小说（浏览量）成功", novels);
     }
 
     @GetMapping("/top/like")
-    public Response<List<Novel>> getTopByLike(@RequestParam(required = false, defaultValue = "10") Integer limit,
-                                              @RequestParam(required = false) Long categoryId) {
-        List<Novel> novels = novelService.getNovelsOrderByLikeCountDesc(limit, categoryId);
+    public Response<PaginationResponse<Novel>> getTopByLike(@RequestParam(required = false, defaultValue = "10") Integer limit,
+                                              @RequestParam(required = false) Long categoryId,
+                                              @RequestParam(required = false, defaultValue = "1") Integer page,
+                                              @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels;
+        // 如果提供了limit参数，使用旧方法（兼容性）
+        if (limit != null && limit > 0) {
+            List<Novel> novelList = novelService.getNovelsOrderByLikeCountDesc(limit, categoryId);
+            novels = PaginationResponse.of(novelList, 1, limit, novelList.size());
+        } else {
+            // 使用分页方法
+            novels = novelService.getNovelsOrderByLikeCountDescWithPaginationResponse(page, pageSize, categoryId);
+        }
         return Response.success("获取热门小说（点赞数）成功", novels);
     }
 
     @GetMapping("/top/favorite")
-    public Response<List<Novel>> getTopByFavorite(@RequestParam(required = false, defaultValue = "10") Integer limit,
-                                                  @RequestParam(required = false) Long categoryId) {
-        List<Novel> novels = novelService.getNovelsOrderByFavoriteCountDesc(limit, categoryId);
+    public Response<PaginationResponse<Novel>> getTopByFavorite(@RequestParam(required = false, defaultValue = "10") Integer limit,
+                                                  @RequestParam(required = false) Long categoryId,
+                                                  @RequestParam(required = false, defaultValue = "1") Integer page,
+                                                  @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels;
+        // 如果提供了limit参数，使用旧方法（兼容性）
+        if (limit != null && limit > 0) {
+            List<Novel> novelList = novelService.getNovelsOrderByFavoriteCountDesc(limit, categoryId);
+            novels = PaginationResponse.of(novelList, 1, limit, novelList.size());
+        } else {
+            // 使用分页方法
+            novels = novelService.getNovelsOrderByFavoriteCountDescWithPaginationResponse(page, pageSize, categoryId);
+        }
         return Response.success("获取热门小说（收藏数）成功", novels);
     }
 
     @GetMapping("/top/new")
-    public Response<List<Novel>> getTopByNew(@RequestParam(required = false, defaultValue = "10") Integer limit,
-                                             @RequestParam(required = false) Long categoryId) {
-        List<Novel> novels = novelService.getNovelsOrderByCreateTimeDesc(limit, categoryId);
+    public Response<PaginationResponse<Novel>> getTopByNew(@RequestParam(required = false, defaultValue = "10") Integer limit,
+                                             @RequestParam(required = false) Long categoryId,
+                                             @RequestParam(required = false, defaultValue = "1") Integer page,
+                                             @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels;
+        // 如果提供了limit参数，使用旧方法（兼容性）
+        if (limit != null && limit > 0) {
+            List<Novel> novelList = novelService.getNovelsOrderByCreateTimeDesc(limit, categoryId);
+            novels = PaginationResponse.of(novelList, 1, limit, novelList.size());
+        } else {
+            // 使用分页方法
+            novels = novelService.getNovelsOrderByCreateTimeDescWithPaginationResponse(page, pageSize, categoryId);
+        }
         return Response.success("获取最新小说成功", novels);
     }
 

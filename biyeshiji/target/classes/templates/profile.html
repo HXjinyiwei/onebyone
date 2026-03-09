@@ -178,6 +178,7 @@
                                     <div id="messages-container-all">
                                         <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
                                     </div>
+                                    <div id="messages-pagination-all"></div>
                                 </div>
                             </div>
                         </div>
@@ -193,6 +194,7 @@
                                     <div id="messages-container-unread">
                                         <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
                                     </div>
+                                    <div id="messages-pagination-unread"></div>
                                 </div>
                             </div>
                         </div>
@@ -208,6 +210,7 @@
                                     <div id="messages-container-read">
                                         <div class="layui-alert layui-alert-normal" style="margin: 20px 0;">加载中...</div>
                                     </div>
+                                    <div id="messages-pagination-read"></div>
                                 </div>
                             </div>
                         </div>
@@ -563,15 +566,15 @@
                     $('.side-nav .layui-nav-item:has(a[href="/profile/messages"])').addClass('layui-this');
                     $('#profile-messages').show();
                     // 加载所有消息
-                    loadMessagesByType('all');
+                    loadMessagesByType('all', 0);
                     // 加载未读消息和已读消息（预加载）
-                    loadMessagesByType('unread');
-                    loadMessagesByType('read');
+                    loadMessagesByType('unread', 0);
+                    loadMessagesByType('read', 0);
                     
                     // 监听标签页切换
                     element.on('tab(messages-tab)', function(data) {
                         var type = $(this).attr('data-type');
-                        loadMessagesByType(type);
+                        loadMessagesByType(type, 0);
                     });
                 }
                 
@@ -808,9 +811,13 @@
                 });
             }
             
-            // 加载消息（按类型）
-            function loadMessagesByType(type) {
+            // 加载消息（按类型）带分页
+            function loadMessagesByType(type, page) {
                 // type: 'all', 'unread', 'read'
+                // page: 页码，从0开始
+                if (page === undefined) page = 0;
+                var pageSize = 10; // 每页10条消息
+                
                 $.ajax({
                     url: '/user/current',
                     type: 'GET',
@@ -818,10 +825,10 @@
                     success: function(res) {
                         if (res.code === 200 && res.data) {
                             var userId = res.data.id;
-                            var url = '/message/user/' + userId;
+                            var url = '/message/user/' + userId + '/page?page=' + page + '&size=' + pageSize;
                             if (type !== 'all') {
                                 var isRead = type === 'read' ? 1 : 0;
-                                url = '/message/user/' + userId + '/filter?isRead=' + isRead;
+                                url = '/message/user/' + userId + '/filter/page?isRead=' + isRead + '&page=' + page + '&size=' + pageSize;
                             }
                             $.ajax({
                                 url: url,
@@ -830,7 +837,9 @@
                                 success: function(res) {
                                     if (res.code === 200) {
                                         var container = '#messages-container-' + type;
-                                        renderMessages(res.data, container);
+                                        var paginationContainer = '#messages-pagination-' + type;
+                                        renderMessages(res.data.content, container);
+                                        renderMessagePagination(res.data, type, paginationContainer, page);
                                     } else {
                                         layer.msg('获取消息失败', {icon: 2});
                                     }
@@ -846,7 +855,7 @@
 
             // 加载所有消息（兼容旧调用）
             function loadMessages() {
-                loadMessagesByType('all');
+                loadMessagesByType('all', 0);
             }
             
             // 渲染消息列表
@@ -884,6 +893,50 @@
                 $(container).html(html);
             }
             
+            // 渲染消息分页
+            function renderMessagePagination(pageData, type, container, currentPage) {
+                var html = '';
+                if (pageData.totalPages > 1) {
+                    html += '<div class="layui-box layui-laypage layui-laypage-default" style="margin: 20px 0; text-align: center;">';
+                    
+                    // 上一页
+                    if (pageData.first) {
+                        html += '<a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-prev" onclick="loadMessagesPage(\'' + type + '\', ' + (currentPage - 1) + ')">上一页</a>';
+                    }
+                    
+                    // 页码
+                    var startPage = Math.max(0, currentPage - 2);
+                    var endPage = Math.min(pageData.totalPages - 1, currentPage + 2);
+                    
+                    for (var i = startPage; i <= endPage; i++) {
+                        if (i === currentPage) {
+                            html += '<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>' + (i + 1) + '</em></span>';
+                        } else {
+                            html += '<a href="javascript:;" onclick="loadMessagesPage(\'' + type + '\', ' + i + ')">' + (i + 1) + '</a>';
+                        }
+                    }
+                    
+                    // 下一页
+                    if (pageData.last) {
+                        html += '<a href="javascript:;" class="layui-laypage-next layui-disabled">下一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-next" onclick="loadMessagesPage(\'' + type + '\', ' + (currentPage + 1) + ')">下一页</a>';
+                    }
+                    
+                    html += '<span class="layui-laypage-count">共 ' + pageData.totalElements + ' 条</span>';
+                    html += '<span class="layui-laypage-count">第 ' + (currentPage + 1) + ' 页 / 共 ' + pageData.totalPages + ' 页</span>';
+                    html += '</div>';
+                }
+                $(container).html(html);
+            }
+            
+            // 加载指定页码的消息
+            window.loadMessagesPage = function(type, page) {
+                loadMessagesByType(type, page);
+            };
+            
             // 获取当前消息标签页类型
             function getCurrentMessageTabType() {
                 var activeTab = $('.layui-tab[lay-filter="messages-tab"] .layui-tab-title .layui-this');
@@ -896,11 +949,14 @@
             // 刷新当前消息标签页
             function refreshCurrentMessageTab() {
                 var type = getCurrentMessageTabType();
-                loadMessagesByType(type);
+                // 获取当前页码（默认为0）
+                var currentPage = 0;
+                // 这里可以添加逻辑来获取当前显示的页码，但为了简单起见，我们重置到第一页
+                loadMessagesByType(type, currentPage);
                 // 同时刷新其他标签页以确保数据一致（可选）
-                if (type !== 'all') loadMessagesByType('all');
-                if (type !== 'unread') loadMessagesByType('unread');
-                if (type !== 'read') loadMessagesByType('read');
+                if (type !== 'all') loadMessagesByType('all', 0);
+                if (type !== 'unread') loadMessagesByType('unread', 0);
+                if (type !== 'read') loadMessagesByType('read', 0);
             }
 
             // 标记消息为已读

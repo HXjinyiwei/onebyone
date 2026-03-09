@@ -1977,3 +1977,54 @@ body {
         margin-top: 20px;
     }
 }
+
+/* ==================== 权限拒绝提示样式 ==================== */
+
+/* 权限拒绝提示容器 */
+.permission-denied {
+    text-align: center;
+    padding: 60px 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin: 40px 0;
+    border: 1px solid #f0f0f0;
+}
+
+.permission-denied i {
+    font-size: 64px;
+    color: #ccc;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.permission-denied h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.permission-denied p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 0 auto 25px;
+}
+
+/* 帖子状态标签样式 */
+.status-rejected {
+    background-color: #FF5722;
+    color: #fff;
+}
+
+.status-pending {
+    background-color: #FFB800;
+    color: #fff;
+}
+
+.status-banned {
+    background-color: #FF5722;
+    color: #fff;
+}

@@ -100,6 +100,35 @@
                 margin-top: 20px;
             }
         }
+        
+        /* 状态标签样式 */
+        .status-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 8px;
+            color: #fff;
+        }
+        .status-ongoing {
+            background-color: #5FB878; /* 绿色 */
+        }
+        .status-completed {
+            background-color: #1E9FFF; /* 蓝色 */
+        }
+        .status-paused {
+            background-color: #FFB800; /* 黄色 */
+        }
+        .status-pending {
+            background-color: #FF5722; /* 橙色 */
+        }
+        .status-rejected {
+            background-color: #FF5722; /* 红色 */
+        }
+        .status-banned {
+            background-color: #393D49; /* 深灰色 */
+        }
     </style>
 </head>
 <body>
@@ -357,8 +386,16 @@
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200 && res.data) {
-                            renderNovelList(res.data);
-                            updatePagination();
+                            // 处理分页响应数据
+                            var novels = res.data.data || res.data; // 兼容旧格式
+                            var paginationData = res.data;
+                            renderNovelList(novels);
+                            // 更新分页信息
+                            if (paginationData.currentPage !== undefined) {
+                                currentPage = paginationData.currentPage;
+                                totalPage = paginationData.totalPages || 1;
+                                updatePagination();
+                            }
                         } else {
                             layer.msg('获取小说列表失败：' + (res.message || '未知错误'), {icon: 2});
                         }
@@ -420,6 +457,21 @@
                     novelListHtml = '<div style="text-align: center; padding: 50px 0; color: #999;">暂无小说数据</div>';
                 } else {
                     novels.forEach(function(novel) {
+                        // 审核状态标签
+                        var auditStatusText = '';
+                        var auditStatusClass = '';
+                        if (novel.auditStatus === 0) {
+                            auditStatusText = '审核中';
+                            auditStatusClass = 'status-pending';
+                        } else if (novel.auditStatus === 2) {
+                            auditStatusText = '已拒绝';
+                            auditStatusClass = 'status-rejected';
+                        } else if (novel.auditStatus === 3) {
+                            auditStatusText = '已封禁';
+                            auditStatusClass = 'status-banned';
+                        }
+                        
+                        // 小说状态标签（连载状态）
                         var statusText = '连载中';
                         var statusClass = 'status-ongoing';
                         if (novel.status === 1) {
@@ -429,6 +481,7 @@
                             statusText = '暂停';
                             statusClass = 'status-paused';
                         }
+                        
                         // 获取分类名称（多个）
                         var categoryNames = '未分类';
                         if (novel.categories && novel.categories.length > 0) {
@@ -441,17 +494,29 @@
                         novelListHtml += '<div class="novel-info">';
                         novelListHtml += '<div class="novel-title">';
                         novelListHtml += '<a href="/novel/view/' + novel.id + '">' + novel.title + '</a>';
-                        novelListHtml += '<span class="status-tag ' + statusClass + '">' + statusText + '</span>';
+                        // 显示审核状态标签（如果有）
+                        if (auditStatusText) {
+                            novelListHtml += '<span class="status-tag ' + auditStatusClass + '">' + auditStatusText + '</span>';
+                        }
+                        // 显示小说状态标签（连载状态） - 审核中的小说不显示连载状态
+                        if (novel.auditStatus !== 0) {
+                            novelListHtml += '<span class="status-tag ' + statusClass + '">' + statusText + '</span>';
+                        }
                         novelListHtml += '</div>';
                         novelListHtml += '<div class="novel-meta">';
                         novelListHtml += '<span>作者：' + (novel.penName || (novel.author ? novel.author.nickname : '未知')) + '</span>';
                         novelListHtml += '<span>分类：' + categoryNames + '</span>';
                         novelListHtml += '<span>字数：' + (novel.chapterCount || 0) + '章</span>';
                         novelListHtml += '<span>更新时间：' + formatDate(novel.updateTime) + '</span>';
-                        // 管理员显示删除和封禁按钮
-                        if (currentUser && (currentUser.role === 1 || currentUser.role === 2)) {
+                        // 管理员显示删除和封禁按钮 - 审核中的小说不显示按钮
+                        if (currentUser && (currentUser.role === 1 || currentUser.role === 2) && novel.auditStatus !== 0) {
                             novelListHtml += '<span style="float: right;">';
-                            novelListHtml += '<button class="layui-btn layui-btn-warning layui-btn-xs" onclick="banNovel(' + novel.id + ')" style="margin-right: 5px;">封禁</button>';
+                            // 根据审核状态显示不同的按钮
+                            if (novel.auditStatus === 3) {
+                                novelListHtml += '<button class="layui-btn layui-btn-normal layui-btn-xs" onclick="unbanNovel(' + novel.id + ')" style="margin-right: 5px;">解禁</button>';
+                            } else {
+                                novelListHtml += '<button class="layui-btn layui-btn-warning layui-btn-xs" onclick="banNovel(' + novel.id + ')" style="margin-right: 5px;">封禁</button>';
+                            }
                             novelListHtml += '<button class="layui-btn layui-btn-danger layui-btn-xs" onclick="deleteNovel(' + novel.id + ')">删除</button>';
                             novelListHtml += '</span>';
                         }
@@ -537,6 +602,89 @@
                                 loadNovels(currentSort, currentPage);
                             } else {
                                 layer.msg('封禁失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 解禁小说（管理员）
+            window.unbanNovel = function(novelId) {
+                layer.confirm('确定要解禁该小说吗？', {
+                    title: '解禁确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/unban/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说解禁成功', {icon: 1});
+                                loadNovels(currentSort, currentPage);
+                            } else {
+                                layer.msg('解禁失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 审核通过小说（管理员）
+            window.approveNovel = function(novelId) {
+                layer.confirm('确定要通过该小说的审核吗？', {
+                    title: '审核通过确认',
+                    btn: ['确定', '取消']
+                }, function(index) {
+                    $.ajax({
+                        url: '/novel/approve/' + novelId,
+                        type: 'POST',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说审核通过成功', {icon: 1});
+                                loadNovels(currentSort, currentPage);
+                            } else {
+                                layer.msg('审核通过失败：' + (res.message || '未知错误'), {icon: 2});
+                            }
+                        },
+                        error: function() {
+                            layer.msg('服务器错误', {icon: 2});
+                        }
+                    });
+                    layer.close(index);
+                });
+            };
+
+            // 审核拒绝小说（管理员）
+            window.rejectNovel = function(novelId) {
+                layer.prompt({
+                    title: '请输入拒绝原因',
+                    formType: 2,
+                    value: '',
+                    area: ['400px', '150px']
+                }, function(reason, index) {
+                    if (!reason || reason.trim() === '') {
+                        layer.msg('请填写拒绝原因', {icon: 2});
+                        return;
+                    }
+                    $.ajax({
+                        url: '/novel/reject-with-reason/' + novelId,
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ reason: reason }),
+                        success: function(res) {
+                            if (res.code === 200) {
+                                layer.msg('小说审核拒绝成功', {icon: 1});
+                                loadNovels(currentSort, currentPage);
+                            } else {
+                                layer.msg('审核拒绝失败：' + (res.message || '未知错误'), {icon: 2});
                             }
                         },
                         error: function() {

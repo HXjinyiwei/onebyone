@@ -208,8 +208,22 @@
                             } else {
                                 $('#postCategory').text('未分类');
                             }
+                            
+                            // 显示帖子状态标签
+                            updatePostStatusTag(post.status);
                         } else {
-                            layer.msg('获取帖子详情失败: ' + res.message, {icon: 2});
+                            // 如果是权限错误，显示更友好的提示
+                            if (res.message && res.message.includes('无权查看')) {
+                                layer.msg('该帖子正在审核中或已被封禁，您没有权限查看', {icon: 2});
+                                // 隐藏帖子操作按钮
+                                $('.post-actions').hide();
+                                // 隐藏评论区域
+                                $('.comments-section').hide();
+                                // 显示提示信息
+                                $('#postContent').html('<div class="permission-denied"><i class="layui-icon layui-icon-face-cry" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i><h3>您没有权限查看此帖子</h3><p>该帖子可能正在审核中或已被封禁，只有作者和管理员可以查看。</p></div>');
+                            } else {
+                                layer.msg('获取帖子详情失败: ' + res.message, {icon: 2});
+                            }
                         }
                     },
                     error: function(xhr, status, error) {
@@ -217,6 +231,26 @@
                         layer.msg('获取帖子详情失败', {icon: 2});
                     }
                 });
+            }
+            
+            // 更新帖子状态标签
+            function updatePostStatusTag(status) {
+                var $statusTag = $('#postStatus');
+                $statusTag.removeClass('status-normal status-pending status-rejected status-banned');
+                
+                switch(status) {
+                    case 0:
+                        $statusTag.text('正常').addClass('status-normal');
+                        break;
+                    case 1:
+                        $statusTag.text('审核中').addClass('status-pending');
+                        break;
+                    case 2:
+                        $statusTag.text('已拒绝').addClass('status-rejected');
+                        break;
+                    default:
+                        $statusTag.text('未知').addClass('status-normal');
+                }
             }
             
             // 获取评论列表

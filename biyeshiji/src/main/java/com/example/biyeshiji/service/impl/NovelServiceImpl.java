@@ -1,5 +1,6 @@
 package com.example.biyeshiji.service.impl;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.*;
 import com.example.biyeshiji.repository.*;
 import com.example.biyeshiji.service.MessageService;
@@ -30,6 +31,9 @@ public class NovelServiceImpl implements NovelService {
 
     @Autowired
     private FavoritePostRepository favoritePostRepository; // 暂时复用，后续可能需要新建FavoriteNovelRepository
+
+    @Autowired
+    private FavoriteRecordRepository favoriteRecordRepository;
 
     @Autowired
     private MessageService messageService;
@@ -233,6 +237,13 @@ public class NovelServiceImpl implements NovelService {
     @Override
     @Transactional(readOnly = true)
     public List<Novel> getNovelsWithFilter(String keyword, Integer status, Long categoryId, Integer page, Integer pageSize) {
+        PaginationResponse<Novel> response = getNovelsWithFilterPagination(keyword, status, categoryId, page, pageSize);
+        return response.getData();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsWithFilterPagination(String keyword, Integer status, Long categoryId, Integer page, Integer pageSize) {
         // 获取当前登录用户
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth != null ? auth.getName() : null;
@@ -298,22 +309,28 @@ public class NovelServiceImpl implements NovelService {
         int start = (page - 1) * pageSize;
         int end = Math.min(start + pageSize, permissionFilteredNovels.size());
         if (start >= end) {
-            return List.of();
+            return PaginationResponse.of(List.of(), page, pageSize, permissionFilteredNovels.size());
         }
 
-        return permissionFilteredNovels.subList(start, end);
+        List<Novel> pagedData = permissionFilteredNovels.subList(start, end);
+        return PaginationResponse.of(pagedData, page, pageSize, permissionFilteredNovels.size());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Novel> getNovelsLikedByUser(Long userId) {
-        // 查询用户点赞的小说记录（target_type需要扩展，暂时假设为2）
-        List<LikeRecord> likeRecords = likeRecordRepository.findByUserIdAndTargetType(userId, 2);
+        // 查询用户点赞的小说记录（target_type=3 表示小说）
+        List<LikeRecord> likeRecords = likeRecordRepository.findByUserIdAndTargetType(userId, 3);
 
         // 提取小说ID列表
         List<Long> novelIds = likeRecords.stream()
                 .map(LikeRecord::getTargetId)
                 .collect(Collectors.toList());
+
+        // 如果没有点赞的小说，返回空列表
+        if (novelIds.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
 
         // 查询并返回小说列表，使用fetch join加载作者信息
         List<Novel> novels = novelRepository.findByIdsWithAuthor(novelIds);
@@ -327,9 +344,26 @@ public class NovelServiceImpl implements NovelService {
     @Override
     @Transactional(readOnly = true)
     public List<Novel> getNovelsFavoritedByUser(Long userId) {
-        // 查询用户收藏的小说记录（需要新建FavoriteNovelRepository，暂时复用FavoritePost，但target_type不同）
-        // 暂时返回空列表，待实现
-        return List.of();
+        // 查询用户收藏的小说记录（从favorite_record表查询，target_type=3 表示小说）
+        List<FavoriteRecord> favoriteRecords = favoriteRecordRepository.findByUserIdAndTargetType(userId, 3);
+        
+        // 提取小说ID列表
+        List<Long> novelIds = favoriteRecords.stream()
+                .map(FavoriteRecord::getTargetId)
+                .collect(Collectors.toList());
+        
+        // 如果没有收藏的小说，返回空列表
+        if (novelIds.isEmpty()) {
+            return new java.util.ArrayList<>();
+        }
+        
+        // 查询并返回小说列表，使用fetch join加载作者信息
+        List<Novel> novels = novelRepository.findByIdsWithAuthor(novelIds);
+        
+        // 按照创建时间倒序排序
+        novels.sort((n1, n2) -> n2.getCreateTime().compareTo(n1.getCreateTime()));
+        
+        return novels;
     }
 
     @Override
@@ -469,12 +503,50 @@ public class NovelServiceImpl implements NovelService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Novel> getNovelsOrderByViewCountDescWithPagination(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByViewCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return List.of();
+        }
+        return novels.subList(start, end);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Novel> getNovelsOrderByLikeCountDesc(Integer limit, Long categoryId) {
         List<Novel> novels = novelRepository.findAllOrderByLikeCountDesc(categoryId);
         if (limit != null && limit > 0 && novels.size() > limit) {
             novels = novels.subList(0, limit);
         }
         return novels;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Novel> getNovelsOrderByLikeCountDescWithPagination(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByLikeCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return List.of();
+        }
+        return novels.subList(start, end);
     }
 
     @Override
@@ -489,12 +561,50 @@ public class NovelServiceImpl implements NovelService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Novel> getNovelsOrderByFavoriteCountDescWithPagination(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByFavoriteCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return List.of();
+        }
+        return novels.subList(start, end);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Novel> getNovelsOrderByCreateTimeDesc(Integer limit, Long categoryId) {
         List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
         if (limit != null && limit > 0 && novels.size() > limit) {
             novels = novels.subList(0, limit);
         }
         return novels;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Novel> getNovelsOrderByCreateTimeDescWithPagination(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return List.of();
+        }
+        return novels.subList(start, end);
     }
 
     @Override
@@ -669,5 +779,85 @@ public class NovelServiceImpl implements NovelService {
             }
         }
         return false;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsOrderByViewCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByViewCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, novels.size());
+        }
+        List<Novel> pagedData = novels.subList(start, end);
+        return PaginationResponse.of(pagedData, page, pageSize, novels.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsOrderByLikeCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByLikeCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, novels.size());
+        }
+        List<Novel> pagedData = novels.subList(start, end);
+        return PaginationResponse.of(pagedData, page, pageSize, novels.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsOrderByFavoriteCountDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByFavoriteCountDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, novels.size());
+        }
+        List<Novel> pagedData = novels.subList(start, end);
+        return PaginationResponse.of(pagedData, page, pageSize, novels.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsOrderByCreateTimeDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId) {
+        List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
+        // 分页处理
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, novels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, novels.size());
+        }
+        List<Novel> pagedData = novels.subList(start, end);
+        return PaginationResponse.of(pagedData, page, pageSize, novels.size());
     }
 }
