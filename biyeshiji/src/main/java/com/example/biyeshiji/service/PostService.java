@@ -1,5 +1,6 @@
 package com.example.biyeshiji.service;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.Post;
 
 import java.util.List;
@@ -39,4 +40,10 @@ public interface PostService {
     
     // 重新提交（从拒绝状态改为审核中）
     boolean resubmitPost(Long postId);
+    
+    // 分页查询方法
+    PaginationResponse<Post> getPostsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize);
+    PaginationResponse<Post> getPostsLikedByUserWithPagination(Long userId, Integer page, Integer pageSize);
+    PaginationResponse<Post> getPostsFavoritedByUserWithPagination(Long userId, Integer page, Integer pageSize);
+    PaginationResponse<Post> getDeletedPostsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize);
 }

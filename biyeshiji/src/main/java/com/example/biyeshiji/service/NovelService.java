@@ -52,4 +52,10 @@ public interface NovelService {
     
     // 重新提交（从拒绝状态改为审核中）
     boolean resubmitNovel(Long novelId);
+    
+    // 分页查询方法
+    PaginationResponse<Novel> getNovelsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize);
+    PaginationResponse<Novel> getNovelsLikedByUserWithPagination(Long userId, Integer page, Integer pageSize);
+    PaginationResponse<Novel> getNovelsFavoritedByUserWithPagination(Long userId, Integer page, Integer pageSize);
+    PaginationResponse<Novel> getDeletedNovelsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize);
 }

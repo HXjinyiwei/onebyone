@@ -64,17 +64,8 @@
         </div>
         
         <!-- 分页 -->
-        <div class="pagination">
-            <div class="layui-box layui-laypage layui-laypage-default">
-                <a href="/post/list?page=1" class="layui-laypage-first">首页</a>
-                <a href="/post/list?page=1" class="layui-laypage-prev">上一页</a>
-                <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>1</em></span>
-                <a href="/post/list?page=2" class="">2</a>
-                <a href="/post/list?page=3" class="">3</a>
-                <a href="/post/list?page=2" class="layui-laypage-next">下一页</a>
-                <a href="/post/list?page=3" class="layui-laypage-last">尾页</a>
-                <span class="layui-laypage-count">共 3 页</span>
-            </div>
+        <div class="pagination" id="paginationContainer">
+            <!-- 分页将通过JavaScript动态生成 -->
         </div>
     </div>
 
@@ -88,6 +79,12 @@
             
             // 全局变量，保存当前用户信息
             var currentUser = null;
+            
+            // 分页相关全局变量
+            var currentPage = 1;
+            var totalPage = 1;
+            var totalRecords = 0;
+            var currentCategoryId = '';
             
             // 退出登录确认函数
             window.logoutConfirm = function() {
@@ -158,8 +155,8 @@
                                 // 更新激活状态
                                 $categoryList.find('a').removeClass('active');
                                 $(this).addClass('active');
-                                // 重新加载帖子列表
-                                getPostList(categoryId);
+                                // 重新加载帖子列表（从第一页开始）
+                                getPostList(categoryId, 1);
                             });
                             console.log('加载帖子分类成功，数量:', res.data.length);
                         } else {
@@ -174,19 +171,34 @@
             
             // 获取帖子列表
             function getPostList(categoryId, page) {
+                currentCategoryId = categoryId || '';
+                currentPage = page || 1;
+                
                 $.ajax({
                     url: '/post/all',
                     type: 'GET',
                     data: {
-                        categoryId: categoryId || '',
-                        page: page || 1,
+                        categoryId: currentCategoryId,
+                        page: currentPage,
                         pageSize: 10
                     },
                     dataType: 'json',
                     success: function(res) {
                         console.log('获取帖子列表成功:', res);
                         if (res.code === 200 && res.data) {
-                            renderPostList(res.data);
+                            // 处理分页响应数据
+                            var posts = res.data.data || res.data; // 兼容旧格式
+                            var paginationData = res.data;
+                            
+                            renderPostList(posts);
+                            
+                            // 更新分页信息
+                            if (paginationData.currentPage !== undefined) {
+                                currentPage = paginationData.currentPage;
+                                totalPage = paginationData.totalPages || 1;
+                                totalRecords = paginationData.totalRecords || 0;
+                                renderPagination();
+                            }
                         } else {
                             layer.msg('获取帖子列表失败：' + (res.message || '未知错误'), {icon: 2});
                         }
@@ -217,7 +229,13 @@
                     success: function(res) {
                         console.log('搜索帖子成功:', res);
                         if (res.code === 200 && res.data) {
+                            // 搜索接口可能返回List<Post>而不是分页响应
                             renderPostList(res.data);
+                            // 搜索后重置分页状态
+                            currentPage = 1;
+                            totalPage = 1;
+                            totalRecords = res.data.length;
+                            renderPagination();
                             layer.msg('搜索完成，找到 ' + res.data.length + ' 条结果', {icon: 1});
                         } else {
                             layer.msg('搜索失败：' + (res.message || '未知错误'), {icon: 2});
@@ -253,12 +271,8 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('帖子删除成功', {icon: 1});
-                                // 重新加载帖子列表
-                                var categoryId = $('.category-list a.active').attr('href').split('categoryId=')[1];
-                                if (!categoryId || categoryId === '/post/list') {
-                                    categoryId = '';
-                                }
-                                getPostList(categoryId);
+                                // 重新加载帖子列表（保持当前分页和分类）
+                                getPostList(currentCategoryId, currentPage);
                             } else {
                                 layer.msg('删除失败：' + (res.message || '未知错误'), {icon: 2});
                             }
@@ -286,12 +300,8 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('帖子封禁成功', {icon: 1});
-                                // 重新加载帖子列表
-                                var categoryId = $('.category-list a.active').attr('href').split('categoryId=')[1];
-                                if (!categoryId || categoryId === '/post/list') {
-                                    categoryId = '';
-                                }
-                                getPostList(categoryId);
+                                // 重新加载帖子列表（保持当前分页和分类）
+                                getPostList(currentCategoryId, currentPage);
                             } else {
                                 layer.msg('封禁失败：' + (res.message || '未知错误'), {icon: 2});
                             }
@@ -402,6 +412,77 @@
                     clearInterval(window.messageBadgeInterval);
                 }
             });
+            
+            // 渲染分页
+            function renderPagination() {
+                var html = '';
+                if (totalPage > 1) {
+                    html += '<div class="layui-box layui-laypage layui-laypage-default">';
+                    
+                    // 首页按钮
+                    if (currentPage > 1) {
+                        html += '<a href="javascript:;" class="layui-laypage-first" onclick="changePage(1)">首页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-first layui-disabled">首页</a>';
+                    }
+                    
+                    // 上一页按钮
+                    if (currentPage > 1) {
+                        html += '<a href="javascript:;" class="layui-laypage-prev" onclick="changePage(' + (currentPage - 1) + ')">上一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>';
+                    }
+                    
+                    // 页码按钮
+                    var startPage = Math.max(1, currentPage - 2);
+                    var endPage = Math.min(totalPage, currentPage + 2);
+                    
+                    for (var i = startPage; i <= endPage; i++) {
+                        if (i === currentPage) {
+                            html += '<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>' + i + '</em></span>';
+                        } else {
+                            html += '<a href="javascript:;" onclick="changePage(' + i + ')">' + i + '</a>';
+                        }
+                    }
+                    
+                    // 下一页按钮
+                    if (currentPage < totalPage) {
+                        html += '<a href="javascript:;" class="layui-laypage-next" onclick="changePage(' + (currentPage + 1) + ')">下一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-next layui-disabled">下一页</a>';
+                    }
+                    
+                    // 尾页按钮
+                    if (currentPage < totalPage) {
+                        html += '<a href="javascript:;" class="layui-laypage-last" onclick="changePage(' + totalPage + ')">尾页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-last layui-disabled">尾页</a>';
+                    }
+                    
+                    // 页码信息
+                    html += '<span class="layui-laypage-count">共 ' + totalRecords + ' 条</span>';
+                    html += '<span class="layui-laypage-count">第 ' + currentPage + ' 页 / 共 ' + totalPage + ' 页</span>';
+                    
+                    html += '</div>';
+                } else {
+                    // 只有一页时显示简单信息
+                    html += '<div class="layui-box layui-laypage layui-laypage-default">';
+                    html += '<span class="layui-laypage-count">共 ' + totalRecords + ' 条</span>';
+                    html += '</div>';
+                }
+                
+                $('#paginationContainer').html(html);
+            }
+            
+            // 切换页面
+            window.changePage = function(page) {
+                if (page < 1 || page > totalPage) return;
+                getPostList(currentCategoryId, page);
+            };
+            
+            // 初始化加载帖子列表和分类
+            loadPostCategories();
+            getPostList();
         });
     </script>
 </body>

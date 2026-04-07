@@ -1,5 +1,6 @@
 package com.example.biyeshiji.service;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.Report;
 import com.example.biyeshiji.entity.User;
 
@@ -16,6 +17,11 @@ public interface ReportService {
      * 获取举报列表（管理员）
      */
     List<Report> getReports(String targetType, Integer status);
+    
+    /**
+     * 获取举报列表（分页版）
+     */
+    PaginationResponse<Report> getReportsWithPagination(String targetType, Integer status, Integer page, Integer pageSize);
     
     /**
      * 获取待处理举报数量

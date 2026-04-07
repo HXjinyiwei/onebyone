@@ -23,4 +23,30 @@ public interface UserRepository extends JpaRepository<User, Long> {
            "(u.status = 0 AND LOWER(:keyword) IN ('正常', '正常状态', 'active', '启用')) OR " +
            "(u.status = 1 AND LOWER(:keyword) IN ('封禁', '封禁状态', 'banned', '禁用', '冻结'))")
     List<User> searchUsers(@Param("keyword") String keyword);
+    
+    @Query("SELECT COUNT(u) FROM User u WHERE " +
+           "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(u.nickname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "(u.role = 0 AND LOWER(:keyword) IN ('普通用户', '用户', '普通', 'user')) OR " +
+           "(u.role = 1 AND LOWER(:keyword) IN ('管理员', 'admin', '管理')) OR " +
+           "(u.role = 2 AND LOWER(:keyword) IN ('高级管理员', 'superadmin', '高级', '超级')) OR " +
+           "(u.status = 0 AND LOWER(:keyword) IN ('正常', '正常状态', 'active', '启用')) OR " +
+           "(u.status = 1 AND LOWER(:keyword) IN ('封禁', '封禁状态', 'banned', '禁用', '冻结'))")
+    long countSearchUsers(@Param("keyword") String keyword);
+    
+    @Query(value = "SELECT * FROM user WHERE " +
+           "LOWER(username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(nickname) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "(role = 0 AND LOWER(:keyword) IN ('普通用户', '用户', '普通', 'user')) OR " +
+           "(role = 1 AND LOWER(:keyword) IN ('管理员', 'admin', '管理')) OR " +
+           "(role = 2 AND LOWER(:keyword) IN ('高级管理员', 'superadmin', '高级', '超级')) OR " +
+           "(status = 0 AND LOWER(:keyword) IN ('正常', '正常状态', 'active', '启用')) OR " +
+           "(status = 1 AND LOWER(:keyword) IN ('封禁', '封禁状态', 'banned', '禁用', '冻结')) " +
+           "ORDER BY id DESC LIMIT :pageSize OFFSET :offset", nativeQuery = true)
+    List<User> searchUsersWithPagination(@Param("keyword") String keyword, 
+                                         @Param("offset") int offset, 
+                                         @Param("pageSize") int pageSize);
+    
+    @Query(value = "SELECT * FROM user ORDER BY id DESC LIMIT :pageSize OFFSET :offset", nativeQuery = true)
+    List<User> findAllWithPagination(@Param("offset") int offset, @Param("pageSize") int pageSize);
 }

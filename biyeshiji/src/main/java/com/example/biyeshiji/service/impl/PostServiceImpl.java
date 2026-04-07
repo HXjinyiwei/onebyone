@@ -1,5 +1,6 @@
 package com.example.biyeshiji.service.impl;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.FavoritePost;
 import com.example.biyeshiji.entity.FavoriteRecord;
 import com.example.biyeshiji.entity.LikeRecord;
@@ -54,9 +55,9 @@ public class PostServiceImpl implements PostService {
         String username = auth != null ? auth.getName() : null;
         User currentUser = username != null ? userRepository.findByUsername(username) : null;
         
-        // 如果是公告分类（categoryId=1），只有管理员可以发布
+        // 如果是公告分类（categoryId=1），只有管理员和高级管理员可以发布
         if (post.getCategoryId() != null && post.getCategoryId() == 1L) {
-            if (currentUser == null || currentUser.getRole() != 1) {
+            if (currentUser == null || (currentUser.getRole() != 1 && currentUser.getRole() != 2)) {
                 throw new RuntimeException("只有管理员才能发布公告");
             }
             // 公告自动置顶
@@ -76,6 +77,11 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post updatePost(Post post) {
+        // 添加空值检查，确保post和postId都不为null
+        if (post == null || post.getId() == null) {
+            return null;
+        }
+        
         Optional<Post> existingPostOpt = postRepository.findById(post.getId());
         if (existingPostOpt.isPresent()) {
             Post existingPost = existingPostOpt.get();
@@ -85,16 +91,16 @@ public class PostServiceImpl implements PostService {
             String username = auth != null ? auth.getName() : null;
             User currentUser = username != null ? userRepository.findByUsername(username) : null;
             
-            // 原帖子是公告，只有管理员可以修改
+            // 原帖子是公告，只有管理员和高级管理员可以修改
             if (existingPost.getCategoryId() != null && existingPost.getCategoryId() == 1L) {
-                if (currentUser == null || currentUser.getRole() != 1) {
+                if (currentUser == null || (currentUser.getRole() != 1 && currentUser.getRole() != 2)) {
                     throw new RuntimeException("只有管理员才能修改公告");
                 }
             }
             
-            // 如果要修改为公告分类，只有管理员可以操作
+            // 如果要修改为公告分类，只有管理员和高级管理员可以操作
             if (post.getCategoryId() != null && post.getCategoryId() == 1L && existingPost.getCategoryId() != 1L) {
-                if (currentUser == null || currentUser.getRole() != 1) {
+                if (currentUser == null || (currentUser.getRole() != 1 && currentUser.getRole() != 2)) {
                     throw new RuntimeException("只有管理员才能发布公告");
                 }
                 // 公告自动置顶
@@ -163,13 +169,9 @@ public class PostServiceImpl implements PostService {
         
         List<Post> filteredPosts;
         
-        // 如果是管理员（角色1或2），返回所有未封禁的帖子（status != 2）
+        // 如果是管理员（角色1或2），返回所有帖子（包括封禁的）
         if (currentUser != null && (currentUser.getRole() == 1 || currentUser.getRole() == 2)) {
-            final Long currentUserId = currentUser.getId();
-            filteredPosts = allPosts.stream()
-                    .filter(post -> !Integer.valueOf(2).equals(post.getStatus()) ||
-                            (currentUserId != null && post.getAuthorId().equals(currentUserId)))
-                    .toList();
+            filteredPosts = allPosts;
         } else {
             // 普通用户或未登录用户，只能看到已审核通过的帖子或者自己的帖子
             final Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -693,5 +695,171 @@ public class PostServiceImpl implements PostService {
             }
         }
         return false;
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Post> getPostsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize) {
+        // 获取所有未删除的帖子，同时加载作者和分类信息
+        List<Post> allPosts = postRepository.findAllWithAuthorAndCategory();
+        
+        // 筛选出指定作者的帖子
+        List<Post> filteredPosts = allPosts.stream()
+                .filter(post -> post.getAuthorId().equals(authorId))
+                .sorted((p1, p2) -> p2.getCreateTime().compareTo(p1.getCreateTime()))
+                .toList();
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredPosts.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredPosts.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Post> content = filteredPosts.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Post> getPostsLikedByUserWithPagination(Long userId, Integer page, Integer pageSize) {
+        // 查询用户点赞的帖子记录
+        List<LikeRecord> likeRecords = likeRecordRepository.findByUserIdAndTargetType(userId, 1);
+        
+        // 提取帖子ID列表
+        List<Long> postIds = likeRecords.stream()
+                .map(LikeRecord::getTargetId)
+                .collect(Collectors.toList());
+        
+        // 如果没有点赞的帖子，返回空分页
+        if (postIds.isEmpty()) {
+            return PaginationResponse.of(List.of(), page != null ? page : 1, pageSize != null ? pageSize : 10, 0);
+        }
+        
+        // 查询并返回帖子列表，使用fetch join加载作者和分类信息
+        List<Post> allPosts = postRepository.findByIdsWithAuthorAndCategory(postIds);
+        
+        // 按照创建时间倒序排序
+        List<Post> filteredPosts = new java.util.ArrayList<>(allPosts);
+        filteredPosts.sort((p1, p2) -> p2.getCreateTime().compareTo(p1.getCreateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredPosts.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredPosts.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Post> content = filteredPosts.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Post> getPostsFavoritedByUserWithPagination(Long userId, Integer page, Integer pageSize) {
+        // 查询用户收藏的帖子记录（从两个表查询）
+        List<FavoritePost> favoritePosts = favoritePostRepository.findByUserId(userId);
+        List<FavoriteRecord> favoriteRecords = favoriteRecordRepository.findByUserIdAndTargetType(userId, 1); // target_type=1 表示帖子
+        
+        // 提取帖子ID列表（从两个表合并）
+        List<Long> postIds = new java.util.ArrayList<>();
+        
+        // 从旧的favorite_post表提取
+        for (FavoritePost favoritePost : favoritePosts) {
+            postIds.add(favoritePost.getPostId());
+        }
+        
+        // 从新的favorite_record表提取
+        for (FavoriteRecord favoriteRecord : favoriteRecords) {
+            postIds.add(favoriteRecord.getTargetId());
+        }
+        
+        // 去重
+        postIds = postIds.stream().distinct().collect(Collectors.toList());
+        
+        // 如果没有收藏的帖子，返回空分页
+        if (postIds.isEmpty()) {
+            return PaginationResponse.of(List.of(), page != null ? page : 1, pageSize != null ? pageSize : 10, 0);
+        }
+        
+        // 查询并返回帖子列表，使用fetch join加载作者和分类信息
+        List<Post> allPosts = postRepository.findByIdsWithAuthorAndCategory(postIds);
+        
+        // 按照创建时间倒序排序
+        List<Post> filteredPosts = new java.util.ArrayList<>(allPosts);
+        filteredPosts.sort((p1, p2) -> p2.getCreateTime().compareTo(p1.getCreateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredPosts.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredPosts.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Post> content = filteredPosts.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Post> getDeletedPostsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize) {
+        // 直接调用仓库方法查询已删除的帖子
+        List<Post> deletedPosts = postRepository.findDeletedByAuthorId(authorId);
+        // 按删除时间（或更新时间）倒序排序
+        deletedPosts.sort((p1, p2) -> p2.getUpdateTime().compareTo(p1.getUpdateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = deletedPosts.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, deletedPosts.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Post> content = deletedPosts.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
     }
 }

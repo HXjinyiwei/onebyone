@@ -60,6 +60,18 @@ public class ChapterServiceImpl implements ChapterService {
             chapter.setSortOrder(maxSortOrder + 1);
         }
 
+        // 章节号唯一性检查（包括被封禁的章节）
+        Chapter existingBySortOrder = chapterRepository.findByNovelIdAndSortOrder(chapter.getNovelId(), chapter.getSortOrder());
+        if (existingBySortOrder != null) {
+            throw new RuntimeException("该章节号已被使用");
+        }
+
+        // 章节名称唯一性检查（包括被封禁的章节）
+        List<Chapter> existingByTitle = chapterRepository.findByNovelIdAndTitle(chapter.getNovelId(), chapter.getTitle());
+        if (!existingByTitle.isEmpty()) {
+            throw new RuntimeException("该章节名称已被使用");
+        }
+
         // 自动计算字数（如果内容不为空）
         if (chapter.getContent() != null) {
             chapter.setWordCount(chapter.getContent().length());
@@ -69,6 +81,14 @@ public class ChapterServiceImpl implements ChapterService {
 
         // 更新小说章节数
         updateChapterCount(chapter.getNovelId());
+
+        // 更新小说的更新时间（章节创建会触发小说更新时间变更）
+        Optional<Novel> novelToUpdateOpt = novelRepository.findById(chapter.getNovelId());
+        if (novelToUpdateOpt.isPresent()) {
+            Novel novelToUpdate = novelToUpdateOpt.get();
+            novelToUpdate.setUpdateTime(LocalDateTime.now());
+            novelRepository.save(novelToUpdate);
+        }
 
         return savedChapter;
     }
@@ -89,24 +109,43 @@ public class ChapterServiceImpl implements ChapterService {
             }
 
             // 验证小说权限
-            Optional<Novel> novelOpt = novelRepository.findById(existingChapter.getNovelId());
-            if (novelOpt.isEmpty()) {
+            Optional<Novel> novelOptForAuth = novelRepository.findById(existingChapter.getNovelId());
+            if (novelOptForAuth.isEmpty()) {
                 throw new RuntimeException("小说不存在");
             }
-
-            Novel novel = novelOpt.get();
-            boolean isAuthor = novel.getAuthorId().equals(currentUser.getId());
+            Novel novelForAuth = novelOptForAuth.get();
+            boolean isAuthor = novelForAuth.getAuthorId().equals(currentUser.getId());
             boolean isAdmin = currentUser.getRole() == 1;
 
             if (!isAuthor && !isAdmin) {
                 throw new RuntimeException("无权修改此章节");
             }
 
-            // 更新字段
+            // 保存原始值用于比较
+            String originalTitle = existingChapter.getTitle();
+            Integer originalSortOrder = existingChapter.getSortOrder();
+
+            // 章节号修改检查（仅当章节号发生变化时）
+            if (!originalSortOrder.equals(chapter.getSortOrder())) {
+                Chapter existingByNewSortOrder = chapterRepository.findByNovelIdAndSortOrder(existingChapter.getNovelId(), chapter.getSortOrder());
+                if (existingByNewSortOrder != null) {
+                    throw new RuntimeException("该章节号已被使用");
+                }
+            }
+
+            // 章节名称修改检查（仅当章节名称发生变化时）
+            if (!originalTitle.equals(chapter.getTitle())) {
+                List<Chapter> existingByNewTitle = chapterRepository.findByNovelIdAndTitle(existingChapter.getNovelId(), chapter.getTitle());
+                if (!existingByNewTitle.isEmpty()) {
+                    throw new RuntimeException("该章节名称已被使用");
+                }
+            }
+
+            // 更新字段（验证通过后才更新）
             existingChapter.setTitle(chapter.getTitle());
             existingChapter.setContent(chapter.getContent());
-            existingChapter.setSortOrder(chapter.getSortOrder());
             existingChapter.setIsFree(chapter.getIsFree());
+            existingChapter.setSortOrder(chapter.getSortOrder());
             existingChapter.setUpdateTime(LocalDateTime.now());
 
             // 重新计算字数
@@ -114,7 +153,17 @@ public class ChapterServiceImpl implements ChapterService {
                 existingChapter.setWordCount(chapter.getContent().length());
             }
 
-            return chapterRepository.save(existingChapter);
+            Chapter savedChapter = chapterRepository.save(existingChapter);
+
+            // 更新小说的更新时间（章节更新会触发小说更新时间变更）
+            Optional<Novel> novelToUpdateOpt = novelRepository.findById(existingChapter.getNovelId());
+            if (novelToUpdateOpt.isPresent()) {
+                Novel novelToUpdate = novelToUpdateOpt.get();
+                novelToUpdate.setUpdateTime(LocalDateTime.now());
+                novelRepository.save(novelToUpdate);
+            }
+
+            return savedChapter;
         }
         return null;
     }

@@ -1,5 +1,6 @@
 package com.example.biyeshiji.controller;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.common.Response;
 import com.example.biyeshiji.entity.User;
 import com.example.biyeshiji.exception.UserBannedException;
@@ -390,5 +391,68 @@ public class UserController {
         }
         
         return Response.success("检查完成", isDuplicate);
+    }
+
+    /**
+     * 获取用户列表（分页版）
+     * @param search 搜索关键词（可选）
+     * @param page 页码（默认1）
+     * @param pageSize 每页大小（默认10）
+     * @return 分页用户列表
+     */
+    @GetMapping("/all/page")
+    public Response<PaginationResponse<User>> getAllUsersWithPagination(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        // 检查当前用户是否为管理员或高级管理员
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) {
+            return Response.error("未登录");
+        }
+        String username = auth.getName();
+        User currentUser = userRepository.findByUsername(username);
+        if (currentUser == null || (currentUser.getRole() != 1 && currentUser.getRole() != 2)) {
+            return Response.error("权限不足，仅管理员或高级管理员可访问");
+        }
+        
+        // 获取总记录数
+        long totalRecords;
+        if (search != null && !search.trim().isEmpty()) {
+            totalRecords = userRepository.countSearchUsers(search.trim());
+        } else {
+            totalRecords = userRepository.count();
+        }
+        
+        // 计算总页数
+        int totalPages = (int) Math.ceil((double) totalRecords / pageSize);
+        if (totalPages == 0) totalPages = 1;
+        
+        // 确保页码在有效范围内
+        if (page < 1) page = 1;
+        if (page > totalPages) page = totalPages;
+        
+        // 计算偏移量
+        int offset = (page - 1) * pageSize;
+        
+        // 获取分页数据
+        List<User> users;
+        if (search != null && !search.trim().isEmpty()) {
+            users = userRepository.searchUsersWithPagination(search.trim(), offset, pageSize);
+        } else {
+            users = userRepository.findAllWithPagination(offset, pageSize);
+        }
+        
+        // 构建分页响应
+        PaginationResponse<User> paginationResponse = new PaginationResponse<>();
+        paginationResponse.setData(users);
+        paginationResponse.setCurrentPage(page);
+        paginationResponse.setPageSize(pageSize);
+        paginationResponse.setTotalRecords(totalRecords);
+        paginationResponse.setTotalPages(totalPages);
+        paginationResponse.setHasNext(page < totalPages);
+        paginationResponse.setHasPrevious(page > 1);
+        
+        return Response.success("获取用户列表成功", paginationResponse);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.biyeshiji.controller;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.common.Response;
 import com.example.biyeshiji.entity.Message;
 import com.example.biyeshiji.entity.Post;
@@ -93,21 +94,31 @@ public class PostController {
     }
 
     @GetMapping("/all")
-    public Response<List<Post>> getAllPosts(
+    public Response<PaginationResponse<Post>> getAllPosts(
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Integer status,
             @RequestParam(required = false, defaultValue = "1") Integer page,
             @RequestParam(required = false, defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) String search) {
-        List<Post> posts;
         if (search != null && !search.trim().isEmpty()) {
-            // 使用新的搜索功能，同时支持状态筛选
-            posts = postService.searchPostsWithStatus(search.trim(), status);
+            // 搜索功能返回列表，需要转换为分页响应
+            List<Post> posts = postService.searchPostsWithStatus(search.trim(), status);
+            // 手动构建分页响应
+            PaginationResponse<Post> paginationResponse = PaginationResponse.of(
+                posts, page, pageSize, posts.size()
+            );
+            return Response.success("获取帖子列表成功", paginationResponse);
         } else {
-            // 使用原有过滤功能
-            posts = postService.getPostsWithFilter(categoryId, status, page, pageSize);
+            // 使用原有过滤功能，但需要分页信息
+            List<Post> posts = postService.getPostsWithFilter(categoryId, status, page, pageSize);
+            // 获取总记录数
+            long totalRecords = postService.countPosts();
+            // 手动构建分页响应
+            PaginationResponse<Post> paginationResponse = PaginationResponse.of(
+                posts, page, pageSize, totalRecords
+            );
+            return Response.success("获取帖子列表成功", paginationResponse);
         }
-        return Response.success("获取帖子列表成功", posts);
     }
 
     @GetMapping("/category/{categoryId}")
@@ -120,6 +131,52 @@ public class PostController {
     public Response<List<Post>> getPostsByAuthorId(@PathVariable Long authorId) {
         List<Post> posts = postService.getPostsByAuthorId(authorId);
         return Response.success("获取作者帖子成功", posts);
+    }
+
+    // 带分页的作者帖子查询
+    @GetMapping("/author/{authorId}/page")
+    public Response<PaginationResponse<Post>> getPostsByAuthorIdWithPagination(
+            @PathVariable Long authorId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Post> posts = postService.getPostsByAuthorIdWithPagination(authorId, page, pageSize);
+        return Response.success("获取作者帖子成功", posts);
+    }
+
+    @GetMapping("/liked/{userId}/page")
+    public Response<PaginationResponse<Post>> getPostsLikedByUserWithPagination(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Post> posts = postService.getPostsLikedByUserWithPagination(userId, page, pageSize);
+        return Response.success("获取用户点赞帖子成功", posts);
+    }
+
+    @GetMapping("/favorited/{userId}/page")
+    public Response<PaginationResponse<Post>> getPostsFavoritedByUserWithPagination(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Post> posts = postService.getPostsFavoritedByUserWithPagination(userId, page, pageSize);
+        return Response.success("获取用户收藏帖子成功", posts);
+    }
+
+    @GetMapping("/deleted/{authorId}/page")
+    public Response<PaginationResponse<Post>> getDeletedPostsByAuthorWithPagination(
+            @PathVariable Long authorId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 权限检查：只有管理员或用户本人可以查看被删除的帖子
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByUsername(auth.getName());
+        if (currentUser == null) {
+            return Response.error("未登录");
+        }
+        if (currentUser.getRole() != 1 && !currentUser.getId().equals(authorId)) {
+            return Response.error("无权查看他人的被删除帖子");
+        }
+        PaginationResponse<Post> posts = postService.getDeletedPostsByAuthorIdWithPagination(authorId, page, pageSize);
+        return Response.success("获取被删除帖子成功", posts);
     }
 
     @PostMapping("/lock/{id}")

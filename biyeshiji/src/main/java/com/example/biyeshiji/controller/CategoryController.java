@@ -95,4 +95,16 @@ public class CategoryController {
         List<Category> categories = categoryService.searchCategories(name, type, isActive);
         return Response.success("搜索分类成功", categories);
     }
+    
+    @GetMapping("/search/page")
+    public Response<com.example.biyeshiji.common.PaginationResponse<Category>> searchCategoriesWithPagination(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer type,
+            @RequestParam(required = false) Integer isActive,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        com.example.biyeshiji.common.PaginationResponse<Category> paginationResponse = 
+            categoryService.searchCategoriesWithPagination(name, type, isActive, page, pageSize);
+        return Response.success("搜索分类成功", paginationResponse);
+    }
 }

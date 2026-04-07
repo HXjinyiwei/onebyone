@@ -36,6 +36,7 @@ public class Category {
     // 多对多反向映射
     @ManyToMany(mappedBy = "categories")
     @JsonIgnoreProperties({"categories", "hibernateLazyInitializer", "handler"})
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @EqualsAndHashCode.Exclude
     private Set<Novel> novels = new HashSet<>();
 

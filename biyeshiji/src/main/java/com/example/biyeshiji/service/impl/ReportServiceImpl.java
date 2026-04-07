@@ -1,11 +1,15 @@
 package com.example.biyeshiji.service.impl;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.entity.Report;
 import com.example.biyeshiji.entity.User;
 import com.example.biyeshiji.repository.ReportRepository;
 import com.example.biyeshiji.repository.UserRepository;
 import com.example.biyeshiji.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -66,6 +70,32 @@ public class ReportServiceImpl implements ReportService {
             // 返回所有举报
             return reportRepository.findAll();
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Report> getReportsWithPagination(String targetType, Integer status, Integer page, Integer pageSize) {
+        // 处理空值
+        if (page == null || page < 1) page = 1;
+        if (pageSize == null || pageSize < 1) pageSize = 10;
+        
+        // 创建分页请求
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+        
+        // 调用分页查询方法
+        Page<Report> reportPage = reportRepository.findByTargetTypeAndStatusWithPagination(
+            targetType != null && !targetType.isEmpty() ? targetType : null,
+            status,
+            pageable
+        );
+        
+        // 构建分页响应
+        return PaginationResponse.of(
+            reportPage.getContent(),
+            page,
+            pageSize,
+            reportPage.getTotalElements()
+        );
     }
 
     @Override

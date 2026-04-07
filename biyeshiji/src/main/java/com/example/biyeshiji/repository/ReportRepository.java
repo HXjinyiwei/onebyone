@@ -1,6 +1,8 @@
 package com.example.biyeshiji.repository;
 
 import com.example.biyeshiji.entity.Report;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,4 +23,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     // 根据类型筛选（不区分大小写）
     @Query("SELECT r FROM Report r WHERE LOWER(r.targetType) = LOWER(:targetType)")
     List<Report> findByTargetTypeIgnoreCase(@Param("targetType") String targetType);
+    
+    // 分页查询：根据类型和状态筛选（不区分大小写）
+    @Query("SELECT r FROM Report r WHERE (:targetType IS NULL OR LOWER(r.targetType) = LOWER(:targetType)) AND (:status IS NULL OR r.status = :status) ORDER BY r.createTime DESC")
+    Page<Report> findByTargetTypeAndStatusWithPagination(@Param("targetType") String targetType, @Param("status") Integer status, Pageable pageable);
 }

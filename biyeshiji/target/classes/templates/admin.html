@@ -206,7 +206,7 @@
             <div id="user-list-page" class="admin-page" style="display: none;">
                 <h2>用户列表</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadUsers()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadUsers(null, 1, 10)">刷新</button>
                     <button class="layui-btn layui-btn-primary" onclick="showAddUserModal()">添加用户</button>
                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>搜索：</label>
@@ -218,7 +218,6 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>用户名</th>
                             <th>昵称</th>
                             <th>角色</th>
@@ -227,16 +226,18 @@
                         </tr>
                     </thead>
                     <tbody id="user-list-body">
-                        <tr><td colspan="6">加载中...</td></tr>
+                        <tr><td colspan="5">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="user-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
             
             <!-- 分类管理页面 -->
             <div id="content-categories-page" class="admin-page" style="display: none;">
                 <h2>分类管理</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadCategories()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadCategories(null, null, null, 1, 10)">刷新</button>
                     <button class="layui-btn layui-btn-primary" onclick="showAddCategoryModal()">添加分类</button>
                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>类型筛选：</label>
@@ -261,10 +262,9 @@
                         <button class="layui-btn layui-btn-sm layui-btn-primary" onclick="clearCategorySearch()">清空</button>
                     </div>
                 </div>
-                <table class="admin-table">
+                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>分类名称</th>
                             <th>描述</th>
                             <th>类型</th>
@@ -273,9 +273,11 @@
                         </tr>
                     </thead>
                     <tbody id="category-list-body">
-                        <tr><td colspan="6">加载中...</td></tr>
+                        <tr><td colspan="5">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="category-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
             
             <!-- 角色权限页面 -->
@@ -287,7 +289,6 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>ID</th>
                             <th>用户名</th>
                             <th>昵称</th>
                             <th>当前角色</th>
@@ -296,7 +297,7 @@
                         </tr>
                     </thead>
                     <tbody id="user-roles-body">
-                        <tr><td colspan="6">加载中...</td></tr>
+                        <tr><td colspan="5">加载中...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -304,11 +305,11 @@
             <!-- 解封请求页面 -->
             <div id="unban-requests-page" class="admin-page" style="display: none;">
                 <h2>解封请求</h2>
-                <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadUnbanRequests()">刷新</button>
-                    <div class="layui-inline" style="margin-left: 20px;">
+                 <div style="margin-bottom: 20px;">
+                    <button class="layui-btn layui-btn-normal" onclick="loadUnbanRequests($('#unban-status-filter').val(), 1, 10)">刷新</button>
+                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>状态筛选：</label>
-                        <select id="unban-status-filter" onchange="loadUnbanRequests()">
+                        <select id="unban-status-filter" onchange="loadUnbanRequests(this.value, 1, 10)">
                             <option value="">全部</option>
                             <option value="0">待处理</option>
                             <option value="1">已通过</option>
@@ -317,7 +318,7 @@
                         </select>
                     </div>
                 </div>
-                <table class="admin-table">
+                 <table class="admin-table">
                     <thead>
                         <tr>
                             <th>用户名</th>
@@ -331,16 +332,18 @@
                         <tr><td colspan="5">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="unban-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
 
             <!-- 举报管理页面 -->
             <div id="report-management-page" class="admin-page" style="display: none;">
                 <h2>举报管理</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadReports()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadReports($('#report-type-filter').val(), $('#report-status-filter').val(), 1, 10)">刷新</button>
                     <div class="layui-inline">
                         <label>类型筛选：</label>
-                        <select id="report-type-filter" onchange="loadReports()">
+                        <select id="report-type-filter" onchange="loadReports(this.value, $('#report-status-filter').val(), 1, 10)">
                             <option value="">全部</option>
                             <option value="POST">帖子</option>
                             <option value="NOVEL">小说</option>
@@ -351,7 +354,7 @@
                     </div>
                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>状态筛选：</label>
-                        <select id="report-status-filter" onchange="loadReports()">
+                        <select id="report-status-filter" onchange="loadReports($('#report-type-filter').val(), this.value, 1, 10)">
                             <option value="">全部</option>
                             <option value="0">待处理</option>
                             <option value="1">已处理</option>
@@ -375,6 +378,8 @@
                         <tr><td colspan="7">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="report-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
 
 
@@ -382,16 +387,16 @@
             <div id="content-posts-page" class="admin-page" style="display: none;">
                 <h2>帖子管理</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadContentPosts()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentPosts(null, 1, 10)">刷新</button>
                     <div class="layui-inline">
                         <label>分类筛选：</label>
-                        <select id="post-category-filter" onchange="loadContentPosts()">
+                        <select id="post-category-filter" onchange="loadContentPosts(null, 1, 10)">
                             <option value="">全部</option>
                         </select>
                     </div>
                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>状态筛选：</label>
-                        <select id="post-status-filter" onchange="loadContentPosts()">
+                        <select id="post-status-filter" onchange="loadContentPosts(null, 1, 10)">
                             <option value="">全部</option>
                             <option value="0">正常</option>
                             <option value="1">审核中</option>
@@ -420,16 +425,18 @@
                         <tr><td colspan="7">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="post-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
             
             <!-- 小说管理页面 -->
             <div id="content-novels-page" class="admin-page" style="display: none;">
                 <h2>小说管理</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadContentNovels()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentNovels(null, 1, 10)">刷新</button>
                     <div class="layui-inline" style="margin-left: 20px;">
                         <label>状态筛选：</label>
-                        <select id="novel-status-filter" onchange="loadContentNovels()">
+                        <select id="novel-status-filter" onchange="loadContentNovels(null, 1, 10)">
                             <option value="">全部</option>
                             <option value="0">待审核</option>
                             <option value="1">审核通过</option>
@@ -459,16 +466,18 @@
                         <tr><td colspan="6">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="novel-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
             
             <!-- 章节管理页面 -->
             <div id="content-chapters-page" class="admin-page" style="display: none;">
                 <h2>章节管理</h2>
                 <div style="margin-bottom: 20px;">
-                    <button class="layui-btn layui-btn-normal" onclick="loadContentChapters()">刷新</button>
+                    <button class="layui-btn layui-btn-normal" onclick="loadContentChapters(null, 1, 10)">刷新</button>
                     <div class="layui-inline">
                         <label>状态筛选：</label>
-                        <select id="chapter-status-filter" onchange="loadContentChapters()">
+                        <select id="chapter-status-filter" onchange="loadContentChapters(null, 1, 10)">
                             <option value="">全部</option>
                             <option value="0">待审核</option>
                             <option value="1">审核通过</option>
@@ -497,6 +506,8 @@
                         <tr><td colspan="5">加载中...</td></tr>
                     </tbody>
                 </table>
+                <!-- 分页容器 -->
+                <div id="chapter-pagination-container" class="pagination-container" style="margin-top: 20px; text-align: center;"></div>
             </div>
             
             <!-- 其他页面占位 -->
@@ -509,6 +520,8 @@
 
     <!-- 引入layui JS -->
     <script src="/layui/layui.js"></script>
+    <!-- 引入分页工具库 -->
+    <script src="/js/pagination-utils.js"></script>
     <script>
         layui.use(['layer', 'element', 'form', 'jquery'], function() {
             var layer = layui.layer;
@@ -590,29 +603,29 @@
                             loadPendingChapters();
                             break;
                         case 'user-list':
-                            loadUsers();
+                            loadUsers(null, 1, 10);
                             break;
                         case 'user-roles':
                             loadUserRoles();
                             break;
                         case 'content-categories':
-                            loadCategories();
+                            loadCategories(null, null, null, 1, 10);
                             break;
                         case 'unban-requests':
-                            loadUnbanRequests();
+                            loadUnbanRequests('', 1, 10);
                             break;
                         case 'report-management':
-                            loadReports();
+                            loadReports('', '', 1, 10);
                             break;
                         case 'content-posts':
                             loadContentPosts();
                             loadPostCategories();
                             break;
                         case 'content-novels':
-                            loadContentNovels();
+                            loadContentNovels(null, 1, 10);
                             break;
                         case 'content-chapters':
-                            loadContentChapters();
+                            loadContentChapters(null, 1, 10);
                             break;
                         default:
                             // 其他页面暂不加载
@@ -723,17 +736,30 @@
 
             }
             
-            // 加载解封请求
-            function loadUnbanRequests() {
-                var status = $('#unban-status-filter').val();
+            // 加载解封请求（分页版）
+            function loadUnbanRequests(status, page, pageSize) {
+                var params = {
+                    page: page || 1,
+                    pageSize: pageSize || 10
+                };
+                if (status !== undefined && status !== null && status !== '') {
+                    params.status = status;
+                }
                 $.ajax({
-                    url: '/admin/unban-requests/list',
+                    url: '/admin/unban-requests/list/page',
                     type: 'GET',
-                    data: { status: status },
+                    data: params,
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderUnbanRequests(res.data, '#unban-requests-body');
+                            // 渲染解封请求列表
+                            renderUnbanRequests(res.data.data, '#unban-requests-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'unban-pagination-container', function(newPage, newPageSize) {
+                                    loadUnbanRequests(status, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取解封请求失败', {icon: 2});
                         }
@@ -790,8 +816,8 @@
                         data: { requestId: requestId, action: action },
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('处理成功', {icon: 1});
-                                loadUnbanRequests();
+                                 layer.msg('处理成功', {icon: 1});
+                                 loadUnbanRequests($('#unban-status-filter').val(), 1, 10);
                             } else {
                                 layer.msg('处理失败: ' + res.message, {icon: 2});
                             }
@@ -804,18 +830,36 @@
                 });
             };
 
-            // 加载举报列表
-            function loadReports() {
-                var type = $('#report-type-filter').val();
-                var status = $('#report-status-filter').val();
+            // 加载举报列表（分页版）
+            function loadReports(type, status, page, pageSize) {
+                // 如果参数为空，从DOM获取
+                if (type === undefined) type = $('#report-type-filter').val();
+                if (status === undefined) status = $('#report-status-filter').val();
+                if (page === undefined || page < 1) page = 1;
+                if (pageSize === undefined || pageSize < 1) pageSize = 10;
+                
+                var params = {
+                    type: type,
+                    status: status,
+                    page: page,
+                    pageSize: pageSize
+                };
+                
                 $.ajax({
-                    url: '/admin/reports/list',
+                    url: '/admin/reports/list/page',
                     type: 'GET',
-                    data: { type: type, status: status },
+                    data: params,
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderReports(res.data, '#report-management-body');
+                            // 渲染举报列表
+                            renderReports(res.data.data, '#report-management-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'report-pagination-container', function(newPage, newPageSize) {
+                                    loadReports(type, status, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取举报列表失败', {icon: 2});
                         }
@@ -925,7 +969,10 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('处理成功', {icon: 1});
-                                loadReports();
+                                // 重新加载当前页的举报列表
+                                var type = $('#report-type-filter').val();
+                                var status = $('#report-status-filter').val();
+                                loadReports(type, status, 1, 10); // 处理成功后回到第一页
                             } else {
                                 layer.msg('处理失败: ' + res.message, {icon: 2});
                             }
@@ -967,6 +1014,7 @@
                             if (res.code === 200) {
                                 layer.msg('内容封禁成功', {icon: 1});
                                 // 同时标记举报为已处理，并传递封禁结果
+                                // 注意：这里我们直接调用processReport，它会处理刷新
                                 processReport(reportId, 'RESOLVED', '已封禁内容');
                             } else {
                                 layer.msg('封禁失败: ' + res.message, {icon: 2});
@@ -1125,20 +1173,30 @@
                 $(container).html(html);
             }
             
-            // 加载用户列表
-            function loadUsers(searchKeyword) {
-                var params = {};
+            // 加载用户列表（分页版）
+            function loadUsers(searchKeyword, page, pageSize) {
+                var params = {
+                    page: page || 1,
+                    pageSize: pageSize || 10
+                };
                 if (searchKeyword && searchKeyword.trim() !== '') {
                     params.search = searchKeyword.trim();
                 }
                 $.ajax({
-                    url: '/user/all',
+                    url: '/user/all/page',
                     type: 'GET',
                     data: params,
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderUsers(res.data, '#user-list-body');
+                            // 渲染用户列表
+                            renderUsers(res.data.data, '#user-list-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'user-pagination-container', function(newPage, newPageSize) {
+                                    loadUsers(searchKeyword, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取用户列表失败', {icon: 2});
                         }
@@ -1152,20 +1210,20 @@
             // 搜索用户
             window.searchUsers = function() {
                 var keyword = $('#user-search-input').val();
-                loadUsers(keyword);
+                loadUsers(keyword, 1, 10); // 搜索时重置到第一页
             };
             
             // 清空搜索
             window.clearSearch = function() {
                 $('#user-search-input').val('');
-                loadUsers();
+                loadUsers(null, 1, 10);
             };
             
             // 渲染用户列表
             function renderUsers(users, container) {
                 var html = '';
                 if (users.length === 0) {
-                    html = '<tr><td colspan="6">暂无用户</td></tr>';
+                    html = '<tr><td colspan="5">暂无用户</td></tr>';
                 } else {
                     users.forEach(function(user) {
                         var roleText = '普通用户';
@@ -1206,7 +1264,6 @@
                         
                         html += `
                             <tr>
-                                <td>${user.id}</td>
                                 <td>${user.username}</td>
                                 <td>${user.nickname}</td>
                                 <td>${roleText}</td>
@@ -1242,7 +1299,7 @@
             function renderUserRoles(users, container) {
                 var html = '';
                 if (users.length === 0) {
-                    html = '<tr><td colspan="6">暂无用户</td></tr>';
+                    html = '<tr><td colspan="5">暂无用户</td></tr>';
                 } else {
                     users.forEach(function(user) {
                         var roleText = '普通用户';
@@ -1260,7 +1317,6 @@
                         }
                         html += `
                             <tr>
-                                <td>${user.id}</td>
                                 <td>${user.username}</td>
                                 <td>${user.nickname}</td>
                                 <td>${roleText}</td>
@@ -1273,15 +1329,36 @@
                 $(container).html(html);
             }
             
-            // 加载分类列表
-            function loadCategories() {
+            // 加载分类列表（分页版）
+            function loadCategories(name, type, isActive, page, pageSize) {
+                var params = {
+                    page: page || 1,
+                    pageSize: pageSize || 10
+                };
+                if (name && name.trim() !== '') {
+                    params.name = name.trim();
+                }
+                if (type !== undefined && type !== null && type !== '') {
+                    params.type = type;
+                }
+                if (isActive !== undefined && isActive !== null && isActive !== '') {
+                    params.isActive = isActive;
+                }
                 $.ajax({
-                    url: '/category/list',
+                    url: '/category/search/page',
                     type: 'GET',
+                    data: params,
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderCategories(res.data, '#category-list-body');
+                            // 渲染分类列表
+                            renderCategories(res.data.data, '#category-list-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'category-pagination-container', function(newPage, newPageSize) {
+                                    loadCategories(name, type, isActive, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取分类列表失败', {icon: 2});
                         }
@@ -1298,34 +1375,8 @@
                 var type = $('#category-type-filter').val();
                 var isActive = $('#category-status-filter').val();
                 
-                // 构建查询参数
-                var params = {};
-                if (name && name.trim() !== '') {
-                    params.name = name.trim();
-                }
-                if (type !== '') {
-                    params.type = parseInt(type);
-                }
-                if (isActive !== '') {
-                    params.isActive = parseInt(isActive);
-                }
-                
-                $.ajax({
-                    url: '/category/search',
-                    type: 'GET',
-                    data: params,
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.code === 200) {
-                            renderCategories(res.data, '#category-list-body');
-                        } else {
-                            layer.msg('搜索分类失败', {icon: 2});
-                        }
-                    },
-                    error: function() {
-                        layer.msg('服务器错误', {icon: 2});
-                    }
-                });
+                // 调用分页版本，重置到第一页
+                loadCategories(name, type, isActive, 1, 10);
             };
             
             // 清空分类搜索
@@ -1333,28 +1384,28 @@
                 $('#category-search-input').val('');
                 $('#category-type-filter').val('');
                 $('#category-status-filter').val('');
-                loadCategories();
+                loadCategories(null, null, null, 1, 10);
             };
             
             // 渲染分类列表
             function renderCategories(categories, container) {
                 var html = '';
                 if (categories.length === 0) {
-                    html = '<tr><td colspan="6">暂无分类</td></tr>';
+                    html = '<tr><td colspan="5">暂无分类</td></tr>';
                 } else {
                     categories.forEach(function(category) {
                         var statusText = category.isActive === 1 ? '启用' : '禁用';
                         var typeText = category.type === 0 ? '帖子分类' : '小说分类';
+                        // 如果分类被禁用，整行显示为灰色
+                        var rowClass = category.isActive === 1 ? '' : 'style="background-color: #f5f5f5; color: #999;"';
                         html += `
-                            <tr>
-                                <td>${category.id}</td>
+                            <tr ${rowClass}>
                                 <td>${category.name}</td>
                                 <td>${category.description || ''}</td>
                                 <td>${typeText}</td>
                                 <td>${statusText}</td>
                                 <td>
                                     <button class="layui-btn layui-btn-xs layui-btn-normal" onclick="editCategory(${category.id})">编辑</button>
-                                    <button class="layui-btn layui-btn-xs layui-btn-danger" onclick="deleteCategory(${category.id})">删除</button>
                                 </td>
                             </tr>
                         `;
@@ -1435,8 +1486,8 @@
                     data: JSON.stringify(formData),
                     success: function(res) {
                         if (res.code === 200) {
-                            layer.msg('分类添加成功', {icon: 1});
-                            loadCategories();
+                             layer.msg('分类添加成功', {icon: 1});
+                             loadCategories(null, null, null, 1, 10);
                         } else {
                             layer.msg('添加失败: ' + res.message, {icon: 2});
                         }
@@ -1536,8 +1587,8 @@
                     data: JSON.stringify(formData),
                     success: function(res) {
                         if (res.code === 200) {
-                            layer.msg('分类更新成功', {icon: 1});
-                            loadCategories();
+                             layer.msg('分类更新成功', {icon: 1});
+                             loadCategories(null, null, null, 1, 10);
                         } else {
                             layer.msg('更新失败: ' + res.message, {icon: 2});
                         }
@@ -1559,8 +1610,8 @@
                         type: 'POST',
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('分类删除成功', {icon: 1});
-                                loadCategories(); // 刷新分类列表
+                                 layer.msg('分类删除成功', {icon: 1});
+                                 loadCategories(null, null, null, 1, 10); // 刷新分类列表
                             } else {
                                 layer.msg('删除失败: ' + res.message, {icon: 2});
                             }
@@ -1854,8 +1905,8 @@
                         data: { userId: userId },
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('用户删除成功', {icon: 1});
-                                loadUsers(); // 刷新用户列表
+                                 layer.msg('用户删除成功', {icon: 1});
+                                 loadUsers(null, 1, 10); // 刷新用户列表
                             } else {
                                 layer.msg('删除失败: ' + res.message, {icon: 2});
                             }
@@ -1944,8 +1995,8 @@
                     data: { userId: userId, duration: duration },
                     success: function(res) {
                         if (res.code === 200) {
-                            layer.msg('操作成功', {icon: 1});
-                            loadUsers(); // 刷新用户列表
+                             layer.msg('操作成功', {icon: 1});
+                             loadUsers(null, 1, 10); // 刷新用户列表
                         } else {
                             layer.msg('操作失败: ' + res.message, {icon: 2});
                         }
@@ -1972,8 +2023,8 @@
                         type: 'POST',
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('用户已提升为管理员', {icon: 1});
-                                loadUsers(); // 刷新用户列表
+                                 layer.msg('用户已提升为管理员', {icon: 1});
+                                 loadUsers(null, 1, 10); // 刷新用户列表
                             } else {
                                 layer.msg('提升失败: ' + res.message, {icon: 2});
                             }
@@ -1997,8 +2048,8 @@
                         type: 'POST',
                         success: function(res) {
                             if (res.code === 200) {
-                                layer.msg('用户已降级为普通用户', {icon: 1});
-                                loadUsers(); // 刷新用户列表
+                                 layer.msg('用户已降级为普通用户', {icon: 1});
+                                 loadUsers(null, 1, 10); // 刷新用户列表
                             } else {
                                 layer.msg('降级失败: ' + res.message, {icon: 2});
                             }
@@ -2051,11 +2102,15 @@
                 });
             }
 
-            // 加载帖子管理数据
-            function loadContentPosts(searchKeyword) {
+            // 加载帖子管理数据（分页版）
+            function loadContentPosts(searchKeyword, page, pageSize) {
                 var status = $('#post-status-filter').val();
                 var categoryId = $('#post-category-filter').val();
-                var params = { status: status };
+                var params = {
+                    status: status,
+                    page: page || 1,
+                    pageSize: pageSize || 10
+                };
                 if (categoryId && categoryId !== '') {
                     params.categoryId = categoryId;
                 }
@@ -2069,7 +2124,15 @@
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderContentPosts(res.data, '#content-posts-body');
+                            // 现在res.data是PaginationResponse对象，需要从res.data.data获取帖子列表
+                            var posts = res.data.data || res.data; // 兼容处理：如果data属性不存在，则使用res.data本身
+                            renderContentPosts(posts, '#content-posts-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'post-pagination-container', function(newPage, newPageSize) {
+                                    loadContentPosts(searchKeyword, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取帖子列表失败', {icon: 2});
                         }
@@ -2084,13 +2147,13 @@
             // 搜索帖子
             window.searchPosts = function() {
                 var keyword = $('#post-search-input').val();
-                loadContentPosts(keyword);
+                loadContentPosts(keyword, 1, 10); // 搜索时重置到第一页
             };
             
             // 清空帖子搜索
             window.clearPostSearch = function() {
                 $('#post-search-input').val('');
-                loadContentPosts();
+                loadContentPosts(null, 1, 10);
             };
             
             // 渲染帖子管理列表
@@ -2147,12 +2210,16 @@
             }
             
 
-            // 加载小说管理数据
-            function loadContentNovels(searchKeyword) {
-                console.log('loadContentNovels called with searchKeyword:', searchKeyword);
+            // 加载小说管理数据（分页版）
+            function loadContentNovels(searchKeyword, page, pageSize) {
+                console.log('loadContentNovels called with searchKeyword:', searchKeyword, 'page:', page, 'pageSize:', pageSize);
                 var status = $('#novel-status-filter').val();
                 console.log('Status filter:', status);
-                var params = { status: status };
+                var params = { 
+                    status: status,
+                    page: page || 1,
+                    pageSize: pageSize || 10
+                };
                 if (searchKeyword && searchKeyword.trim() !== '') {
                     params.keyword = searchKeyword.trim();
                 }
@@ -2165,8 +2232,16 @@
                     success: function(res) {
                         console.log('AJAX success, response:', res);
                         if (res.code === 200) {
-                            console.log('Rendering novels, count:', res.data.length);
-                            renderContentNovels(res.data, '#content-novels-body');
+                            // 现在res.data是PaginationResponse对象，需要从res.data.data获取小说列表
+                            var novels = res.data.data || res.data; // 兼容处理：如果data属性不存在，则使用res.data本身
+                            console.log('Rendering novels, count:', novels ? novels.length : 0);
+                            renderContentNovels(novels, '#content-novels-body');
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(res.data, 'novel-pagination-container', function(newPage, newPageSize) {
+                                    loadContentNovels(searchKeyword, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             console.error('Failed to get novels:', res.message);
                             layer.msg('获取小说列表失败', {icon: 2});
@@ -2184,13 +2259,13 @@
                 console.log('searchNovels called');
                 var keyword = $('#novel-search-input').val();
                 console.log('Search keyword:', keyword);
-                loadContentNovels(keyword);
+                loadContentNovels(keyword, 1, 10); // 搜索时重置到第一页
             };
             
             // 清空小说搜索
             window.clearNovelSearch = function() {
                 $('#novel-search-input').val('');
-                loadContentNovels();
+                loadContentNovels(null, 1, 10);
             };
             
             // 渲染小说管理列表
@@ -2258,8 +2333,8 @@
                 $(container).html(html);
             }
             
-            // 加载章节管理数据
-            function loadContentChapters(searchKeyword) {
+            // 加载章节管理数据（客户端分页版）
+            function loadContentChapters(searchKeyword, page, pageSize) {
                 var status = $('#chapter-status-filter').val();
                 var params = { status: status };
                 if (searchKeyword && searchKeyword.trim() !== '') {
@@ -2272,7 +2347,33 @@
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderContentChapters(res.data, '#content-chapters-body');
+                            var allChapters = res.data || [];
+                            var currentPage = page || 1;
+                            var currentPageSize = pageSize || 10;
+                            
+                            // 客户端分页逻辑
+                            var startIndex = (currentPage - 1) * currentPageSize;
+                            var endIndex = startIndex + currentPageSize;
+                            var paginatedChapters = allChapters.slice(startIndex, endIndex);
+                            
+                            // 渲染当前页的章节
+                            renderContentChapters(paginatedChapters, '#content-chapters-body');
+                            
+                            // 创建分页响应对象（模拟后端分页响应）
+                            var paginationResponse = {
+                                data: paginatedChapters,
+                                page: currentPage,
+                                pageSize: currentPageSize,
+                                total: allChapters.length,
+                                totalPages: Math.ceil(allChapters.length / currentPageSize)
+                            };
+                            
+                            // 渲染分页
+                            if (window.paginationUtils) {
+                                paginationUtils.updatePagination(paginationResponse, 'chapter-pagination-container', function(newPage, newPageSize) {
+                                    loadContentChapters(searchKeyword, newPage, newPageSize);
+                                });
+                            }
                         } else {
                             layer.msg('获取章节列表失败', {icon: 2});
                         }
@@ -2286,13 +2387,13 @@
             // 搜索章节
             window.searchChapters = function() {
                 var keyword = $('#chapter-search-input').val();
-                loadContentChapters(keyword);
+                loadContentChapters(keyword, 1, 10); // 搜索时重置到第一页
             };
             
             // 清空章节搜索
             window.clearChapterSearch = function() {
                 $('#chapter-search-input').val('');
-                loadContentChapters();
+                loadContentChapters(null, 1, 10);
             };
             
             // 渲染章节管理列表
@@ -2353,7 +2454,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('帖子封禁成功', {icon: 1});
-                                loadContentPosts();
+                                loadContentPosts(null, 1, 10);
                             } else {
                                 layer.msg('封禁失败: ' + res.message, {icon: 2});
                             }
@@ -2378,7 +2479,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('帖子解禁成功', {icon: 1});
-                                loadContentPosts();
+                                loadContentPosts(null, 1, 10);
                             } else {
                                 layer.msg('解禁失败: ' + res.message, {icon: 2});
                             }
@@ -2404,7 +2505,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('小说封禁成功', {icon: 1});
-                                loadContentNovels();
+                                loadContentNovels(null, 1, 10);
                             } else {
                                 layer.msg('封禁失败: ' + res.message, {icon: 2});
                             }
@@ -2429,7 +2530,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('小说解禁成功', {icon: 1});
-                                loadContentNovels();
+                                loadContentNovels(null, 1, 10);
                             } else {
                                 layer.msg('解禁失败: ' + res.message, {icon: 2});
                             }
@@ -2455,7 +2556,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('章节封禁成功', {icon: 1});
-                                loadContentChapters();
+                                loadContentChapters(null, 1, 10);
                             } else {
                                 layer.msg('封禁失败: ' + res.message, {icon: 2});
                             }
@@ -2480,7 +2581,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('章节解禁成功', {icon: 1});
-                                loadContentChapters();
+                                loadContentChapters(null, 1, 10);
                             } else {
                                 layer.msg('解禁失败: ' + res.message, {icon: 2});
                             }
@@ -2505,7 +2606,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('帖子删除成功', {icon: 1});
-                                loadContentPosts();
+                                loadContentPosts(null, 1, 10);
                             } else {
                                 layer.msg('删除失败: ' + res.message, {icon: 2});
                             }
@@ -2530,7 +2631,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('小说删除成功', {icon: 1});
-                                loadContentNovels();
+                                loadContentNovels(null, 1, 10);
                             } else {
                                 layer.msg('删除失败: ' + res.message, {icon: 2});
                             }
@@ -2555,7 +2656,7 @@
                         success: function(res) {
                             if (res.code === 200) {
                                 layer.msg('章节删除成功', {icon: 1});
-                                loadContentChapters();
+                                loadContentChapters(null, 1, 10);
                             } else {
                                 layer.msg('删除失败: ' + res.message, {icon: 2});
                             }

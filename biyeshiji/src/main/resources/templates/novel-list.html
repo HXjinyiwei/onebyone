@@ -202,15 +202,8 @@
                     
                     <!-- 分页 -->
                     <div class="pagination">
-                        <div class="layui-box layui-laypage layui-laypage-default">
-                            <a href="javascript:;" class="layui-laypage-first" onclick="changePage(1)">首页</a>
-                            <a href="javascript:;" class="layui-laypage-prev" onclick="changePage(currentPage - 1)">上一页</a>
-                            <span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em id="currentPage">1</em></span>
-                            <a href="javascript:;" onclick="changePage(2)">2</a>
-                            <a href="javascript:;" onclick="changePage(3)">3</a>
-                            <a href="javascript:;" class="layui-laypage-next" onclick="changePage(currentPage + 1)">下一页</a>
-                            <a href="javascript:;" class="layui-laypage-last" onclick="changePage(totalPage)">尾页</a>
-                            <span class="layui-laypage-count">共 <span id="totalPage">1</span> 页</span>
+                        <div class="layui-box layui-laypage layui-laypage-default" id="paginationContainer">
+                            <!-- 分页将通过JavaScript动态生成 -->
                         </div>
                     </div>
                 </div>
@@ -387,13 +380,25 @@
                     success: function(res) {
                         if (res.code === 200 && res.data) {
                             // 处理分页响应数据
-                            var novels = res.data.data || res.data; // 兼容旧格式
                             var paginationData = res.data;
+                            var novels = paginationData.data || paginationData; // 兼容旧格式
+                            
+                            // 确保novels是数组
+                            if (!Array.isArray(novels)) {
+                                novels = [];
+                            }
+                            
                             renderNovelList(novels);
+                            
                             // 更新分页信息
                             if (paginationData.currentPage !== undefined) {
                                 currentPage = paginationData.currentPage;
                                 totalPage = paginationData.totalPages || 1;
+                                updatePagination();
+                            } else {
+                                // 如果没有分页信息，假设只有一页
+                                currentPage = 1;
+                                totalPage = 1;
                                 updatePagination();
                             }
                         } else {
@@ -433,6 +438,10 @@
                     success: function(res) {
                         if (res.code === 200 && res.data) {
                             renderNovelList(res.data);
+                            // 搜索结果是列表，不是分页响应，所以重置分页
+                            currentPage = 1;
+                            totalPage = 1;
+                            updatePagination();
                             layer.msg('搜索完成，找到 ' + res.data.length + ' 条结果', {icon: 1});
                         } else {
                             layer.msg('搜索失败：' + (res.message || '未知错误'), {icon: 2});
@@ -545,11 +554,80 @@
                        date.getMinutes().toString().padStart(2, '0');
             }
             
-            // 更新分页
+            // 更新分页 - 动态生成分页按钮
             function updatePagination() {
-                // 这里应该根据总页数更新分页UI，但暂时简单处理
-                $('#currentPage').text(currentPage);
-                $('#totalPage').text(totalPage);
+                var $container = $('#paginationContainer');
+                $container.empty();
+                
+                if (totalPage <= 1) {
+                    // 只有一页，不显示分页
+                    return;
+                }
+                
+                // 首页按钮
+                var firstBtn = $('<a href="javascript:;" class="layui-laypage-first">首页</a>');
+                if (currentPage === 1) {
+                    firstBtn.addClass('layui-disabled');
+                } else {
+                    firstBtn.on('click', function() { changePage(1); });
+                }
+                $container.append(firstBtn);
+                
+                // 上一页按钮
+                var prevBtn = $('<a href="javascript:;" class="layui-laypage-prev">上一页</a>');
+                if (currentPage === 1) {
+                    prevBtn.addClass('layui-disabled');
+                } else {
+                    prevBtn.on('click', function() { changePage(currentPage - 1); });
+                }
+                $container.append(prevBtn);
+                
+                // 计算页码范围
+                var startPage = Math.max(1, currentPage - 2);
+                var endPage = Math.min(totalPage, startPage + 4);
+                
+                // 调整起始页码，确保显示5个页码（如果可能）
+                if (endPage - startPage < 4 && startPage > 1) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+                
+                // 生成页码按钮
+                for (var i = startPage; i <= endPage; i++) {
+                    if (i === currentPage) {
+                        // 当前页
+                        var currentSpan = $('<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>' + i + '</em></span>');
+                        $container.append(currentSpan);
+                    } else {
+                        // 其他页码
+                        var pageBtn = $('<a href="javascript:;">' + i + '</a>');
+                        pageBtn.on('click', (function(page) {
+                            return function() { changePage(page); };
+                        })(i));
+                        $container.append(pageBtn);
+                    }
+                }
+                
+                // 下一页按钮
+                var nextBtn = $('<a href="javascript:;" class="layui-laypage-next">下一页</a>');
+                if (currentPage === totalPage) {
+                    nextBtn.addClass('layui-disabled');
+                } else {
+                    nextBtn.on('click', function() { changePage(currentPage + 1); });
+                }
+                $container.append(nextBtn);
+                
+                // 尾页按钮
+                var lastBtn = $('<a href="javascript:;" class="layui-laypage-last">尾页</a>');
+                if (currentPage === totalPage) {
+                    lastBtn.addClass('layui-disabled');
+                } else {
+                    lastBtn.on('click', function() { changePage(totalPage); });
+                }
+                $container.append(lastBtn);
+                
+                // 总页数信息
+                var countSpan = $('<span class="layui-laypage-count">共 <span>' + totalPage + '</span> 页</span>');
+                $container.append(countSpan);
             }
             
             // 切换页面

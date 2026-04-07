@@ -133,4 +133,39 @@ public class CategoryServiceImpl implements CategoryService {
                 })
                 .toList();
     }
+    
+    @Override
+    public com.example.biyeshiji.common.PaginationResponse<Category> searchCategoriesWithPagination(
+            String name, Integer type, Integer isActive, Integer page, Integer pageSize) {
+        
+        // 获取所有符合条件的分类
+        List<Category> allCategories = searchCategories(name, type, isActive);
+        long totalRecords = allCategories.size();
+        
+        // 设置默认值
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算分页
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, allCategories.size());
+        
+        // 如果起始索引超出范围，返回空列表
+        if (startIndex >= allCategories.size()) {
+            return com.example.biyeshiji.common.PaginationResponse.of(
+                List.of(), page, pageSize, totalRecords
+            );
+        }
+        
+        // 获取当前页数据
+        List<Category> pageData = allCategories.subList(startIndex, endIndex);
+        
+        return com.example.biyeshiji.common.PaginationResponse.of(
+            pageData, page, pageSize, totalRecords
+        );
+    }
 }

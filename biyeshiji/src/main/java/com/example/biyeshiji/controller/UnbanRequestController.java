@@ -208,4 +208,72 @@ public class UnbanRequestController {
         User user = userRepository.findById(userId).orElse(null);
         return user != null ? user.getUsername() : "未知";
     }
+    
+    @GetMapping("/list/page")
+    public Response<com.example.biyeshiji.common.PaginationResponse<Map<String, Object>>> listUnbanRequestsWithPagination(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
+        
+        // 查询解封请求（type=1），支持状态筛选
+        List<AdminNotification> notifications;
+        
+        if (status != null && !status.isEmpty()) {
+            if ("processed".equalsIgnoreCase(status)) {
+                // 已处理：状态为1（已通过）或2（已拒绝）
+                notifications = adminNotificationRepository.findByTypeAndStatusInOrderByCreateTimeDesc(1, List.of(1, 2));
+            } else {
+                try {
+                    int statusInt = Integer.parseInt(status);
+                    notifications = adminNotificationRepository.findByTypeAndStatusOrderByCreateTimeDesc(1, statusInt);
+                } catch (NumberFormatException e) {
+                    // 如果status不是数字，返回空列表
+                    notifications = new ArrayList<>();
+                }
+            }
+        } else {
+            notifications = adminNotificationRepository.findByTypeOrderByCreateTimeDesc(1);
+        }
+        
+        // 计算分页
+        long totalRecords = notifications.size();
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, notifications.size());
+        
+        // 如果起始索引超出范围，返回空列表
+        if (startIndex >= notifications.size()) {
+            return Response.success("获取成功", 
+                com.example.biyeshiji.common.PaginationResponse.of(
+                    new ArrayList<>(), page, pageSize, totalRecords
+                )
+            );
+        }
+        
+        // 获取当前页数据
+        List<AdminNotification> pageNotifications = notifications.subList(startIndex, endIndex);
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (AdminNotification notification : pageNotifications) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", notification.getId());
+            map.put("userId", notification.getSenderId());
+            map.put("username", getUserName(notification.getSenderId()));
+            map.put("content", notification.getContent());
+            map.put("status", notification.getStatus());
+            map.put("createTime", notification.getCreateTime());
+            list.add(map);
+        }
+        
+        return Response.success("获取成功", 
+            com.example.biyeshiji.common.PaginationResponse.of(
+                list, page, pageSize, totalRecords
+            )
+        );
+    }
 }

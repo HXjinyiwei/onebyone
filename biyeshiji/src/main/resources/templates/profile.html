@@ -128,9 +128,16 @@
                     </ul>
                     <div class="layui-tab-content">
                         <div class="layui-tab-item layui-show" id="my-novels-container"></div>
+                        <div id="my-novels-pagination"></div>
+                        
                         <div class="layui-tab-item" id="liked-novels-container"></div>
+                        <div id="liked-novels-pagination"></div>
+                        
                         <div class="layui-tab-item" id="favorited-novels-container"></div>
+                        <div id="favorited-novels-pagination"></div>
+                        
                         <div class="layui-tab-item" id="deleted-novels-container"></div>
+                        <div id="deleted-novels-pagination"></div>
                     </div>
                 </div>
             </div>
@@ -147,9 +154,16 @@
                     </ul>
                     <div class="layui-tab-content">
                         <div class="layui-tab-item layui-show" id="my-posts-container"></div>
+                        <div id="my-posts-pagination"></div>
+                        
                         <div class="layui-tab-item" id="liked-posts-container"></div>
+                        <div id="liked-posts-pagination"></div>
+                        
                         <div class="layui-tab-item" id="favorited-posts-container"></div>
+                        <div id="favorited-posts-pagination"></div>
+                        
                         <div class="layui-tab-item" id="deleted-posts-container"></div>
+                        <div id="deleted-posts-pagination"></div>
                     </div>
                 </div>
             </div>
@@ -483,7 +497,7 @@
                 } else if (path === '/profile/novels') {
                     $('.side-nav .layui-nav-item:has(a[href="/profile/novels"])').addClass('layui-this');
                     $('#profile-novels').show();
-                    loadMyNovels();
+                    loadMyNovels(1);
                     
                     // 监听标签页切换
                     element.on('tab(novels-tab)', function(data) {
@@ -499,16 +513,16 @@
                                     userId = res.data.id;
                                     switch(type) {
                                         case 'my':
-                                            loadMyNovels();
+                                            loadMyNovels(1);
                                             break;
                                         case 'liked':
-                                            loadLikedNovels(userId);
+                                            loadLikedNovels(userId, 1);
                                             break;
                                         case 'favorited':
-                                            loadFavoritedNovels(userId);
+                                            loadFavoritedNovels(userId, 1);
                                             break;
                                         case 'deleted':
-                                            loadDeletedNovels(userId);
+                                            loadDeletedNovels(userId, 1);
                                             break;
                                     }
                                 }
@@ -518,7 +532,7 @@
                 } else if (path === '/profile/posts') {
                     $('.side-nav .layui-nav-item:has(a[href="/profile/posts"])').addClass('layui-this');
                     $('#profile-posts').show();
-                    loadMyPosts();
+                    loadMyPosts(1);
                     
                     // 监听标签页切换
                     element.on('tab(posts-tab)', function(data) {
@@ -534,22 +548,23 @@
                                     userId = res.data.id;
                                     switch(type) {
                                         case 'my':
-                                            loadMyPosts();
+                                            loadMyPosts(1);
                                             break;
                                         case 'liked':
-                                            loadLikedPosts(userId);
+                                            loadLikedPosts(userId, 1);
                                             break;
                                         case 'favorited':
-                                            loadFavoritedPosts(userId);
+                                            loadFavoritedPosts(userId, 1);
                                             break;
                                         case 'deleted':
-                                            loadDeletedPosts(userId);
+                                            loadDeletedPosts(userId, 1);
                                             break;
                                     }
                                 }
                             }
                         });
                     });
+
                 } else if (path === '/profile/approval/posts') {
                     $('.side-nav .layui-nav-item:has(a[href="/profile/approval/posts"])').addClass('layui-this');
                     $('#post-approval').show();
@@ -582,8 +597,11 @@
                 element.render('nav', 'side-nav');
             }
             
-            // 加载我发布的帖子
-            function loadMyPosts() {
+            // 加载我发布的帖子 带分页
+            function loadMyPosts(page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
                     url: '/user/current',
                     type: 'GET',
@@ -592,12 +610,13 @@
                         if (res.code === 200 && res.data) {
                             var authorId = res.data.id;
                             $.ajax({
-                                url: '/post/author/' + authorId,
+                                url: '/post/author/' + authorId + '/page?page=' + page + '&size=' + pageSize,
                                 type: 'GET',
                                 dataType: 'json',
                                 success: function(res) {
                                     if (res.code === 200) {
-                                        renderPosts(res.data, '#my-posts-container');
+                                        renderPosts(res.data.data, '#my-posts-container');
+                                        renderPostsPagination(res.data, 'my', '#my-posts-pagination', page);
                                     } else {
                                         layer.msg('获取帖子失败', {icon: 2});
                                     }
@@ -611,8 +630,11 @@
                 });
             }
             
-            // 加载我发布的小说
-            function loadMyNovels() {
+            // 加载我发布的小说 带分页
+            function loadMyNovels(page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
                     url: '/user/current',
                     type: 'GET',
@@ -621,12 +643,13 @@
                         if (res.code === 200 && res.data) {
                             var authorId = res.data.id;
                             $.ajax({
-                                url: '/novel/author/' + authorId,
+                                url: '/novel/author/' + authorId + '/page?page=' + page + '&size=' + pageSize,
                                 type: 'GET',
                                 dataType: 'json',
                                 success: function(res) {
                                     if (res.code === 200) {
-                                        renderNovels(res.data, '#my-novels-container');
+                                        renderNovels(res.data.data, '#my-novels-container');
+                                        renderNovelsPagination(res.data, 'my', '#my-novels-pagination', page);
                                     } else {
                                         layer.msg('获取小说失败', {icon: 2});
                                     }
@@ -640,15 +663,19 @@
                 });
             }
             
-            // 加载我点赞的帖子
-            function loadLikedPosts(userId) {
+            // 加载我点赞的帖子 带分页
+            function loadLikedPosts(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/post/liked/' + userId,
+                    url: '/post/liked/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderPosts(res.data, '#liked-posts-container');
+                            renderPosts(res.data.data, '#liked-posts-container');
+                            renderPostsPagination(res.data, 'liked', '#liked-posts-pagination', page);
                         } else {
                             layer.msg('获取点赞帖子失败', {icon: 2});
                         }
@@ -659,15 +686,19 @@
                 });
             }
             
-            // 加载我点赞的小说
-            function loadLikedNovels(userId) {
+            // 加载我点赞的小说 带分页
+            function loadLikedNovels(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/novel/liked/' + userId,
+                    url: '/novel/liked/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderNovels(res.data, '#liked-novels-container');
+                            renderNovels(res.data.data, '#liked-novels-container');
+                            renderNovelsPagination(res.data, 'liked', '#liked-novels-pagination', page);
                         } else {
                             layer.msg('获取点赞小说失败', {icon: 2});
                         }
@@ -678,15 +709,19 @@
                 });
             }
             
-            // 加载我收藏的帖子
-            function loadFavoritedPosts(userId) {
+            // 加载我收藏的帖子 带分页
+            function loadFavoritedPosts(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/post/favorited/' + userId,
+                    url: '/post/favorited/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderPosts(res.data, '#favorited-posts-container');
+                            renderPosts(res.data.data, '#favorited-posts-container');
+                            renderPostsPagination(res.data, 'favorited', '#favorited-posts-pagination', page);
                         } else {
                             layer.msg('获取收藏帖子失败', {icon: 2});
                         }
@@ -697,15 +732,19 @@
                 });
             }
             
-            // 加载我收藏的小说
-            function loadFavoritedNovels(userId) {
+            // 加载我收藏的小说 带分页
+            function loadFavoritedNovels(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/novel/favorited/' + userId,
+                    url: '/novel/favorited/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderNovels(res.data, '#favorited-novels-container');
+                            renderNovels(res.data.data, '#favorited-novels-container');
+                            renderNovelsPagination(res.data, 'favorited', '#favorited-novels-pagination', page);
                         } else {
                             layer.msg('获取收藏小说失败', {icon: 2});
                         }
@@ -716,15 +755,19 @@
                 });
             }
 
-            // 加载我被删除的帖子
-            function loadDeletedPosts(userId) {
+            // 加载我被删除的帖子 带分页
+            function loadDeletedPosts(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/post/deleted/' + userId,
+                    url: '/post/deleted/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderDeletedPosts(res.data, '#deleted-posts-container');
+                            renderDeletedPosts(res.data.data, '#deleted-posts-container');
+                            renderPostsPagination(res.data, 'deleted', '#deleted-posts-pagination', page);
                         } else {
                             layer.msg('获取被删除帖子失败', {icon: 2});
                         }
@@ -735,55 +778,21 @@
                 });
             }
 
-            // 加载我被删除的小说
-            function loadDeletedNovels(userId) {
+            // 加载我被删除的小说 带分页
+            function loadDeletedNovels(userId, page) {
+                if (page === undefined) page = 1;
+                var pageSize = 10;
+                
                 $.ajax({
-                    url: '/novel/deleted/' + userId,
+                    url: '/novel/deleted/' + userId + '/page?page=' + page + '&size=' + pageSize,
                     type: 'GET',
                     dataType: 'json',
                     success: function(res) {
                         if (res.code === 200) {
-                            renderDeletedNovels(res.data, '#deleted-novels-container');
+                            renderDeletedNovels(res.data.data, '#deleted-novels-container');
+                            renderNovelsPagination(res.data, 'deleted', '#deleted-novels-pagination', page);
                         } else {
                             layer.msg('获取被删除小说失败', {icon: 2});
-                        }
-                    },
-                    error: function() {
-                        layer.msg('服务器错误', {icon: 2});
-                    }
-                });
-            }
-            
-            // 加载我收藏的帖子
-            function loadFavoritedPosts(userId) {
-                $.ajax({
-                    url: '/post/favorited/' + userId,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.code === 200) {
-                            renderPosts(res.data, '#favorited-posts-container');
-                        } else {
-                            layer.msg('获取收藏帖子失败', {icon: 2});
-                        }
-                    },
-                    error: function() {
-                        layer.msg('服务器错误', {icon: 2});
-                    }
-                });
-            }
-
-            // 加载我被删除的帖子
-            function loadDeletedPosts(userId) {
-                $.ajax({
-                    url: '/post/deleted/' + userId,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.code === 200) {
-                            renderDeletedPosts(res.data, '#deleted-posts-container');
-                        } else {
-                            layer.msg('获取被删除帖子失败', {icon: 2});
                         }
                     },
                     error: function() {
@@ -838,8 +847,31 @@
                                     if (res.code === 200) {
                                         var container = '#messages-container-' + type;
                                         var paginationContainer = '#messages-pagination-' + type;
-                                        renderMessages(res.data.content, container);
-                                        renderMessagePagination(res.data, type, paginationContainer, page);
+                                        // 处理Page对象（Spring Data Page）或PaginationResponse对象
+                                        var messagesData = res.data;
+                                        var messagesList, paginationData;
+                                        
+                                        // 检查是否是Page对象（有content属性）
+                                        if (messagesData.content !== undefined) {
+                                            messagesList = messagesData.content;
+                                            // 将Page对象转换为PaginationResponse格式
+                                            paginationData = {
+                                                data: messagesData.content,
+                                                currentPage: messagesData.number + 1, // Page的number从0开始
+                                                pageSize: messagesData.size,
+                                                totalRecords: messagesData.totalElements,
+                                                totalPages: messagesData.totalPages,
+                                                hasNext: !messagesData.last,
+                                                hasPrevious: !messagesData.first
+                                            };
+                                        } else {
+                                            // 假设是PaginationResponse对象
+                                            messagesList = messagesData.data;
+                                            paginationData = messagesData;
+                                        }
+                                        
+                                        renderMessages(messagesList, container);
+                                        renderMessagePagination(paginationData, type, paginationContainer, page);
                                     } else {
                                         layer.msg('获取消息失败', {icon: 2});
                                     }
@@ -861,7 +893,8 @@
             // 渲染消息列表
             function renderMessages(messages, container) {
                 var html = '';
-                if (messages.length === 0) {
+                // 添加空值检查
+                if (!messages || messages.length === 0) {
                     html = '<div class="layui-alert layui-alert-normal" style="margin: 20px 0;">暂无消息</div>';
                 } else {
                     messages.forEach(function(message) {
@@ -900,7 +933,7 @@
                     html += '<div class="layui-box layui-laypage layui-laypage-default" style="margin: 20px 0; text-align: center;">';
                     
                     // 上一页
-                    if (pageData.first) {
+                    if (!pageData.hasPrevious) {
                         html += '<a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>';
                     } else {
                         html += '<a href="javascript:;" class="layui-laypage-prev" onclick="loadMessagesPage(\'' + type + '\', ' + (currentPage - 1) + ')">上一页</a>';
@@ -919,13 +952,13 @@
                     }
                     
                     // 下一页
-                    if (pageData.last) {
+                    if (!pageData.hasNext) {
                         html += '<a href="javascript:;" class="layui-laypage-next layui-disabled">下一页</a>';
                     } else {
                         html += '<a href="javascript:;" class="layui-laypage-next" onclick="loadMessagesPage(\'' + type + '\', ' + (currentPage + 1) + ')">下一页</a>';
                     }
                     
-                    html += '<span class="layui-laypage-count">共 ' + pageData.totalElements + ' 条</span>';
+                    html += '<span class="layui-laypage-count">共 ' + pageData.totalRecords + ' 条</span>';
                     html += '<span class="layui-laypage-count">第 ' + (currentPage + 1) + ' 页 / 共 ' + pageData.totalPages + ' 页</span>';
                     html += '</div>';
                 }
@@ -1163,7 +1196,7 @@
                                 <div class="layui-card-body">
                                     <p>${novel.description ? novel.description.substring(0, 100) : ''}${novel.description && novel.description.length > 100 ? '...' : ''}</p>
                                     <div style="margin-top: 10px; color: #999; font-size: 12px;">
-                                        作者: ${novel.penName} | 章节数: ${novel.chapterCount} | 浏览量: ${novel.viewCount} | 点赞: ${novel.likeCount} | 收藏: ${novel.favoriteCount}
+                                        作者：${novel.penName} | 章节数：${novel.chapterCount} | 浏览量：${novel.viewCount} | 点赞：${novel.likeCount} | 收藏：${novel.favoriteCount}
                                     </div>
                                     <div style="margin-top: 5px;">
                                         <a href="/novel/edit/${novel.id}" class="layui-btn layui-btn-xs layui-btn-normal">编辑</a>
@@ -1180,6 +1213,140 @@
                 $(container).html(html);
             }
             
+            // 渲染小说分页
+            function renderNovelsPagination(pageData, type, container, currentPage) {
+                var html = '';
+                if (pageData.totalPages > 1) {
+                    html += '<div class="layui-box layui-laypage layui-laypage-default" style="margin: 20px 0; text-align: center;">';
+                    
+                    // 上一页
+                    if (!pageData.hasPrevious) {
+                        html += '<a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-prev" onclick="loadNovelsPage(\'' + type + '\', ' + (currentPage - 1) + ')">上一页</a>';
+                    }
+                    
+                    // 页码
+                    var startPage = Math.max(1, currentPage - 2);
+                    var endPage = Math.min(pageData.totalPages, currentPage + 2);
+                    
+                    for (var i = startPage; i <= endPage; i++) {
+                        if (i === currentPage) {
+                            html += '<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>' + i + '</em></span>';
+                        } else {
+                            html += '<a href="javascript:;" onclick="loadNovelsPage(\'' + type + '\', ' + i + ')">' + i + '</a>';
+                        }
+                    }
+                    
+                    // 下一页
+                    if (!pageData.hasNext) {
+                        html += '<a href="javascript:;" class="layui-laypage-next layui-disabled">下一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-next" onclick="loadNovelsPage(\'' + type + '\', ' + (currentPage + 1) + ')">下一页</a>';
+                    }
+                    
+                    html += '<span class="layui-laypage-count">共 ' + pageData.totalRecords + ' 条</span>';
+                    html += '<span class="layui-laypage-count">第 ' + currentPage + ' 页 / 共 ' + pageData.totalPages + ' 页</span>';
+                    html += '</div>';
+                }
+                $(container).html(html);
+            }
+            
+            // 渲染帖子分页
+            function renderPostsPagination(pageData, type, container, currentPage) {
+                var html = '';
+                if (pageData.totalPages > 1) {
+                    html += '<div class="layui-box layui-laypage layui-laypage-default" style="margin: 20px 0; text-align: center;">';
+                    
+                    // 上一页
+                    if (!pageData.hasPrevious) {
+                        html += '<a href="javascript:;" class="layui-laypage-prev layui-disabled">上一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-prev" onclick="loadPostsPage(\'' + type + '\', ' + (currentPage - 1) + ')">上一页</a>';
+                    }
+                    
+                    // 页码
+                    var startPage = Math.max(1, currentPage - 2);
+                    var endPage = Math.min(pageData.totalPages, currentPage + 2);
+                    
+                    for (var i = startPage; i <= endPage; i++) {
+                        if (i === currentPage) {
+                            html += '<span class="layui-laypage-curr"><em class="layui-laypage-em"></em><em>' + i + '</em></span>';
+                        } else {
+                            html += '<a href="javascript:;" onclick="loadPostsPage(\'' + type + '\', ' + i + ')">' + i + '</a>';
+                        }
+                    }
+                    
+                    // 下一页
+                    if (!pageData.hasNext) {
+                        html += '<a href="javascript:;" class="layui-laypage-next layui-disabled">下一页</a>';
+                    } else {
+                        html += '<a href="javascript:;" class="layui-laypage-next" onclick="loadPostsPage(\'' + type + '\', ' + (currentPage + 1) + ')">下一页</a>';
+                    }
+                    
+                    html += '<span class="layui-laypage-count">共 ' + pageData.totalRecords + ' 条</span>';
+                    html += '<span class="layui-laypage-count">第 ' + currentPage + ' 页 / 共 ' + pageData.totalPages + ' 页</span>';
+                    html += '</div>';
+                }
+                $(container).html(html);
+            }
+            
+            // 加载小说指定页码
+            window.loadNovelsPage = function(type, page) {
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var userId = res.data.id;
+                            switch(type) {
+                                case 'my':
+                                    loadMyNovels(page);
+                                    break;
+                                case 'liked':
+                                    loadLikedNovels(userId, page);
+                                    break;
+                                case 'favorited':
+                                    loadFavoritedNovels(userId, page);
+                                    break;
+                                case 'deleted':
+                                    loadDeletedNovels(userId, page);
+                                    break;
+                            }
+                        }
+                    }
+                });
+            };
+            
+            // 加载帖子指定页码
+            window.loadPostsPage = function(type, page) {
+                $.ajax({
+                    url: '/user/current',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.code === 200 && res.data) {
+                            var userId = res.data.id;
+                            switch(type) {
+                                case 'my':
+                                    loadMyPosts(page);
+                                    break;
+                                case 'liked':
+                                    loadLikedPosts(userId, page);
+                                    break;
+                                case 'favorited':
+                                    loadFavoritedPosts(userId, page);
+                                    break;
+                                case 'deleted':
+                                    loadDeletedPosts(userId, page);
+                                    break;
+                            }
+                        }
+                    }
+                });
+            };
+
             // 渲染被删除的帖子
             function renderDeletedPosts(posts, container) {
                 var html = '';

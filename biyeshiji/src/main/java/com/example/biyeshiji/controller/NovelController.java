@@ -180,6 +180,16 @@ public class NovelController {
         return Response.success("获取作者小说成功", novels);
     }
 
+    // 带分页的作者小说查询
+    @GetMapping("/author/{authorId}/page")
+    public Response<PaginationResponse<Novel>> getNovelsByAuthorIdWithPagination(
+            @PathVariable Long authorId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels = novelService.getNovelsByAuthorIdWithPagination(authorId, page, pageSize);
+        return Response.success("获取作者小说成功", novels);
+    }
+
     @GetMapping("/search")
     public Response<List<Novel>> searchNovels(@RequestParam(required = false) String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
@@ -197,9 +207,27 @@ public class NovelController {
         return Response.success("获取用户点赞小说成功", novels);
     }
 
+    @GetMapping("/liked/{userId}/page")
+    public Response<PaginationResponse<Novel>> getNovelsLikedByUserWithPagination(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels = novelService.getNovelsLikedByUserWithPagination(userId, page, pageSize);
+        return Response.success("获取用户点赞小说成功", novels);
+    }
+
     @GetMapping("/favorited/{userId}")
     public Response<List<Novel>> getNovelsFavoritedByUser(@PathVariable Long userId) {
         List<Novel> novels = novelService.getNovelsFavoritedByUser(userId);
+        return Response.success("获取用户收藏小说成功", novels);
+    }
+
+    @GetMapping("/favorited/{userId}/page")
+    public Response<PaginationResponse<Novel>> getNovelsFavoritedByUserWithPagination(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        PaginationResponse<Novel> novels = novelService.getNovelsFavoritedByUserWithPagination(userId, page, pageSize);
         return Response.success("获取用户收藏小说成功", novels);
     }
 
@@ -216,6 +244,24 @@ public class NovelController {
         }
         List<Novel> deletedNovels = novelService.getDeletedNovelsByAuthorId(authorId);
         return Response.success("获取被删除小说成功", deletedNovels);
+    }
+
+    @GetMapping("/deleted/{authorId}/page")
+    public Response<PaginationResponse<Novel>> getDeletedNovelsByAuthorWithPagination(
+            @PathVariable Long authorId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 权限检查：只有管理员或用户本人可以查看被删除的小说
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = userRepository.findByUsername(auth.getName());
+        if (currentUser == null) {
+            return Response.error("未登录");
+        }
+        if (currentUser.getRole() != 1 && !currentUser.getId().equals(authorId)) {
+            return Response.error("无权查看他人的被删除小说");
+        }
+        PaginationResponse<Novel> novels = novelService.getDeletedNovelsByAuthorIdWithPagination(authorId, page, pageSize);
+        return Response.success("获取被删除小说成功", novels);
     }
 
     // 审核相关API（如果需要）

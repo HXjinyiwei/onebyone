@@ -22,10 +22,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.category WHERE p.isDeleted = 0")
     List<Post> findAllWithAuthorAndCategory();
     
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.category WHERE p.id = :postId AND p.isDeleted = 0")
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.category WHERE p.id = :postId AND p.isDeleted = 0 AND p.status != 2")
     Post findByIdWithAuthorAndCategory(@Param("postId") Long postId);
-    
-    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.category WHERE p.id IN :postIds AND p.isDeleted = 0")
+
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.category WHERE p.id IN :postIds AND p.isDeleted = 0 AND p.status != 2")
     List<Post> findByIdsWithAuthorAndCategory(@Param("postIds") List<Long> postIds);
     
     @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.author a LEFT JOIN FETCH p.category WHERE p.isDeleted = 0 AND (p.title LIKE %:keyword% OR p.content LIKE %:keyword% OR a.nickname LIKE %:keyword%)")

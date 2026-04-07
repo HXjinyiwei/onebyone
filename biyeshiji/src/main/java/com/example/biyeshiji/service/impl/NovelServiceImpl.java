@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -198,13 +199,10 @@ public class NovelServiceImpl implements NovelService {
 
         List<Novel> filteredNovels;
 
-        // 如果是管理员（角色1或2），返回所有未封禁的小说（auditStatus != 3）
+        // 如果是管理员（角色1或2），返回所有小说（包括封禁的）
         if (currentUser != null && (currentUser.getRole() == 1 || currentUser.getRole() == 2)) {
-            final Long currentUserId = currentUser.getId();
-            filteredNovels = allNovels.stream()
-                    .filter(novel -> !Integer.valueOf(3).equals(novel.getAuditStatus()) ||
-                            (currentUserId != null && novel.getAuthorId().equals(currentUserId)))
-                    .toList();
+            // 管理员可以看到所有小说，不需要过滤
+            filteredNovels = allNovels;
         } else {
             // 普通用户或未登录用户，只能看到已审核通过的小说或者自己的小说
             final Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -263,12 +261,8 @@ public class NovelServiceImpl implements NovelService {
         // 权限过滤
         List<Novel> permissionFilteredNovels;
         if (currentUser != null && (currentUser.getRole() == 1 || currentUser.getRole() == 2)) {
-            // 管理员（角色1或2），返回所有未封禁的小说（auditStatus != 3）或者自己的小说
-            final Long currentUserId = currentUser.getId();
-            permissionFilteredNovels = filteredNovels.stream()
-                    .filter(novel -> !Integer.valueOf(3).equals(novel.getAuditStatus()) ||
-                            (currentUserId != null && novel.getAuthorId().equals(currentUserId)))
-                    .toList();
+            // 管理员（角色1或2），返回所有小说（包括封禁的）
+            permissionFilteredNovels = filteredNovels;
         } else {
             // 普通用户或未登录用户，只能看到已审核通过的小说或者自己的小说
             final Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -367,57 +361,38 @@ public class NovelServiceImpl implements NovelService {
     }
 
     @Override
+    @Transactional
     public void increaseViewCount(Long novelId) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            novel.setViewCount(novel.getViewCount() + 1);
-            novelRepository.save(novel);
-        }
+        // 使用原生SQL更新浏览量，避免触发@PreUpdate
+        novelRepository.increaseViewCount(novelId);
     }
 
     @Override
+    @Transactional
     public void increaseLikeCount(Long novelId) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            novel.setLikeCount(novel.getLikeCount() + 1);
-            novelRepository.save(novel);
-        }
+        // 使用原生SQL更新点赞数，避免触发@PreUpdate
+        novelRepository.increaseLikeCount(novelId);
     }
 
     @Override
+    @Transactional
     public void decreaseLikeCount(Long novelId) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            if (novel.getLikeCount() > 0) {
-                novel.setLikeCount(novel.getLikeCount() - 1);
-                novelRepository.save(novel);
-            }
-        }
+        // 使用原生SQL减少点赞数，避免触发@PreUpdate
+        novelRepository.decreaseLikeCount(novelId);
     }
 
     @Override
+    @Transactional
     public void increaseFavoriteCount(Long novelId) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            novel.setFavoriteCount(novel.getFavoriteCount() + 1);
-            novelRepository.save(novel);
-        }
+        // 使用原生SQL更新收藏数，避免触发@PreUpdate
+        novelRepository.increaseFavoriteCount(novelId);
     }
 
     @Override
+    @Transactional
     public void decreaseFavoriteCount(Long novelId) {
-        Optional<Novel> novelOpt = novelRepository.findById(novelId);
-        if (novelOpt.isPresent()) {
-            Novel novel = novelOpt.get();
-            if (novel.getFavoriteCount() > 0) {
-                novel.setFavoriteCount(novel.getFavoriteCount() - 1);
-                novelRepository.save(novel);
-            }
-        }
+        // 使用原生SQL减少收藏数，避免触发@PreUpdate
+        novelRepository.decreaseFavoriteCount(novelId);
     }
 
     @Override
@@ -446,13 +421,9 @@ public class NovelServiceImpl implements NovelService {
 
         List<Novel> filteredNovels;
 
-        // 如果是管理员（角色1或2），返回所有未封禁的搜索结果（auditStatus != 3）
+        // 如果是管理员（角色1或2），返回所有搜索结果（包括封禁的）
         if (currentUser != null && (currentUser.getRole() == 1 || currentUser.getRole() == 2)) {
-            final Long currentUserId = currentUser.getId();
-            filteredNovels = allNovels.stream()
-                    .filter(novel -> !Integer.valueOf(3).equals(novel.getAuditStatus()) ||
-                            (currentUserId != null && novel.getAuthorId().equals(currentUserId)))
-                    .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+            filteredNovels = new java.util.ArrayList<>(allNovels);
         } else {
             // 普通用户或未登录用户，只能看到已审核通过的小说或者自己的小说
             final Long currentUserId = currentUser != null ? currentUser.getId() : null;
@@ -476,6 +447,160 @@ public class NovelServiceImpl implements NovelService {
         // 按删除时间（或更新时间）倒序排序
         deletedNovels.sort((n1, n2) -> n2.getUpdateTime().compareTo(n1.getUpdateTime()));
         return deletedNovels;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize) {
+        // 获取所有未删除的小说，同时加载作者信息
+        List<Novel> allNovels = novelRepository.findAllWithAuthor();
+        
+        // 筛选出指定作者的小说
+        List<Novel> filteredNovels = allNovels.stream()
+                .filter(novel -> novel.getAuthorId().equals(authorId))
+                .sorted((n1, n2) -> n2.getCreateTime().compareTo(n1.getCreateTime()))
+                .toList();
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredNovels.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredNovels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Novel> content = filteredNovels.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsLikedByUserWithPagination(Long userId, Integer page, Integer pageSize) {
+        // 查询用户点赞的小说记录（target_type=3 表示小说）
+        List<LikeRecord> likeRecords = likeRecordRepository.findByUserIdAndTargetType(userId, 3);
+        
+        // 提取小说 ID 列表
+        List<Long> novelIds = likeRecords.stream()
+                .map(LikeRecord::getTargetId)
+                .collect(Collectors.toList());
+        
+        // 如果没有点赞的小说，返回空分页
+        if (novelIds.isEmpty()) {
+            return PaginationResponse.of(List.of(), page != null ? page : 1, pageSize != null ? pageSize : 10, 0);
+        }
+        
+        // 查询并返回小说列表，使用 fetch join 加载作者信息
+        List<Novel> allNovels = novelRepository.findByIdsWithAuthor(novelIds);
+        
+        // 按照创建时间倒序排序
+        List<Novel> filteredNovels = new java.util.ArrayList<>(allNovels);
+        filteredNovels.sort((n1, n2) -> n2.getCreateTime().compareTo(n1.getCreateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredNovels.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredNovels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Novel> content = filteredNovels.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getNovelsFavoritedByUserWithPagination(Long userId, Integer page, Integer pageSize) {
+        // 查询用户收藏的小说记录（从 favorite_record 表查询，target_type=3 表示小说）
+        List<FavoriteRecord> favoriteRecords = favoriteRecordRepository.findByUserIdAndTargetType(userId, 3);
+        
+        // 提取小说 ID 列表
+        List<Long> novelIds = favoriteRecords.stream()
+                .map(FavoriteRecord::getTargetId)
+                .collect(Collectors.toList());
+        
+        // 如果没有收藏的小说，返回空分页
+        if (novelIds.isEmpty()) {
+            return PaginationResponse.of(List.of(), page != null ? page : 1, pageSize != null ? pageSize : 10, 0);
+        }
+        
+        // 查询并返回小说列表，使用 fetch join 加载作者信息
+        List<Novel> allNovels = novelRepository.findByIdsWithAuthor(novelIds);
+        
+        // 按照创建时间倒序排序
+        List<Novel> filteredNovels = new java.util.ArrayList<>(allNovels);
+        filteredNovels.sort((n1, n2) -> n2.getCreateTime().compareTo(n1.getCreateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = filteredNovels.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, filteredNovels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Novel> content = filteredNovels.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<Novel> getDeletedNovelsByAuthorIdWithPagination(Long authorId, Integer page, Integer pageSize) {
+        // 直接调用仓库方法查询已删除的小说
+        List<Novel> deletedNovels = novelRepository.findDeletedByAuthorId(authorId);
+        // 按删除时间（或更新时间）倒序排序
+        deletedNovels.sort((n1, n2) -> n2.getUpdateTime().compareTo(n1.getUpdateTime()));
+        
+        // 验证分页参数
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (pageSize == null || pageSize < 1) {
+            pageSize = 10;
+        }
+        
+        // 计算总数
+        long total = deletedNovels.size();
+        
+        // 分页处理
+        int start = (page - 1) * pageSize;
+        int end = Math.min(start + pageSize, deletedNovels.size());
+        if (start >= end) {
+            return PaginationResponse.of(List.of(), page, pageSize, total);
+        }
+        
+        List<Novel> content = deletedNovels.subList(start, end);
+        return PaginationResponse.of(content, page, pageSize, total);
     }
 
     @Override
@@ -578,20 +703,26 @@ public class NovelServiceImpl implements NovelService {
         return novels.subList(start, end);
     }
 
+    // 按最新章节更新时间降序排序（只显示审核通过的小说）- 使用章节的最新更新时间
     @Override
     @Transactional(readOnly = true)
     public List<Novel> getNovelsOrderByCreateTimeDesc(Integer limit, Long categoryId) {
-        List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
+        List<Novel> novels = novelRepository.findAllOrderByLatestChapterUpdateTimeDesc(categoryId);
+        // 手动加载关联数据（author和categories）
+        loadAssociationsForNovels(novels);
         if (limit != null && limit > 0 && novels.size() > limit) {
             novels = novels.subList(0, limit);
         }
         return novels;
     }
 
+    // 按最新章节更新时间降序排序（只显示审核通过的小说）- 使用章节的最新更新时间
     @Override
     @Transactional(readOnly = true)
     public List<Novel> getNovelsOrderByCreateTimeDescWithPagination(Integer page, Integer pageSize, Long categoryId) {
-        List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
+        List<Novel> novels = novelRepository.findAllOrderByLatestChapterUpdateTimeDesc(categoryId);
+        // 手动加载关联数据（author和categories）
+        loadAssociationsForNovels(novels);
         // 分页处理
         if (page == null || page < 1) {
             page = 1;
@@ -844,7 +975,9 @@ public class NovelServiceImpl implements NovelService {
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<Novel> getNovelsOrderByCreateTimeDescWithPaginationResponse(Integer page, Integer pageSize, Long categoryId) {
-        List<Novel> novels = novelRepository.findAllOrderByCreateTimeDesc(categoryId);
+        List<Novel> novels = novelRepository.findAllOrderByLatestChapterUpdateTimeDesc(categoryId);
+        // 手动加载关联数据（author和categories）
+        loadAssociationsForNovels(novels);
         // 分页处理
         if (page == null || page < 1) {
             page = 1;
@@ -859,5 +992,36 @@ public class NovelServiceImpl implements NovelService {
         }
         List<Novel> pagedData = novels.subList(start, end);
         return PaginationResponse.of(pagedData, page, pageSize, novels.size());
+    }
+    
+    // 手动加载小说的关联数据（author和categories）
+    private void loadAssociationsForNovels(List<Novel> novels) {
+        if (novels == null || novels.isEmpty()) {
+            return;
+        }
+        
+        // 提取小说ID列表
+        List<Long> novelIds = novels.stream()
+                .map(Novel::getId)
+                .collect(Collectors.toList());
+        
+        // 批量查询完整的小说数据（包含关联）
+        List<Novel> fullNovels = novelRepository.findByIdsWithAuthor(novelIds);
+        
+        // 创建ID到完整小说的映射
+        Map<Long, Novel> fullNovelMap = fullNovels.stream()
+                .collect(Collectors.toMap(Novel::getId, novel -> novel));
+        
+        // 将关联数据复制到原始小说对象中
+        for (Novel novel : novels) {
+            Novel fullNovel = fullNovelMap.get(novel.getId());
+            if (fullNovel != null) {
+                // 复制关联数据
+                novel.setAuthor(fullNovel.getAuthor());
+                novel.setCategories(fullNovel.getCategories());
+                // 触发@PostLoad以设置categoryIds
+                novel.postLoad();
+            }
+        }
     }
 }

@@ -30,6 +30,9 @@ public interface ChapterRepository extends JpaRepository<Chapter, Long> {
     // 根据小说ID和排序号获取章节
     Chapter findByNovelIdAndSortOrder(Long novelId, Integer sortOrder);
 
+    // 根据小说ID和标题获取章节（用于唯一性检查）
+    List<Chapter> findByNovelIdAndTitle(Long novelId, String title);
+
     // 统计小说章节数
     Long countByNovelId(Long novelId);
 

@@ -1,5 +1,6 @@
 package com.example.biyeshiji.controller;
 
+import com.example.biyeshiji.common.PaginationResponse;
 import com.example.biyeshiji.common.Response;
 import com.example.biyeshiji.entity.Report;
 import com.example.biyeshiji.entity.User;
@@ -101,6 +102,70 @@ public class ReportController {
         }
         
         return Response.success("获取成功", result);
+    }
+
+    @GetMapping("/list/page")
+    public Response<PaginationResponse<Map<String, Object>>> listReportsWithPagination(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        
+        // 获取分页数据
+        PaginationResponse<Report> reportPage = reportService.getReportsWithPagination(type, status, page, pageSize);
+        
+        // 转换Report对象为Map
+        List<Map<String, Object>> result = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        for (Report report : reportPage.getData()) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", report.getId());
+            item.put("targetType", report.getTargetType());
+            item.put("targetId", report.getTargetId());
+            item.put("reason", report.getReason());
+            item.put("description", report.getReason());
+            item.put("status", report.getStatus());
+            item.put("statusText", getStatusText(report.getStatus()));
+            item.put("createTime", report.getCreateTime() != null ?
+                report.getCreateTime().format(formatter) : "");
+            item.put("handleTime", report.getHandleTime() != null ?
+                report.getHandleTime().format(formatter) : "");
+            item.put("handleResult", report.getHandleResult());
+            
+            // 获取举报人信息
+            if (report.getReporterId() != null) {
+                User reporter = userRepository.findById(report.getReporterId()).orElse(null);
+                if (reporter != null) {
+                    item.put("reporterName", reporter.getNickname() != null ? reporter.getNickname() : reporter.getUsername());
+                    item.put("reporterId", reporter.getId());
+                }
+            }
+            
+            // 获取处理管理员信息
+            if (report.getAdminId() != null) {
+                User admin = userRepository.findById(report.getAdminId()).orElse(null);
+                if (admin != null) {
+                    item.put("adminName", admin.getUsername());
+                }
+            }
+            
+            // 获取目标名称
+            String targetName = getTargetName(report.getTargetType(), report.getTargetId());
+            item.put("targetName", targetName);
+            
+            result.add(item);
+        }
+        
+        // 创建新的分页响应
+        PaginationResponse<Map<String, Object>> paginationResponse = new PaginationResponse<>(
+            result,
+            reportPage.getCurrentPage(),
+            reportPage.getPageSize(),
+            reportPage.getTotalRecords()
+        );
+        
+        return Response.success("获取成功", paginationResponse);
     }
 
     @PostMapping("/process")
